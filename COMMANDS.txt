@@ -1,0 +1,55 @@
+# Ubuntu PowerShell me ye commands run karo:
+
+# 1. Project folder me jao
+cd /mnt/c/Users/ASHISH/Desktop/ashwheel
+
+# 2. Git initialize karo (agar pehle se nahi hai)
+git init
+
+# 3. All files add karo
+git add .
+
+# 4. First commit
+git commit -m "Initial commit - Ashwheel project setup"
+
+# 5. GitHub private repo banao (browser me):
+# https://github.com/new
+# Repository name: ashwheel
+# Private: Yes
+# Create repository
+
+# 6. Remote add karo (YOUR_USERNAME replace karo apne GitHub username se)
+git remote add origin https://github.com/YOUR_USERNAME/ashwheel.git
+
+# 7. Branch rename karo
+git branch -M main
+
+# 8. Push karo
+git push -u origin main
+
+# GitHub credentials maangega, enter karo
+
+# ========================================
+# COOLIFY SETUP (Browser me)
+# ========================================
+
+1. Coolify dashboard open karo
+2. "+ New Resource" click karo
+3. "Application" select karo
+4. Repository URL dalo: https://github.com/YOUR_USERNAME/ashwheel.git
+5. Branch: main
+6. Build Pack: Dockerfile
+7. Environment Variables add karo:
+   VITE_SUPABASE_URL=http://supabasekong-gs0sgokso0s4go8wgswoosc0.72.60.203.162.sslip.io
+   VITE_SUPABASE_ANON_KEY=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc1OTgxMDgwMCwiZXhwIjo0OTE1NDg0NDAwLCJyb2xlIjoiYW5vbiJ9.Zr5uxuN4vUi_rjXKaEHXfmt8qVLzwv4JC14nH5T21OI
+8. Domain add karo: ashwheel.cloud
+9. Deploy button click karo
+
+# ========================================
+# DNS SETTINGS (Domain provider me)
+# ========================================
+
+A Record: ashwheel.cloud → 72.60.203.162
+A Record: www.ashwheel.cloud → 72.60.203.162
+
+# Done! Website live ho jayegi
