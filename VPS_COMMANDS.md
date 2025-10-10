@@ -112,7 +112,7 @@ http://72.60.203.162:8000
 
 3. **Environment Variables:**
    ```env
-   VITE_SUPABASE_URL=http://supabasekong-gs0sgokso0s4go8wgswoosc0.72.60.203.162.sslip.io
+   VITE_SUPABASE_URL=http://supabasekong-k008ks4w48o8s00w4o4o0w0g.72.60.203.162.sslip.io
    VITE_SUPABASE_ANON_KEY=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc1OTgxMDgwMCwiZXhwIjo0OTE1NDg0NDAwLCJyb2xlIjoiYW5vbiJ9.Zr5uxuN4vUi_rjXKaEHXfmt8qVLzwv4JC14nH5T21OI
    ```
 
@@ -135,7 +135,7 @@ docker logs -f $(docker ps | grep coolify | awk '{print $1}' | head -1)
 ### Check Supabase:
 ```bash
 docker ps | grep supabase
-curl http://supabasekong-gs0sgokso0s4go8wgswoosc0.72.60.203.162.sslip.io
+curl http://supabasekong-k008ks4w48o8s00w4o4o0w0g.72.60.203.162.sslip.io
 ```
 
 ### Check deployed app:
@@ -183,7 +183,7 @@ curl -I http://ashwheel.cloud
 curl -I https://ashwheel.cloud
 
 # Check Supabase connection
-curl http://supabasekong-gs0sgokso0s4go8wgswoosc0.72.60.203.162.sslip.io/rest/v1/
+curl http://supabasekong-k008ks4w48o8s00w4o4o0w0g.72.60.203.162.sslip.io/rest/v1/
 ```
 
 ---
