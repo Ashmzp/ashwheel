@@ -878,7 +878,7 @@ $$;
 ALTER FUNCTION "public"."get_party_ledger_v2"("p_customer_id" "uuid", "p_start_date" "date", "p_end_date" "date") OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION "public"."get_party_sale_summary"("p_start_date" "date", "p_end_date" "date") RETURNS TABLE("party_name" "text", "customer_type" "text", "sale_count" bigint, "sale_month" "text")
+CREATE OR REPLACE FUNCTION "public"."get_party_sale_summary"("p_start_date" "date", "p_end_date" "date") RETURNS TABLE("party_name" "text", "customer_type" "text", "sale_count" bigint, "sale_month" "text", "model_name" "text", "category" "text")
     LANGUAGE "plpgsql"
     AS $$
 DECLARE
@@ -889,9 +889,14 @@ BEGIN
         SELECT
             (SELECT p.party_name 
              FROM public.purchases p, jsonb_array_elements(p.items) as item
-             WHERE p.user_id = v_user_id AND item->>'chassis_no' = vii.chassis_no
+             WHERE p.user_id = v_user_id AND item->>'chassisNo' = vii.chassis_no
              LIMIT 1) as resolved_party_name,
+            (SELECT s.category 
+             FROM public.stock s
+             WHERE s.user_id = v_user_id AND s.chassis_no = vii.chassis_no
+             LIMIT 1) as resolved_category,
             vi.invoice_date,
+            vii.model_name,
             CASE 
                 WHEN vi.customer_details->>'gst' IS NOT NULL AND LTRIM(RTRIM(vi.customer_details->>'gst')) <> '' THEN 'Registered'
                 ELSE 'Non-Registered'
@@ -904,30 +909,85 @@ BEGIN
     SELECT 
         COALESCE(
             sd.resolved_party_name, 
-            CASE 
-                WHEN sd.resolved_customer_type = 'Registered' THEN 'Unknown Registered Party'
-                ELSE 'Non-Registered'
-            END
+            'Non-Registered'
         ) as party_name,
         sd.resolved_customer_type as customer_type,
         COUNT(*) as sale_count,
-        to_char(sd.invoice_date, 'YYYY-MM') as sale_month
+        to_char(sd.invoice_date, 'YYYY-MM') as sale_month,
+        sd.model_name,
+        sd.resolved_category as category
     FROM sales_data sd
     GROUP BY
         COALESCE(
             sd.resolved_party_name, 
-            CASE 
-                WHEN sd.resolved_customer_type = 'Registered' THEN 'Unknown Registered Party'
-                ELSE 'Non-Registered'
-            END
+            'Non-Registered'
         ),
         sd.resolved_customer_type,
-        to_char(sd.invoice_date, 'YYYY-MM');
+        to_char(sd.invoice_date, 'YYYY-MM'),
+        sd.model_name,
+        sd.resolved_category;
 END;
 $$;
 
 
 ALTER FUNCTION "public"."get_party_sale_summary"("p_start_date" "date", "p_end_date" "date") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."get_party_vehicle_invoice_summary"("p_start_date" "date", "p_end_date" "date", "p_customer_type" "text" DEFAULT NULL::"text") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+    v_user_id UUID := auth.uid();
+    v_result JSONB;
+BEGIN
+    WITH sales_data AS (
+        SELECT
+            vi.customer_name,
+            vii.model_name,
+            CASE 
+                WHEN vi.customer_details->>'gst' IS NOT NULL AND vi.customer_details->>'gst' <> '' THEN 'Registered'
+                ELSE 'Non-Registered'
+            END as customer_type
+        FROM public.vehicle_invoice_items vii
+        JOIN public.vehicle_invoices vi ON vii.invoice_id = vi.id
+        WHERE vi.user_id = v_user_id
+          AND vi.invoice_date BETWEEN p_start_date AND p_end_date
+          AND (p_customer_type IS NULL OR 
+               p_customer_type = 'All' OR
+               CASE 
+                   WHEN vi.customer_details->>'gst' IS NOT NULL AND vi.customer_details->>'gst' <> '' THEN 'Registered'
+                   ELSE 'Non-Registered'
+               END = p_customer_type
+              )
+    )
+    SELECT jsonb_build_object(
+        'report_data', COALESCE(
+            (
+                SELECT jsonb_agg(t)
+                FROM (
+                    SELECT 
+                        COALESCE(customer_name, 'Non-Registered Customer') as party_name,
+                        customer_type,
+                        model_name,
+                        COUNT(*) as sale_count
+                    FROM sales_data
+                    GROUP BY 
+                        COALESCE(customer_name, 'Non-Registered Customer'), 
+                        customer_type, 
+                        model_name
+                ) t
+            ), '[]'::jsonb
+        )
+    )
+    INTO v_result;
+
+    RETURN v_result;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."get_party_vehicle_invoice_summary"("p_start_date" "date", "p_end_date" "date", "p_customer_type" "text") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."get_party_wise_sale_report"("p_start_date" "date", "p_end_date" "date") RETURNS "jsonb"
@@ -4929,6 +4989,30 @@ CREATE INDEX "active_sessions_user_id_idx" ON "public"."active_sessions" USING "
 
 
 
+CREATE INDEX "idx_bookings_user_id" ON "public"."bookings" USING "btree" ("user_id");
+
+
+
+CREATE INDEX "idx_customers_user_id" ON "public"."customers" USING "btree" ("user_id");
+
+
+
+CREATE INDEX "idx_daily_report_settings_user_id" ON "public"."daily_report_settings" USING "btree" ("user_id");
+
+
+
+CREATE INDEX "idx_daily_reports_user_id" ON "public"."daily_reports" USING "btree" ("user_id");
+
+
+
+CREATE INDEX "idx_data_entries_user_id" ON "public"."data_entries" USING "btree" ("user_id");
+
+
+
+CREATE INDEX "idx_gaps_user_id" ON "public"."gaps" USING "btree" ("user_id");
+
+
+
 CREATE INDEX "idx_job_cards_next_due_date" ON "public"."job_cards" USING "btree" ("next_due_date");
 
 
@@ -4949,6 +5033,34 @@ CREATE UNIQUE INDEX "idx_job_cards_user_unique" ON "public"."job_cards" USING "b
 
 
 
+CREATE INDEX "idx_journal_entries_user_id" ON "public"."journal_entries" USING "btree" ("user_id");
+
+
+
+CREATE INDEX "idx_price_list_user_id" ON "public"."price_list" USING "btree" ("user_id");
+
+
+
+CREATE INDEX "idx_purchase_returns_user_id" ON "public"."purchase_returns" USING "btree" ("user_id");
+
+
+
+CREATE INDEX "idx_purchases_user_id" ON "public"."purchases" USING "btree" ("user_id");
+
+
+
+CREATE INDEX "idx_receipts_user_id" ON "public"."receipts" USING "btree" ("user_id");
+
+
+
+CREATE INDEX "idx_sales_returns_user_id" ON "public"."sales_returns" USING "btree" ("user_id");
+
+
+
+CREATE INDEX "idx_stock_user_id" ON "public"."stock" USING "btree" ("user_id");
+
+
+
 CREATE INDEX "idx_vehicle_invoice_items_chassis_no" ON "public"."vehicle_invoice_items" USING "gin" ("chassis_no" "public"."gin_trgm_ops");
 
 
@@ -4966,6 +5078,10 @@ CREATE INDEX "idx_vehicle_invoice_items_engine_no_trgm" ON "public"."vehicle_inv
 
 
 CREATE INDEX "idx_vehicle_invoice_items_invoice_id" ON "public"."vehicle_invoice_items" USING "btree" ("invoice_id");
+
+
+
+CREATE INDEX "idx_vehicle_invoice_items_user_id" ON "public"."vehicle_invoice_items" USING "btree" ("user_id");
 
 
 
@@ -5002,6 +5118,30 @@ CREATE INDEX "idx_workshop_follow_ups_job_card_id" ON "public"."workshop_follow_
 
 
 CREATE INDEX "idx_workshop_follow_ups_next_follow_up_date" ON "public"."workshop_follow_ups" USING "btree" ("next_follow_up_date");
+
+
+
+CREATE INDEX "idx_workshop_follow_ups_user_id" ON "public"."workshop_follow_ups" USING "btree" ("user_id");
+
+
+
+CREATE INDEX "idx_workshop_inventory_user_id" ON "public"."workshop_inventory" USING "btree" ("user_id");
+
+
+
+CREATE INDEX "idx_workshop_labour_items_user_id" ON "public"."workshop_labour_items" USING "btree" ("user_id");
+
+
+
+CREATE INDEX "idx_workshop_purchase_returns_user_id" ON "public"."workshop_purchase_returns" USING "btree" ("user_id");
+
+
+
+CREATE INDEX "idx_workshop_purchases_user_id" ON "public"."workshop_purchases" USING "btree" ("user_id");
+
+
+
+CREATE INDEX "idx_workshop_sales_returns_user_id" ON "public"."workshop_sales_returns" USING "btree" ("user_id");
 
 
 
@@ -5318,7 +5458,7 @@ CREATE POLICY "Public can insert tool requests" ON "public"."tool_requests" FOR 
 
 
 
-CREATE POLICY "Users can fully manage their own settings" ON "public"."settings" USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users can fully manage their own settings" ON "public"."settings" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
@@ -5326,75 +5466,91 @@ CREATE POLICY "Users can manage their own active sessions" ON "public"."active_s
 
 
 
-CREATE POLICY "Users can manage their own bookings" ON "public"."bookings" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users can manage their own bookings" ON "public"."bookings" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "Users can manage their own data" ON "public"."customers" USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users can manage their own data" ON "public"."customers" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "Users can manage their own data" ON "public"."daily_report_settings" USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users can manage their own data" ON "public"."daily_report_settings" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "Users can manage their own data" ON "public"."daily_reports" USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users can manage their own data" ON "public"."daily_reports" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "Users can manage their own data" ON "public"."gaps" USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users can manage their own data" ON "public"."data_entries" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "Users can manage their own data" ON "public"."job_cards" USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users can manage their own data" ON "public"."gaps" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "Users can manage their own data" ON "public"."purchase_returns" USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users can manage their own data" ON "public"."job_cards" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "Users can manage their own data" ON "public"."purchases" USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users can manage their own data" ON "public"."journal_entries" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "Users can manage their own data" ON "public"."sales_returns" USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users can manage their own data" ON "public"."price_list" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "Users can manage their own data" ON "public"."stock" USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users can manage their own data" ON "public"."purchase_returns" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "Users can manage their own data" ON "public"."vehicle_invoice_items" USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users can manage their own data" ON "public"."purchases" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "Users can manage their own data" ON "public"."vehicle_invoices" USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users can manage their own data" ON "public"."receipts" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "Users can manage their own data" ON "public"."workshop_follow_ups" USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users can manage their own data" ON "public"."sales_returns" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "Users can manage their own data" ON "public"."workshop_inventory" USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users can manage their own data" ON "public"."stock" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "Users can manage their own data" ON "public"."workshop_labour_items" USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users can manage their own data" ON "public"."vehicle_invoice_items" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "Users can manage their own data" ON "public"."workshop_purchase_returns" USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users can manage their own data" ON "public"."vehicle_invoices" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "Users can manage their own data" ON "public"."workshop_purchases" USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users can manage their own data" ON "public"."workshop_follow_ups" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "Users can manage their own data" ON "public"."workshop_sales_returns" USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users can manage their own data" ON "public"."workshop_inventory" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
+
+
+
+CREATE POLICY "Users can manage their own data" ON "public"."workshop_labour_items" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
+
+
+
+CREATE POLICY "Users can manage their own data" ON "public"."workshop_purchase_returns" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
+
+
+
+CREATE POLICY "Users can manage their own data" ON "public"."workshop_purchases" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
+
+
+
+CREATE POLICY "Users can manage their own data" ON "public"."workshop_sales_returns" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
@@ -5854,6 +6010,12 @@ GRANT ALL ON FUNCTION "public"."get_party_ledger_v2"("p_customer_id" "uuid", "p_
 GRANT ALL ON FUNCTION "public"."get_party_sale_summary"("p_start_date" "date", "p_end_date" "date") TO "anon";
 GRANT ALL ON FUNCTION "public"."get_party_sale_summary"("p_start_date" "date", "p_end_date" "date") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_party_sale_summary"("p_start_date" "date", "p_end_date" "date") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."get_party_vehicle_invoice_summary"("p_start_date" "date", "p_end_date" "date", "p_customer_type" "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."get_party_vehicle_invoice_summary"("p_start_date" "date", "p_end_date" "date", "p_customer_type" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."get_party_vehicle_invoice_summary"("p_start_date" "date", "p_end_date" "date", "p_customer_type" "text") TO "service_role";
 
 
 
@@ -6598,4 +6760,3 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 
 
 
-RESET ALL;

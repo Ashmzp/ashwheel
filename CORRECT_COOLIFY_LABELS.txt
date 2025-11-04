@@ -1,0 +1,29 @@
+# ✅ CORRECT LABELS - Copy paste these in Coolify UI
+
+# Basic Configuration
+traefik.enable=true
+traefik.http.services.ashwheel.loadbalancer.server.port=80
+
+# HTTP Router (Port 80) - Redirect to HTTPS
+traefik.http.routers.ashwheel-http.rule=Host(`ashwheel.cloud`) || Host(`www.ashwheel.cloud`)
+traefik.http.routers.ashwheel-http.entrypoints=http
+traefik.http.routers.ashwheel-http.middlewares=redirect-to-https
+
+# HTTPS Router (Port 443) - Main Router
+traefik.http.routers.ashwheel-https.rule=Host(`ashwheel.cloud`) || Host(`www.ashwheel.cloud`)
+traefik.http.routers.ashwheel-https.entrypoints=https
+traefik.http.routers.ashwheel-https.tls=true
+traefik.http.routers.ashwheel-https.tls.certresolver=letsencrypt
+traefik.http.routers.ashwheel-https.service=ashwheel
+
+# Compression
+traefik.http.middlewares.gzip.compress=true
+traefik.http.routers.ashwheel-https.middlewares=gzip
+
+# Security Headers (Optional but recommended)
+traefik.http.middlewares.ashwheel-security.headers.sslredirect=true
+traefik.http.middlewares.ashwheel-security.headers.stsSeconds=31536000
+traefik.http.middlewares.ashwheel-security.headers.stsIncludeSubdomains=true
+
+# Coolify Network
+caddy_ingress_network=coolify
