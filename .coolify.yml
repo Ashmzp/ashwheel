@@ -1,4 +1,6 @@
 # Coolify Configuration for Ashwheel
+# Coolify uses built-in Caddy proxy - no Traefik labels needed
+
 version: '3.8'
 
 services:
@@ -11,33 +13,5 @@ services:
         - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
     container_name: ashwheel-app
     restart: unless-stopped
-    networks:
-      - coolify
-    labels:
-      # Enable Traefik
-      - "traefik.enable=true"
-      
-      # HTTP Router (redirect to HTTPS)
-      - "traefik.http.routers.ashwheel-http.rule=Host(`ashwheel.cloud`) || Host(`www.ashwheel.cloud`)"
-      - "traefik.http.routers.ashwheel-http.entrypoints=http"
-      - "traefik.http.routers.ashwheel-http.middlewares=redirect-to-https"
-      
-      # HTTPS Router
-      - "traefik.http.routers.ashwheel-https.rule=Host(`ashwheel.cloud`) || Host(`www.ashwheel.cloud`)"
-      - "traefik.http.routers.ashwheel-https.entrypoints=https"
-      - "traefik.http.routers.ashwheel-https.tls=true"
-      - "traefik.http.routers.ashwheel-https.tls.certresolver=letsencrypt"
-      
-      # Service Configuration
-      - "traefik.http.services.ashwheel.loadbalancer.server.port=80"
-      
-      # Security Headers
-      - "traefik.http.middlewares.ashwheel-headers.headers.sslredirect=true"
-      - "traefik.http.middlewares.ashwheel-headers.headers.stsSeconds=31536000"
-      - "traefik.http.middlewares.ashwheel-headers.headers.stsIncludeSubdomains=true"
-      - "traefik.http.middlewares.ashwheel-headers.headers.stsPreload=true"
-      - "traefik.http.routers.ashwheel-https.middlewares=ashwheel-headers"
-
-networks:
-  coolify:
-    external: true
+    ports:
+      - "80:80"
