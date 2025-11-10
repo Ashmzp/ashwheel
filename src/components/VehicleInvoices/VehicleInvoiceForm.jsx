@@ -29,12 +29,12 @@ const VehicleInvoiceForm = ({ onSave, onCancel }) => {
   const refreshData = useCallback(async () => {
     try {
       const { data: customerData } = await getCustomers({ pageSize: 9999 });
-      const [stockData, settingsData] = await Promise.all([
+      const [stockResponse, settingsData] = await Promise.all([
         getStock(),
         getSettings()
       ]);
       setCustomers(Array.isArray(customerData) ? customerData : []);
-      setStock(Array.isArray(stockData) ? stockData : []);
+      setStock(Array.isArray(stockResponse.data) ? stockResponse.data : []);
       setSettings(settingsData);
     } catch (error) {
       toast({ title: "Error", description: `Failed to load initial data: ${error.message}`, variant: "destructive" });
@@ -85,26 +85,34 @@ const VehicleInvoiceForm = ({ onSave, onCancel }) => {
     removeItem(itemToRemove.chassis_no);
   };
 
-  const nonRegFieldsConfig = useMemo(() => settings?.nonRegFields || {}, [settings]);
-  
-  const activeNonRegFields = useMemo(() => {
-    return Object.entries(nonRegFieldsConfig)
-      .filter(([key, value]) => value.enabled)
-      .map(([key]) => key);
-  }, [nonRegFieldsConfig]);
+  const getActiveFields = useCallback(() => {
+    if (!settings || !formData.selectedCustomer) return [];
+    
+    const isRegistered = !!formData.selectedCustomer.gst;
+    const fieldsConfig = isRegistered 
+      ? settings.registeredCustomerFields 
+      : settings.nonRegisteredCustomerFields;
+
+    return Object.entries(fieldsConfig || {})
+      .filter(([, value]) => value.enabled)
+      .map(([key, config]) => ({ key, ...config }));
+  }, [settings, formData.selectedCustomer]);
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.selectedCustomer) newErrors.customer = "Please select a customer.";
-    if (!Array.isArray(formData.items) || formData.items.length === 0) newErrors.items = "At least one item must be added.";
-    
-    if (formData.selectedCustomer && !formData.selectedCustomer.gst) {
-        Object.entries(settings?.nonRegFields || {}).forEach(([key, val]) => {
-            if(val.enabled && val.mandatory && !formData.customer_details?.[key]) {
-                newErrors[key] = `${val.label || key} is mandatory.`;
-            }
-        });
+    if (!formData.selectedCustomer) {
+      newErrors.customer = "Please select a customer.";
     }
+    if (!Array.isArray(formData.items) || formData.items.length === 0) {
+      newErrors.items = "At least one item must be added.";
+    }
+    
+    const activeFields = getActiveFields();
+    activeFields.forEach(field => {
+      if (field.mandatory && !formData.customer_details?.[field.key]) {
+        newErrors[field.key] = `${field.label || field.key} is mandatory.`;
+      }
+    });
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -166,6 +174,8 @@ const VehicleInvoiceForm = ({ onSave, onCancel }) => {
       return (<div className="p-8"><CustomerForm onSave={handleNewCustomerSave} onCancel={() => setShowCustomerForm(false)} /></div>);
   }
 
+  const activeCustomFields = getActiveFields();
+
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-6xl mx-auto">
       <Card>
@@ -201,21 +211,17 @@ const VehicleInvoiceForm = ({ onSave, onCancel }) => {
                  </motion.div>
             )}
 
-            {formData.selectedCustomer && !formData.selectedCustomer.gst && (
+            {formData.selectedCustomer && activeCustomFields.length > 0 && (
               <Card>
-                <CardHeader><CardTitle className="text-base">Additional Details (Non-Registered)</CardTitle></CardHeader>
+                <CardHeader><CardTitle className="text-base">Additional Details</CardTitle></CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {activeNonRegFields.map(key => {
-                    const fieldConfig = nonRegFieldsConfig[key];
-                    if (!fieldConfig || !fieldConfig.enabled) return null;
-                    return (
-                        <div key={key}>
-                            <Label>{fieldConfig.label || key} {fieldConfig.mandatory && '*'}</Label>
-                            <Input value={formData.customer_details?.[key] || ''} onChange={(e) => handleCustomFieldChange(key, e.target.value)} />
-                            {errors[key] && <p className="text-red-500 text-sm mt-1">{errors[key]}</p>}
-                        </div>
-                    )
-                  })}
+                  {activeCustomFields.map(field => (
+                    <div key={field.key}>
+                      <Label>{field.label || field.key} {field.mandatory && '*'}</Label>
+                      <Input value={formData.customer_details?.[field.key] || ''} onChange={(e) => handleCustomFieldChange(field.key, e.target.value)} />
+                      {errors[field.key] && <p className="text-red-500 text-sm mt-1">{errors[field.key]}</p>}
+                    </div>
+                  ))}
                 </CardContent>
               </Card>
             )}

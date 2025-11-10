@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/customSupabaseClient';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -18,12 +17,14 @@ export const getPurchases = async ({ page = 1, pageSize = 10, searchTerm = '', s
         .select('*', { count: 'exact' })
         .eq('user_id', userId)
         .order('invoice_date', { ascending: false })
-        .order('created_at', { ascending: false })
-        .range(from, to);
-
-    if (searchTerm) {
-        query = query.or(`invoice_no.ilike.%${searchTerm}%,party_name.ilike.%${searchTerm}%,items->>chassisNo.ilike.%${searchTerm}%`);
-    } else {
+        .order('created_at', { ascending: false });
+    
+    if (pageSize !== 10000) { // Don't apply range for full export
+        query = query.range(from, to);
+    }
+        
+    // Always apply date range unless searching
+    if (!searchTerm) {
         if (startDate) {
             query = query.gte('invoice_date', startDate);
         }
@@ -38,6 +39,22 @@ export const getPurchases = async ({ page = 1, pageSize = 10, searchTerm = '', s
         console.error('Error fetching purchases:', error);
         throw error;
     }
+    
+    // Client-side filtering for chassis_no/engine_no if searchTerm is present
+    if (searchTerm && data) {
+        const lowercasedSearchTerm = searchTerm.toLowerCase();
+        const filteredData = data.filter(purchase => {
+            if (purchase.party_name.toLowerCase().includes(lowercasedSearchTerm) || purchase.invoice_no.toLowerCase().includes(lowercasedSearchTerm)) {
+                return true;
+            }
+            return (purchase.items || []).some(item => 
+                (item.chassisNo && item.chassisNo.toLowerCase().includes(lowercasedSearchTerm)) ||
+                (item.engineNo && item.engineNo.toLowerCase().includes(lowercasedSearchTerm))
+            );
+        });
+        return { data: filteredData, count: filteredData.length };
+    }
+
 
     return { data, count };
 };
@@ -69,6 +86,7 @@ export const savePurchase = async (purchaseData) => {
         party_name: purchaseData.partyName,
         items: purchaseData.items,
         created_at: isUpdating ? purchaseData.created_at : new Date().toISOString(),
+        category: purchaseData.items?.[0]?.category || null,
     };
 
     const { data, error } = await supabase

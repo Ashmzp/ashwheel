@@ -28,18 +28,29 @@ export const saveSettings = async (settings) => {
       non_registered_invoice_prefix: settings.nonRegisteredInvoicePrefix,
       workshop_settings: settings.workshop_settings,
       booking_settings: settings.booking_settings,
-      non_reg_fields: settings.nonRegFields,
+      "nonRegisteredCustomerFields": settings.nonRegisteredCustomerFields,
+      "registeredCustomerFields": settings.registeredCustomerFields,
       custom_fields: settings.customFields,
       enable_extra_charges: settings.enable_extra_charges,
       extra_charges_mandatory_for_unregistered: settings.extra_charges_mandatory_for_unregistered,
       fy_counters: settings.fy_counters,
       updated_at: new Date().toISOString()
   };
+
   const { error } = await supabase.from('settings').upsert(settingsData, { onConflict: 'user_id' });
   if (error) {
     console.error('Error saving settings:', error);
     throw error;
   }
+};
+
+const defaultCustomerFields = {
+  adharNo: { label: 'Adhar No', enabled: false, mandatory: false },
+  nomineeName: { label: 'Nominee Name', enabled: false, mandatory: false },
+  hypothecation: { label: 'Hypothecation', enabled: false, mandatory: false },
+  rto: { label: 'RTO', enabled: false, mandatory: false },
+  emailId: { label: 'Email Id', enabled: false, mandatory: false },
+  salesPerson: { label: 'Sales Person', enabled: false, mandatory: false },
 };
 
 export const getSettings = async () => {
@@ -70,14 +81,8 @@ export const getSettings = async () => {
       registeredInvoicePrefix: 'RINV-',
       nonRegisteredInvoicePrefix: 'NRINV-',
       fy_counters: {},
-      nonRegFields: {
-        adharNo: { enabled: false, mandatory: false },
-        nomineeName: { enabled: false, mandatory: false },
-        hypothecation: { enabled: false, mandatory: false },
-        rto: { enabled: false, mandatory: false },
-        emailId: { enabled: false, mandatory: false },
-        salesPerson: { enabled: false, mandatory: false },
-      },
+      nonRegisteredCustomerFields: { ...defaultCustomerFields },
+      registeredCustomerFields: { ...defaultCustomerFields },
       customFields: [],
       enable_extra_charges: false,
       extra_charges_mandatory_for_unregistered: false,
@@ -114,7 +119,7 @@ export const getSettings = async () => {
     };
     
     if (error && error.code === 'PGRST116') { // No settings found for user, create them.
-        const defaultSettingsForNewUser = { user_id: userId, company_name: defaults.companyName, gst_no: defaults.gstNo, pin_code: defaults.pinCode, registered_invoice_prefix: defaults.registeredInvoicePrefix, non_registered_invoice_prefix: defaults.nonRegisteredInvoicePrefix, workshop_settings: defaults.workshop_settings, booking_settings: defaults.booking_settings, fy_counters: defaults.fy_counters, non_reg_fields: defaults.nonRegFields, custom_fields: defaults.customFields, enable_extra_charges: defaults.enable_extra_charges, extra_charges_mandatory_for_unregistered: defaults.extra_charges_mandatory_for_unregistered, bank_details: defaults.bank_details, company_logo_url: defaults.company_logo_url, upi_qr_code_url: defaults.upi_qr_code_url, terms_and_conditions: defaults.terms_and_conditions };
+        const defaultSettingsForNewUser = { user_id: userId, company_name: defaults.companyName, gst_no: defaults.gstNo, pin_code: defaults.pinCode, registered_invoice_prefix: defaults.registeredInvoicePrefix, non_registered_invoice_prefix: defaults.nonRegisteredInvoicePrefix, workshop_settings: defaults.workshop_settings, booking_settings: defaults.booking_settings, fy_counters: defaults.fy_counters, "nonRegisteredCustomerFields": defaults.nonRegisteredCustomerFields, "registeredCustomerFields": defaults.registeredCustomerFields, custom_fields: defaults.customFields, enable_extra_charges: defaults.enable_extra_charges, extra_charges_mandatory_for_unregistered: defaults.extra_charges_mandatory_for_unregistered, bank_details: defaults.bank_details, company_logo_url: defaults.company_logo_url, upi_qr_code_url: defaults.upi_qr_code_url, terms_and_conditions: defaults.terms_and_conditions };
         
         const { data: newSettings, error: insertError } = await supabase
             .from('settings')
@@ -135,7 +140,8 @@ export const getSettings = async () => {
             workshop_settings: newSettings.workshop_settings,
             booking_settings: newSettings.booking_settings,
             fy_counters: newSettings.fy_counters,
-            nonRegFields: newSettings.non_reg_fields,
+            nonRegisteredCustomerFields: newSettings.nonRegisteredCustomerFields,
+            registeredCustomerFields: newSettings.registeredCustomerFields,
             customFields: newSettings.custom_fields,
             enable_extra_charges: newSettings.enable_extra_charges,
             extra_charges_mandatory_for_unregistered: newSettings.extra_charges_mandatory_for_unregistered,
@@ -163,9 +169,13 @@ export const getSettings = async () => {
           ...(data.booking_settings || {})
         },
         fy_counters: data.fy_counters || {},
-        nonRegFields: {
-            ...defaults.nonRegFields,
-            ...(data.non_reg_fields || {})
+        nonRegisteredCustomerFields: {
+            ...defaults.nonRegisteredCustomerFields,
+            ...(data.nonRegisteredCustomerFields || {})
+        },
+        registeredCustomerFields: {
+            ...defaults.registeredCustomerFields,
+            ...(data.registeredCustomerFields || {})
         },
         customFields: data.custom_fields,
         enable_extra_charges: data.enable_extra_charges,

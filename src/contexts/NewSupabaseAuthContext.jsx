@@ -26,6 +26,22 @@ export const NewAuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  const clearSessionData = useCallback(() => {
+    setUser(null);
+    setSession(null);
+    
+    try {
+        const deviceId = localStorage.getItem('device_id');
+        localStorage.clear();
+        if (deviceId) {
+            localStorage.setItem('device_id', deviceId);
+        }
+        sessionStorage.clear();
+    } catch (e) {
+        console.error("Error clearing local/session storage", e);
+    }
+  }, []);
+
   const signOut = useCallback(async (isAutoLogout = false) => {
     setLoading(true);
     const deviceId = getDeviceId();
@@ -43,24 +59,9 @@ export const NewAuthProvider = ({ children }) => {
       }
     }
     
-    setUser(null);
-    setSession(null);
-    
-    try {
-        let i = localStorage.length;
-        while (i--) {
-            const key = localStorage.key(i);
-            if (key && (key.startsWith('sb-') || key.startsWith('supabase') || key.startsWith('zustand'))) {
-                if (key !== 'device_id') {
-                    localStorage.removeItem(key);
-                }
-            }
-        }
-    } catch (e) {
-        console.error("Error clearing local storage", e);
-    }
-    
+    clearSessionData();
     setLoading(false);
+
     if (isAutoLogout) {
         toast({
             title: "Session Expired",
@@ -69,8 +70,8 @@ export const NewAuthProvider = ({ children }) => {
             duration: 5000,
         });
     }
-    navigate('/');
-  }, [navigate, toast, session]);
+    navigate('/login');
+  }, [navigate, toast, session, clearSessionData]);
 
   useAutoLogout(user, signOut);
 
@@ -112,9 +113,8 @@ export const NewAuthProvider = ({ children }) => {
               await getSettings().catch(e => console.error("Failed to fetch settings on sign in", e));
             }
         } else if (event === "SIGNED_OUT") {
-           handleSession(null);
-           setUser(null);
-           setSession(null);
+           clearSessionData();
+           navigate('/login');
         } else if (event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
            handleSession(currentSession);
         }
@@ -123,7 +123,7 @@ export const NewAuthProvider = ({ children }) => {
     );
 
     return () => subscription.unsubscribe();
-  }, [handleSession]);
+  }, [handleSession, clearSessionData, navigate]);
 
   const { userData, loadingUserData, refetchUserData } = useUserDataHook(user, signOut);
   const { access, can } = usePermissionsHook(userData);
@@ -166,19 +166,19 @@ export const NewAuthProvider = ({ children }) => {
             .eq('id', signInData.user.id)
             .single();
 
-        if (profileError) {
-            await supabase.auth.signOut();
+        if (profileError && profileError.code !== 'PGRST116') { // Ignore not found error for admin login test
+            await signOut();
             toast({ variant: "destructive", title: "Sign in Failed", description: "Could not retrieve user profile." });
             return { data: null, error: profileError };
         }
 
         // Admins can log in from multiple devices
-        if (userProfile.role === 'admin') {
+        if (userProfile?.role === 'admin') {
             toast({ title: "Admin Sign in Successful!", description: "Welcome back!" });
             return { data: signInData, error: null };
         }
 
-        const maxDevices = userProfile.max_devices || 1;
+        const maxDevices = userProfile?.max_devices || 1;
         const deviceId = getDeviceId();
 
         const { data: activeSessions, error: sessionsError } = await supabase
@@ -187,7 +187,7 @@ export const NewAuthProvider = ({ children }) => {
             .eq('user_id', signInData.user.id);
 
         if (sessionsError) {
-            await supabase.auth.signOut();
+            await signOut();
             toast({ variant: "destructive", title: "Sign in Failed", description: "Could not verify active sessions." });
             return { data: null, error: sessionsError };
         }
@@ -195,7 +195,7 @@ export const NewAuthProvider = ({ children }) => {
         const isDeviceActive = activeSessions.some(s => s.session_id === deviceId);
 
         if (!isDeviceActive && activeSessions.length >= maxDevices) {
-            await supabase.auth.signOut();
+            await signOut();
             toast({
                 variant: "destructive",
                 title: "Login Limit Reached",
@@ -215,8 +215,9 @@ export const NewAuthProvider = ({ children }) => {
             }, { onConflict: 'user_id, session_id' });
 
         if (upsertError) {
-            await supabase.auth.signOut();
-            toast({ variant: "destructive", title: "Sign in Failed", description: "Could not register device session." });
+            console.error("Upsert error:", upsertError);
+            await signOut();
+            toast({ variant: "destructive", title: "Sign in Failed", description: "Could not register device session. " + upsertError.message });
             return { data: null, error: upsertError };
         }
 
@@ -227,7 +228,7 @@ export const NewAuthProvider = ({ children }) => {
     }
 
     return { data: signInData, error: null };
-  }, [toast]);
+  }, [toast, signOut]);
 
   const value = useMemo(() => ({
     user,

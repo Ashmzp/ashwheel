@@ -4,7 +4,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { getPurchaseReturns, savePurchaseReturn, deletePurchaseReturn, addStock, deleteStockByChassis } from '@/utils/db';
-import { getCurrentDate, formatDate } from '@/utils/dateUtils';
+import { getCurrentDate, formatDate, getCurrentMonthDateRange } from '@/utils/dateUtils';
 import { exportToExcel } from '@/utils/excel';
 import { useAuth } from '@/contexts/NewSupabaseAuthContext';
 import PurchaseReturnForm from '@/components/PurchaseReturns/PurchaseReturnForm';
@@ -19,19 +19,21 @@ const PurchaseReturnPage = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [searchTerm, setSearchTerm] = useState('');
-    const [dateRange, setDateRange] = useState({ start: '', end: '' });
     const { toast } = useToast();
     const { canAccess } = useAuth();
     const searchDebounceTimeout = useRef(null);
     const PAGE_SIZE = 10;
     const resetForm = usePurchaseReturnStore(state => state.resetForm);
 
+    const initialDateRange = getCurrentMonthDateRange();
+    const [dateRange, setDateRange] = useState({ start: initialDateRange.start, end: initialDateRange.end });
+
     const fetchReturns = useCallback(async (page = currentPage, term = searchTerm, range = dateRange) => {
         setLoading(true);
         try {
             const { data, count } = await getPurchaseReturns({ page, pageSize: PAGE_SIZE, searchTerm: term, dateRange: range });
             setReturns(Array.isArray(data) ? data : []);
-            setTotalPages(Math.ceil(count / PAGE_SIZE));
+            setTotalPages(Math.ceil((count || 0) / PAGE_SIZE));
         } catch (error) {
             toast({ title: 'Error', description: 'Could not fetch purchase returns.', variant: 'destructive' });
         } finally {
@@ -46,6 +48,10 @@ const PurchaseReturnPage = () => {
             fetchReturns(1, searchTerm, dateRange);
         }, 500);
     }, [searchTerm, dateRange, fetchReturns]);
+    
+    useEffect(() => {
+        fetchReturns(1, searchTerm, dateRange);
+    }, []);
 
     const handleSave = async (returnData) => {
         try {

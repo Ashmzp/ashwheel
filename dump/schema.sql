@@ -945,12 +945,14 @@ BEGIN
         SELECT
             vi.customer_name,
             vii.model_name,
+            s.category, -- Fetched category from stock
             CASE 
                 WHEN vi.customer_details->>'gst' IS NOT NULL AND vi.customer_details->>'gst' <> '' THEN 'Registered'
                 ELSE 'Non-Registered'
             END as customer_type
         FROM public.vehicle_invoice_items vii
         JOIN public.vehicle_invoices vi ON vii.invoice_id = vi.id
+        LEFT JOIN public.stock s ON vii.chassis_no = s.chassis_no AND vii.user_id = s.user_id -- Join with stock table
         WHERE vi.user_id = v_user_id
           AND vi.invoice_date BETWEEN p_start_date AND p_end_date
           AND (p_customer_type IS NULL OR 
@@ -970,12 +972,14 @@ BEGIN
                         COALESCE(customer_name, 'Non-Registered Customer') as party_name,
                         customer_type,
                         model_name,
+                        COALESCE(category, 'N/A') as category,
                         COUNT(*) as sale_count
                     FROM sales_data
                     GROUP BY 
                         COALESCE(customer_name, 'Non-Registered Customer'), 
                         customer_type, 
-                        model_name
+                        model_name,
+                        COALESCE(category, 'N/A')
                 ) t
             ), '[]'::jsonb
         )
@@ -1546,13 +1550,56 @@ ALTER FUNCTION "public"."handle_new_user_default_role"() OWNER TO "postgres";
 
 CREATE OR REPLACE FUNCTION "public"."handle_stock_deletion_on_sale"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
+DECLARE
+    restore_setting BOOLEAN;
 BEGIN
-  -- Delete the corresponding chassis number from the stock table.
-  DELETE FROM public.stock
-  WHERE user_id = NEW.user_id AND chassis_no = NEW.chassis_no;
-  
-  RETURN NEW;
+    -- This function now runs for INSERT, UPDATE, and DELETE on vehicle_invoice_items.
+
+    IF (TG_OP = 'INSERT' OR TG_OP = 'UPDATE') THEN
+        -- On a new sale or if a sale item is updated, delete the corresponding chassis number from the stock table.
+        DELETE FROM public.stock
+        WHERE user_id = NEW.user_id AND chassis_no = NEW.chassis_no;
+    END IF;
+
+    IF (TG_OP = 'DELETE') THEN
+        -- Check user's setting for restoring stock on sales return/deletion.
+        SELECT restore_on_delete INTO restore_setting
+        FROM public.daily_report_settings
+        WHERE user_id = OLD.user_id;
+
+        -- Only restore to stock if the setting is enabled.
+        IF COALESCE(restore_setting, false) = true THEN
+            -- Check if the item already exists in stock to prevent duplicates.
+            IF NOT EXISTS (SELECT 1 FROM public.stock WHERE user_id = OLD.user_id AND chassis_no = OLD.chassis_no) THEN
+                INSERT INTO public.stock (user_id, model_name, chassis_no, engine_no, colour, price, gst, hsn, purchase_date, created_at, category)
+                SELECT
+                    p.user_id,
+                    (item->>'modelName')::text,
+                    (item->>'chassisNo')::text,
+                    (item->>'engineNo')::text,
+                    (item->>'colour')::text,
+                    (item->>'price')::numeric,
+                    (item->>'gst')::text,
+                    (item->>'hsn')::text,
+                    p.invoice_date,
+                    NOW(),
+                    (item->>'category')::text
+                FROM public.purchases p, jsonb_array_elements(p.items) as item
+                WHERE p.user_id = OLD.user_id AND (item->>'chassisNo')::text = OLD.chassis_no
+                -- Find the original purchase details for the deleted sales item
+                LIMIT 1; 
+            END IF;
+        END IF;
+    END IF;
+
+    -- Return the appropriate record based on the operation.
+    IF (TG_OP = 'INSERT' OR TG_OP = 'UPDATE') THEN
+        RETURN NEW;
+    ELSE
+        RETURN OLD;
+    END IF;
 END;
 $$;
 
@@ -2918,89 +2965,69 @@ BEGIN
             'purchases', (
                 SELECT COALESCE(jsonb_agg(p_res), '[]'::jsonb)
                 FROM (
-                    SELECT 
+                    SELECT
                         p.id,
                         p.invoice_date,
                         p.invoice_no,
                         p.party_name,
-                        p.items
+                        -- Filter the items array to only include the matched item
+                        (SELECT jsonb_agg(item)
+                         FROM jsonb_array_elements(p.items) as item
+                         WHERE LOWER(TRIM(item->>'chassisNo')) LIKE '%' || v_clean_search_term || '%'
+                            OR LOWER(TRIM(item->>'engineNo')) LIKE '%' || v_clean_search_term || '%'
+                        ) AS items
                     FROM public.purchases p
-                    WHERE p.user_id = v_user_id AND (
-                        LOWER(p.party_name) LIKE '%' || v_clean_search_term || '%'
-                        OR LOWER(p.invoice_no) LIKE '%' || v_clean_search_term || '%'
-                        OR EXISTS (
-                            SELECT 1 FROM jsonb_array_elements(p.items) it
-                            WHERE LOWER(TRIM(it->>'chassis_no')) LIKE '%' || v_clean_search_term || '%'
-                               OR LOWER(TRIM(it->>'engine_no')) LIKE '%' || v_clean_search_term || '%'
-                               OR LOWER(TRIM(it->>'modelName')) LIKE '%' || v_clean_search_term || '%'
-                        )
+                    WHERE p.user_id = v_user_id AND EXISTS (
+                        SELECT 1 FROM jsonb_array_elements(p.items) it
+                        WHERE LOWER(TRIM(it->>'chassisNo')) LIKE '%' || v_clean_search_term || '%'
+                           OR LOWER(TRIM(it->>'engineNo')) LIKE '%' || v_clean_search_term || '%'
                     )
                 ) p_res
             ),
             'purchase_returns', (
                 SELECT COALESCE(jsonb_agg(pr_res), '[]'::jsonb)
                 FROM (
-                    SELECT 
+                     SELECT
                         pr.id,
                         pr.return_date,
                         pr.return_invoice_no,
                         pr.party_name,
-                        pr.items,
-                        pr.reason
+                        pr.reason,
+                        -- Filter the items array to only include the matched item
+                        (SELECT jsonb_agg(item)
+                         FROM jsonb_array_elements(pr.items) as item
+                         WHERE LOWER(TRIM(item->>'chassisNo')) LIKE '%' || v_clean_search_term || '%'
+                            OR LOWER(TRIM(item->>'engineNo')) LIKE '%' || v_clean_search_term || '%'
+                        ) AS items
                     FROM public.purchase_returns pr
-                    WHERE pr.user_id = v_user_id AND (
-                        LOWER(pr.party_name) LIKE '%' || v_clean_search_term || '%'
-                        OR LOWER(pr.return_invoice_no) LIKE '%' || v_clean_search_term || '%'
-                        OR EXISTS (
-                            SELECT 1 FROM jsonb_array_elements(pr.items) it
-                            WHERE LOWER(TRIM(it->>'chassisNo')) LIKE '%' || v_clean_search_term || '%'
-                               OR LOWER(TRIM(it->>'engineNo')) LIKE '%' || v_clean_search_term || '%'
-                               OR LOWER(TRIM(it->>'modelName')) LIKE '%' || v_clean_search_term || '%'
-                        )
+                    WHERE pr.user_id = v_user_id AND EXISTS (
+                        SELECT 1 FROM jsonb_array_elements(pr.items) it
+                        WHERE LOWER(TRIM(it->>'chassisNo')) LIKE '%' || v_clean_search_term || '%'
+                           OR LOWER(TRIM(it->>'engineNo')) LIKE '%' || v_clean_search_term || '%'
                     )
                 ) pr_res
             ),
             'vehicle_sales', (
                 SELECT COALESCE(jsonb_agg(vs_res), '[]'::jsonb)
                 FROM (
-                    SELECT 
+                    SELECT
                         vi.id,
                         vi.invoice_date,
                         vi.invoice_no,
                         vi.customer_name,
-                        (
-                            SELECT jsonb_agg(jsonb_build_object(
-                                'id', vii.id,
-                                'model_name', vii.model_name,
-                                'chassis_no', vii.chassis_no,
-                                'engine_no', vii.engine_no,
-                                'price', vii.price,
-                                'colour', vii.colour,
-                                'gst', vii.gst,
-                                'hsn', vii.hsn,
-                                'taxable_value', vii.taxable_value,
-                                'cgst_rate', vii.cgst_rate,
-                                'sgst_rate', vii.sgst_rate,
-                                'igst_rate', vii.igst_rate,
-                                'cgst_amount', vii.cgst_amount,
-                                'sgst_amount', vii.sgst_amount,
-                                'igst_amount', vii.igst_amount,
-                                'discount', vii.discount
-                            ))
-                            FROM public.vehicle_invoice_items vii
-                            WHERE vii.invoice_id = vi.id
+                        -- Filter the items array to only include the matched item
+                        (SELECT jsonb_agg(item)
+                         FROM public.vehicle_invoice_items item
+                         WHERE item.invoice_id = vi.id
+                           AND (LOWER(TRIM(item.chassis_no)) LIKE '%' || v_clean_search_term || '%'
+                                OR LOWER(TRIM(item.engine_no)) LIKE '%' || v_clean_search_term || '%')
                         ) AS items
                     FROM public.vehicle_invoices vi
-                    WHERE vi.user_id = v_user_id AND (
-                        LOWER(vi.customer_name) LIKE '%' || v_clean_search_term || '%'
-                        OR LOWER(vi.invoice_no) LIKE '%' || v_clean_search_term || '%'
-                        OR EXISTS (
-                            SELECT 1 FROM public.vehicle_invoice_items vii
-                            WHERE vii.invoice_id = vi.id AND (
-                                LOWER(TRIM(vii.chassis_no)) LIKE '%' || v_clean_search_term || '%'
-                                OR LOWER(TRIM(vii.engine_no)) LIKE '%' || v_clean_search_term || '%'
-                                OR LOWER(TRIM(vii.model_name)) LIKE '%' || v_clean_search_term || '%'
-                            )
+                    WHERE vi.user_id = v_user_id AND EXISTS (
+                        SELECT 1 FROM public.vehicle_invoice_items vii
+                        WHERE vii.invoice_id = vi.id AND (
+                            LOWER(TRIM(vii.chassis_no)) LIKE '%' || v_clean_search_term || '%'
+                            OR LOWER(TRIM(vii.engine_no)) LIKE '%' || v_clean_search_term || '%'
                         )
                     )
                 ) vs_res
@@ -3008,23 +3035,23 @@ BEGIN
             'sales_returns', (
                 SELECT COALESCE(jsonb_agg(sr_res), '[]'::jsonb)
                 FROM (
-                    SELECT 
+                     SELECT
                         sr.id,
                         sr.return_date,
                         sr.return_invoice_no,
                         sr.customer_name,
-                        sr.items,
-                        sr.reason
+                        sr.reason,
+                        -- Filter the items array to only include the matched item
+                        (SELECT jsonb_agg(item)
+                         FROM jsonb_array_elements(sr.items) as item
+                         WHERE LOWER(TRIM(item->>'chassis_no')) LIKE '%' || v_clean_search_term || '%'
+                            OR LOWER(TRIM(item->>'engine_no')) LIKE '%' || v_clean_search_term || '%'
+                        ) AS items
                     FROM public.sales_returns sr
-                    WHERE sr.user_id = v_user_id AND (
-                        LOWER(sr.customer_name) LIKE '%' || v_clean_search_term || '%'
-                        OR LOWER(sr.return_invoice_no) LIKE '%' || v_clean_search_term || '%'
-                        OR EXISTS (
-                            SELECT 1 FROM jsonb_array_elements(sr.items) it
-                            WHERE LOWER(TRIM(it->>'chassis_no')) LIKE '%' || v_clean_search_term || '%'
-                               OR LOWER(TRIM(it->>'engine_no')) LIKE '%' || v_clean_search_term || '%'
-                               OR LOWER(TRIM(it->>'model_name')) LIKE '%' || v_clean_search_term || '%'
-                        )
+                    WHERE sr.user_id = v_user_id AND EXISTS (
+                        SELECT 1 FROM jsonb_array_elements(sr.items) it
+                        WHERE LOWER(TRIM(it->>'chassis_no')) LIKE '%' || v_clean_search_term || '%'
+                           OR LOWER(TRIM(it->>'engine_no')) LIKE '%' || v_clean_search_term || '%'
                     )
                 ) sr_res
             )
@@ -4446,9 +4473,6 @@ CREATE TABLE IF NOT EXISTS "public"."settings" (
     "pin_code" "text",
     "registered_invoice_prefix" "text",
     "non_registered_invoice_prefix" "text",
-    "registered_invoice_counter" integer,
-    "non_registered_invoice_counter" integer,
-    "non_reg_fields" "jsonb",
     "custom_fields" "jsonb",
     "updated_at" timestamp with time zone DEFAULT "now"(),
     "user_id" "uuid" NOT NULL,
@@ -4461,7 +4485,9 @@ CREATE TABLE IF NOT EXISTS "public"."settings" (
     "company_logo_url" "text",
     "upi_qr_code_url" "text",
     "terms_and_conditions" "text",
-    "booking_settings" "jsonb"
+    "booking_settings" "jsonb",
+    "nonRegisteredCustomerFields" "jsonb",
+    "registeredCustomerFields" "jsonb"
 );
 
 ALTER TABLE ONLY "public"."settings" REPLICA IDENTITY FULL;
@@ -5145,7 +5171,7 @@ CREATE INDEX "idx_workshop_sales_returns_user_id" ON "public"."workshop_sales_re
 
 
 
-CREATE OR REPLACE TRIGGER "delete_from_stock_on_sale" AFTER INSERT ON "public"."vehicle_invoice_items" FOR EACH ROW EXECUTE FUNCTION "public"."handle_stock_deletion_on_sale"();
+CREATE OR REPLACE TRIGGER "delete_from_stock_on_sale" AFTER INSERT OR DELETE OR UPDATE ON "public"."vehicle_invoice_items" FOR EACH ROW EXECUTE FUNCTION "public"."handle_stock_deletion_on_sale"();
 
 
 

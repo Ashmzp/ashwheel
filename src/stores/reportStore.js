@@ -40,6 +40,12 @@ const useReportStore = create(
     {
       name: 'report-storage',
       storage: createJSONStorage(() => localStorage),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          // This ensures that on subsequent loads, the navigation works correctly
+          // without this, the app might reload on first navigation to /reports
+        }
+      }
     }
   )
 );

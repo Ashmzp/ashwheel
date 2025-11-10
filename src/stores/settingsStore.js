@@ -3,6 +3,15 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import { getSettings, saveSettings as saveSettingsToDB } from '@/utils/db/settings';
 
+const defaultCustomerFields = {
+  adharNo: { label: 'Adhar No', enabled: false, mandatory: false },
+  nomineeName: { label: 'Nominee Name', enabled: false, mandatory: false },
+  hypothecation: { label: 'Hypothecation', enabled: false, mandatory: false },
+  rto: { label: 'RTO', enabled: false, mandatory: false },
+  emailId: { label: 'Email Id', enabled: false, mandatory: false },
+  salesPerson: { label: 'Sales Person', enabled: false, mandatory: false },
+};
+
 const DEFAULT_SETTINGS = {
   companyName: '',
   gstNo: '',
@@ -25,14 +34,8 @@ const DEFAULT_SETTINGS = {
   nonRegisteredInvoicePrefix: 'NRINV-',
   jobCardInvoicePrefix: 'JC-',
   fy_counters: {},
-  nonRegFields: {
-    adharNo: { enabled: false, mandatory: false },
-    nomineeName: { enabled: false, mandatory: false },
-    hypothecation: { enabled: false, mandatory: false },
-    rto: { enabled: false, mandatory: false },
-    emailId: { enabled: false, mandatory: false },
-    salesPerson: { enabled: false, mandatory: false },
-  },
+  nonRegisteredCustomerFields: { ...defaultCustomerFields },
+  registeredCustomerFields: { ...defaultCustomerFields },
   customFields: [],
   enable_extra_charges: false,
   extra_charges_mandatory_for_unregistered: false,

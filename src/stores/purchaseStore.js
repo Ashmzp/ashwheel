@@ -18,20 +18,22 @@ const usePurchaseStore = create(
     (set, get) => ({
       ...createInitialState(),
       setFormData: (data) => set((state) => ({ ...state, ...data })),
+      setItems: (items) => set({ items }),
       addItem: (item) => set((state) => ({ items: [...state.items, item] })),
-      updateItem: (id, field, value) =>
+      updateItem: (id, updatedFields) =>
         set((state) => ({
           items: state.items.map((item) =>
-            item.id === id ? { ...item, [field]: value } : item
+            item.id === id ? { ...item, ...updatedFields } : item
           ),
         })),
       removeItem: (id) =>
         set((state) => ({ items: state.items.filter((i) => i.id !== id) })),
-      setItems: (items) => set({ items }),
-      resetForm: (initialState) => set(createInitialState(initialState)),
+      resetForm: (initialData = {}) => {
+        set(createInitialState(initialData));
+      },
     }),
     {
-      name: 'form-purchase-placeholder', 
+      name: 'form-purchase-placeholder',
       storage: createJSONStorage(() => localStorage),
       partialize: (state) =>
         Object.fromEntries(
@@ -41,41 +43,41 @@ const usePurchaseStore = create(
   )
 );
 
-export const initializePurchaseStore = (isEditing, data) => {
-  if (isEditing && !data) {
-    console.warn("initializePurchaseStore called in edit mode without data.");
-    return;
-  }
+const initializePurchaseStore = (isEditing, data) => {
   const uniqueKey = isEditing ? `form-edit-purchase-${data.id}` : 'form-new-purchase';
-  usePurchaseStore.persist.setOptions({ name: uniqueKey });
+  const currentKey = usePurchaseStore.persist.getOptions().name;
 
-  // Use a timeout to allow the store to rehydrate from localStorage first
-  setTimeout(() => {
-    const storedState = usePurchaseStore.getState();
+  if (currentKey !== uniqueKey) {
+    usePurchaseStore.persist.rehydrate();
+    usePurchaseStore.persist.setOptions({ name: uniqueKey });
     
-    // Determine if the form needs a fresh start
-    const needsReset = 
-      (isEditing && storedState.id !== data.id) || // Editing a different item
-      (!isEditing && storedState.id) || // Was editing, now creating new
-      (data && !storedState.id); // Was new, now editing
-
-    if (needsReset) {
-      const initialState = isEditing ? {
-          ...data,
-          invoiceDate: data.invoice_date,
-          invoiceNo: data.invoice_no,
-          partyName: data.party_name,
-      } : {};
-      usePurchaseStore.getState().resetForm(initialState);
-    }
-  }, 0);
+    usePurchaseStore.persist.rehydrate().then(() => {
+        const storedState = usePurchaseStore.getState();
+        if (isEditing) {
+            if (storedState.id !== data.id) {
+                const initialState = {
+                    ...data,
+                    invoiceDate: data.invoice_date,
+                    invoiceNo: data.invoice_no,
+                    partyName: data.party_name,
+                };
+                usePurchaseStore.getState().resetForm(initialState);
+            }
+        } else {
+            if (storedState.id) {
+                usePurchaseStore.getState().resetForm();
+            }
+        }
+    });
+  }
 };
 
-export const clearPurchaseStore = (isEditing, id) => {
+
+const clearPurchaseStore = (isEditing, id) => {
     const uniqueKey = isEditing ? `form-edit-purchase-${id}` : 'form-new-purchase';
     localStorage.removeItem(uniqueKey);
     usePurchaseStore.getState().resetForm();
     usePurchaseStore.persist.setOptions({ name: 'form-purchase-placeholder' });
 };
 
-export default usePurchaseStore;
+export { usePurchaseStore as default, initializePurchaseStore, clearPurchaseStore };

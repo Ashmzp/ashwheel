@@ -7,15 +7,37 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Save, Plus, Trash2 } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
-const InvoiceConfig = ({ settings, handleCompanyChange, handleCheckboxChange, handleNonRegFieldChange, handleCustomFieldChange, addCustomField, removeCustomField, handleSave, isSaving, handleWorkshopSettingsChange, handleExtraChargeChange, addExtraCharge, removeExtraCharge }) => {
+const InvoiceConfig = ({ settings, handleCompanyChange, handleCheckboxChange, handleNonRegFieldChange, handleRegFieldChange, handleCustomFieldChange, addCustomField, removeCustomField, handleSave, isSaving, handleWorkshopSettingsChange, handleExtraChargeChange, addExtraCharge, removeExtraCharge }) => {
   if (!settings) {
     return <div>Loading settings...</div>;
   }
 
   const workshopSettings = settings.workshop_settings || {};
   const extraCharges = workshopSettings.extra_charges || [];
-  const nonRegFields = settings.nonRegFields || {};
+  const nonRegFields = settings.nonRegisteredCustomerFields || {};
+  const regFields = settings.registeredCustomerFields || {};
   const customFields = settings.customFields || [];
+
+  const renderFieldConfig = (title, fields, handler) => (
+    <Card>
+      <CardHeader><CardTitle>{title}</CardTitle></CardHeader>
+      <CardContent className="space-y-2">
+        {Object.entries(fields).map(([key, val]) => (
+          <div key={key} className="flex items-center justify-between p-2 border rounded-md">
+            <span className="capitalize">{val.label || key.replace(/([A-Z])/g, ' $1')}</span>
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2">
+                <Checkbox checked={val.enabled} onCheckedChange={checked => handler(key, 'enabled', checked)} /> Enabled
+              </label>
+              <label className="flex items-center gap-2">
+                <Checkbox checked={val.mandatory} onCheckedChange={checked => handler(key, 'mandatory', checked)} disabled={!val.enabled} /> Mandatory
+              </label>
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
 
   return (
     <div className="space-y-4">
@@ -81,24 +103,9 @@ const InvoiceConfig = ({ settings, handleCompanyChange, handleCheckboxChange, ha
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader><CardTitle>Non-Registered Customer Fields</CardTitle></CardHeader>
-        <CardContent className="space-y-2">
-          {Object.entries(nonRegFields).map(([key, val]) => (
-            <div key={key} className="flex items-center justify-between p-2 border rounded-md">
-              <span className="capitalize">{key.replace(/([A-Z])/g, ' $1')}</span>
-              <div className="flex items-center gap-4">
-                <label className="flex items-center gap-2">
-                  <Checkbox checked={val.enabled} onCheckedChange={checked => handleNonRegFieldChange(key, 'enabled', checked)} /> Enabled
-                </label>
-                <label className="flex items-center gap-2">
-                  <Checkbox checked={val.mandatory} onCheckedChange={checked => handleNonRegFieldChange(key, 'mandatory', checked)} disabled={!val.enabled} /> Mandatory
-                </label>
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+      {renderFieldConfig("Non-Registered Customer Fields", nonRegFields, handleNonRegFieldChange)}
+      {renderFieldConfig("Registered Customer Fields", regFields, handleRegFieldChange)}
+
       <Card>
         <CardHeader><CardTitle>Custom Customer Fields</CardTitle></CardHeader>
         <CardContent className="space-y-2">

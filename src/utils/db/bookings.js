@@ -24,7 +24,7 @@ export const getBookings = async ({ page = 1, pageSize = 10, searchTerm = '', st
     }
 
     if (searchTerm) {
-        query = query.or(`customer_name.ilike.%${searchTerm}%,mobile_no.ilike.%${searchTerm}%,model_name.ilike.%${searchTerm}%,colour.ilike.%${searchTerm}%,status.ilike.%${searchTerm}%`);
+        query = query.or(`customer_name.ilike.%${searchTerm}%,mobile_no.ilike.%${searchTerm}%,model_name.ilike.%${searchTerm}%,receipt_no.ilike.%${searchTerm}%,status.ilike.%${searchTerm}%`);
     } else {
         if (startDate) {
             query = query.gte('booking_date', startDate);
@@ -55,8 +55,19 @@ export const getBookingById = async (id) => {
 
     if (error) {
         if (error.code === 'PGRST116') { // PostgREST error for "exact-one" row not found
-            console.warn('Attempt to fetch booking not owned by user or not found.');
-            return null;
+            const { data: adminData, error: adminError } = await supabase
+                .rpc('get_user_role')
+                .then(async ({data: role}) => {
+                    if (role === 'admin') {
+                        return await supabase.from('bookings').select('*').eq('id', id).single();
+                    }
+                    return { data: null, error: new Error("Not found or not an admin.") };
+                });
+            if (adminError) {
+                console.error('Error fetching booking as admin:', adminError);
+                throw adminError;
+            }
+            return adminData;
         }
         console.error('Error fetching booking by ID:', error);
         throw error;
@@ -64,27 +75,29 @@ export const getBookingById = async (id) => {
     return data;
 };
 
-export const saveBooking = async (bookingData) => {
+export const saveBooking = async (bookingData, isEditing) => {
     const userId = await getCurrentUserId();
-    const isUpdating = !!bookingData.id && bookingData.id.length > 10;
+    const { data: { role } } = await supabase.rpc('get_user_role').then(res => ({data: {role: res.data}}));
 
-    if (isUpdating) {
-        const { data: existingBooking, error: fetchError } = await supabase
-            .from('bookings')
-            .select('id')
-            .eq('id', bookingData.id)
-            .eq('user_id', userId)
-            .single();
+    if (isEditing) {
+        if (role !== 'admin') {
+            const { data: existingBooking, error: fetchError } = await supabase
+                .from('bookings')
+                .select('id')
+                .eq('id', bookingData.id)
+                .eq('user_id', userId)
+                .single();
 
-        if (fetchError || !existingBooking) {
-            throw new Error("Unauthorized: You can only edit your own bookings.");
+            if (fetchError || !existingBooking) {
+                throw new Error("Unauthorized: You can only edit your own bookings.");
+            }
         }
     }
-
+    
     const payload = {
         ...bookingData,
-        user_id: userId,
-        id: isUpdating ? bookingData.id : uuidv4(),
+        user_id: isEditing ? bookingData.user_id : userId,
+        id: isEditing ? bookingData.id : uuidv4(),
     };
 
     const { data, error } = await supabase
@@ -103,11 +116,14 @@ export const saveBooking = async (bookingData) => {
 
 export const deleteBooking = async (id) => {
     const userId = await getCurrentUserId();
-    const { error } = await supabase
-        .from('bookings')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', userId);
+    const { data: { role } } = await supabase.rpc('get_user_role').then(res => ({data: {role: res.data}}));
+    
+    let query = supabase.from('bookings').delete().eq('id', id);
+    if(role !== 'admin'){
+        query = query.eq('user_id', userId);
+    }
+        
+    const { error } = await query;
         
     if (error) {
         console.error('Error deleting booking:', error);

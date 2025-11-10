@@ -39,11 +39,19 @@ const Settings = () => {
   };
 
   const handleNonRegFieldChange = (key, prop, value) => {
-    const newNonRegFields = {
-      ...settings.nonRegFields,
-      [key]: { ...settings.nonRegFields[key], [prop]: value },
+    const newFields = {
+      ...settings.nonRegisteredCustomerFields,
+      [key]: { ...settings.nonRegisteredCustomerFields[key], [prop]: value },
     };
-    updateSettings({ nonRegFields: newNonRegFields });
+    updateSettings({ nonRegisteredCustomerFields: newFields });
+  };
+
+  const handleRegFieldChange = (key, prop, value) => {
+    const newFields = {
+      ...settings.registeredCustomerFields,
+      [key]: { ...settings.registeredCustomerFields[key], [prop]: value },
+    };
+    updateSettings({ registeredCustomerFields: newFields });
   };
 
   const handleCustomFieldChange = (id, value) => {
@@ -147,6 +155,7 @@ const Settings = () => {
             handleCompanyChange={handleCompanyChange}
             handleCheckboxChange={handleCheckboxChange}
             handleNonRegFieldChange={handleNonRegFieldChange}
+            handleRegFieldChange={handleRegFieldChange}
             handleCustomFieldChange={handleCustomFieldChange}
             addCustomField={addCustomField}
             removeCustomField={removeCustomField}

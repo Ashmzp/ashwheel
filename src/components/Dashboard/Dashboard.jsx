@@ -14,6 +14,7 @@ import { useAuth } from '@/contexts/NewSupabaseAuthContext';
 import { getSettings } from '@/utils/db/settings';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
+import { getCurrentMonthDateRange } from '@/utils/dateUtils';
 
 const StatCard = ({ title, value, icon, description, isLoading }) => (
   <Card className="bg-secondary/50 hover:bg-secondary/70 transition-colors duration-300">
@@ -146,12 +147,15 @@ const Dashboard = () => {
     }
     setLoadingStock(false);
 
-    // Fetch open bookings count
+    // Fetch open bookings count for the CURRENT MONTH only
+    const { start: currentMonthStart, end: currentMonthEnd } = getCurrentMonthDateRange();
     const { count: bookingsCount, error: bookingsError } = await supabase
       .from('bookings')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id)
-      .eq('status', 'Open');
+      .eq('status', 'Open')
+      .gte('booking_date', currentMonthStart)
+      .lte('booking_date', currentMonthEnd);
 
     if (bookingsError) {
       toast({ title: 'Error fetching open bookings', description: bookingsError.message, variant: 'destructive' });
@@ -240,7 +244,7 @@ const Dashboard = () => {
           <StatCard title="Non-Registered Sale" value={stats.nonregisteredsaleqty} icon={<Car className="h-4 w-4 text-muted-foreground" />} description="Sales to non-registered customers" isLoading={loadingStats} />
           <StatCard title="Total Sale" value={stats.totalsaleqty} icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />} description="Total vehicles sold" isLoading={loadingStats} />
           <StatCard title="Vehicle Stock" value={stockCount} icon={<Warehouse className="h-4 w-4 text-muted-foreground" />} description="Vehicles in stock" isLoading={loadingStock} />
-          <StatCard title="Open Bookings" value={openBookingsCount} icon={<BookOpen className="h-4 w-4 text-muted-foreground" />} description="Currently open bookings" isLoading={loadingBookings} />
+          <StatCard title="Open Bookings" value={openBookingsCount} icon={<BookOpen className="h-4 w-4 text-muted-foreground" />} description="This month's open bookings" isLoading={loadingBookings} />
         </div>
 
         <Card>

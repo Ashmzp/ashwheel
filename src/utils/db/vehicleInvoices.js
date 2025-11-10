@@ -104,39 +104,28 @@ export const saveVehicleInvoice = async (invoiceData) => {
         discount: item.discount,
     }));
     
+    // For updates, determine which items were removed to restore them to stock
     if (isUpdating) {
         const { data: oldItems, error: oldItemsError } = await supabase
             .from('vehicle_invoice_items')
             .select('*')
             .eq('invoice_id', savedInvoice.id);
-
         if (oldItemsError) {
-             console.error("Error fetching old items for update:", oldItemsError);
+             console.error("Error fetching old items for update check:", oldItemsError);
         } else {
              const newChassisNos = itemsToUpsert.map(i => i.chassis_no);
              const itemsToDelete = oldItems.filter(oi => !newChassisNos.includes(oi.chassis_no));
              const chassisToDeleteFromInvoice = itemsToDelete.map(i => i.chassis_no);
 
              if (chassisToDeleteFromInvoice.length > 0) {
+                 // The trigger will handle stock restoration
                  await supabase.from('vehicle_invoice_items').delete().eq('invoice_id', savedInvoice.id).in('chassis_no', chassisToDeleteFromInvoice);
-                 
-                 // Restore deleted items to stock
-                 const stockItemsToRestore = itemsToDelete.map(item => ({
-                    chassis_no: item.chassis_no,
-                    engine_no: item.engine_no,
-                    model_name: item.model_name,
-                    colour: item.colour,
-                    price: item.price,
-                    gst: item.gst,
-                    hsn: item.hsn,
-                    purchase_date: new Date().toISOString().split('T')[0],
-                 }));
-                 await addStock(stockItemsToRestore);
              }
         }
     }
     
     if (itemsToUpsert.length > 0) {
+        // The trigger will handle stock deletion
         const { error: upsertError } = await supabase.from('vehicle_invoice_items').upsert(itemsToUpsert);
         if (upsertError) throw upsertError;
     }
@@ -145,6 +134,7 @@ export const saveVehicleInvoice = async (invoiceData) => {
 };
 
 export const deleteVehicleInvoice = async (invoiceId) => {
+    // The trigger will handle restoring items to stock based on daily_report_settings
     const { error } = await supabase.from('vehicle_invoices').delete().eq('id', invoiceId);
     if (error) throw error;
     return { error };

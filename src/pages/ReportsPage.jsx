@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { History, Car, Wrench, Users, BarChart3 } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
@@ -48,7 +48,7 @@ const ReportsPage = () => {
         <title>Reports - Showroom Pro</title>
         <meta name="description" content="View and analyze real-time stock reports and track vehicle history." />
       </Helmet>
-      <div className="space-y-6">
+      <div className="p-4 md:p-6 space-y-6">
         <h1 className="text-3xl font-bold">Reports</h1>
         <Tabs value={activeMainTab} onValueChange={handleTabChange}>
           <div className="w-full overflow-x-auto pb-2">
@@ -62,7 +62,7 @@ const ReportsPage = () => {
           </div>
           {accessibleTabs.map(tab => (
             <TabsContent key={tab.value} value={tab.value} className="mt-4">
-              {tab.component}
+              {activeMainTab === tab.value && tab.component}
             </TabsContent>
           ))}
         </Tabs>

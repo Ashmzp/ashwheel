@@ -17,6 +17,7 @@ const Bookings = () => {
     setSelectedBookingId,
     isEditing,
     setIsEditing,
+    resetForm,
     resetBookingState,
   } = useBookingStore();
 
@@ -27,7 +28,7 @@ const Bookings = () => {
   });
 
   const saveBookingMutation = useMutation({
-    mutationFn: saveBooking,
+    mutationFn: ({ bookingData, isEditing }) => saveBooking(bookingData, isEditing),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
       queryClient.invalidateQueries({ queryKey: ['bookingSummary'] });
@@ -77,8 +78,8 @@ const Bookings = () => {
     setActiveTab('form');
   };
 
-  const handleSave = async (bookingData) => {
-    await saveBookingMutation.mutateAsync(bookingData);
+  const handleSave = async (bookingData, isEditingFlag) => {
+    await saveBookingMutation.mutateAsync({ bookingData, isEditing: isEditingFlag });
   };
 
   const handleDelete = async (id) => {

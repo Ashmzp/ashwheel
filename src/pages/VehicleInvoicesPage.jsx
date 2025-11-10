@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Helmet } from 'react-helmet';
+import { Helmet } from 'react-helmet-async';
 import { useReactToPrint } from 'react-to-print';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -80,7 +80,7 @@ const VehicleInvoicesPage = () => {
       return { invoices, totalCount };
     },
     enabled: !!dateRange.start && !!dateRange.end && !!user,
-    staleTime: 1000 * 60, // 1 minute
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   const invoices = data?.invoices || [];

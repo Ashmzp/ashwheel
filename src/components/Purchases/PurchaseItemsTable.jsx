@@ -6,8 +6,16 @@ import { useToast } from '@/components/ui/use-toast';
 import { Plus, Trash2 } from 'lucide-react';
 import { validateRequired, validateChassisNo, validateEngineNo } from '@/utils/validation';
 import { checkStockExistence } from '@/utils/db/stock';
+import usePurchaseStore from '@/stores/purchaseStore';
 
-const PurchaseItemsTable = ({ items, setItems }) => {
+const PurchaseItemsTable = () => {
+  const { items, addItem, updateItem, removeItem } = usePurchaseStore((state) => ({
+    items: state.items,
+    addItem: state.addItem,
+    updateItem: state.updateItem,
+    removeItem: state.removeItem,
+  }));
+  
   const [newItem, setNewItem] = useState({
     modelName: '', chassisNo: '', engineNo: '', colour: '', category: '', hsn: '', gst: '', price: '0'
   });
@@ -25,23 +33,23 @@ const PurchaseItemsTable = ({ items, setItems }) => {
       return;
     }
 
-    if (items.some(i => i.chassisNo === newItem.chassisNo)) {
+    if (items.some(i => i.chassisNo === newItem.chassisNo.toUpperCase())) {
       toast({ title: "Duplicate Chassis No", description: "This chassis number is already in the current purchase list.", variant: "destructive" });
       return;
     }
 
-    const { exists, message } = await checkStockExistence(newItem.chassisNo, newItem.engineNo);
+    const { exists, message } = await checkStockExistence(newItem.chassisNo.toUpperCase(), newItem.engineNo.toUpperCase());
     if (exists) {
       toast({ title: "Stock Alert", description: message, variant: "destructive" });
       return;
     }
 
-    setItems([...items, { ...newItem, id: Date.now().toString() }]);
+    addItem({ ...newItem, id: Date.now().toString(), chassisNo: newItem.chassisNo.toUpperCase(), engineNo: newItem.engineNo.toUpperCase() });
     setNewItem({ modelName: '', chassisNo: '', engineNo: '', colour: '', category: '', hsn: '', gst: '', price: '0' });
   };
 
   const handleRemoveItem = (itemId) => {
-    setItems(items.filter(item => item.id !== itemId));
+    removeItem(itemId);
   };
   
   const handleItemInputChange = (e, id, field) => {
@@ -49,10 +57,7 @@ const PurchaseItemsTable = ({ items, setItems }) => {
     if (field === 'chassisNo' || field === 'engineNo') {
       value = value.toUpperCase();
     }
-    const updatedItems = items.map(item => 
-      item.id === id ? { ...item, [field]: value } : item
-    );
-    setItems(updatedItems);
+    updateItem(id, { [field]: value });
   };
 
   const handleNewItemInputChange = (e, field) => {
@@ -88,8 +93,8 @@ const PurchaseItemsTable = ({ items, setItems }) => {
               <TableCell><Input value={item.colour} onChange={(e) => handleItemInputChange(e, item.id, 'colour')} placeholder="Colour" /></TableCell>
               <TableCell><Input value={item.category || ''} onChange={(e) => handleItemInputChange(e, item.id, 'category')} placeholder="Category" /></TableCell>
               <TableCell><Input type="number" value={item.price} onChange={(e) => handleItemInputChange(e, item.id, 'price')} placeholder="0" /></TableCell>
-              <TableCell><Input value={item.hsn} onChange={(e) => handleItemInputChange(e, item.id, 'hsn')} placeholder="HSN Code" /></TableCell>
-              <TableCell><Input value={item.gst} onChange={(e) => handleItemInputChange(e, item.id, 'gst')} placeholder="GST %" /></TableCell>
+              <TableCell><Input value={item.hsn || ''} onChange={(e) => handleItemInputChange(e, item.id, 'hsn')} placeholder="HSN Code" /></TableCell>
+              <TableCell><Input value={item.gst || ''} onChange={(e) => handleItemInputChange(e, item.id, 'gst')} placeholder="GST %" /></TableCell>
               <TableCell>
                 <Button type="button" size="icon" variant="ghost" onClick={() => handleRemoveItem(item.id)} className="text-red-500">
                   <Trash2 className="w-4 h-4" />

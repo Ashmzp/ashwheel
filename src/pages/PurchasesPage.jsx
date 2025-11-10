@@ -1,11 +1,11 @@
-
-import React, { useState, useEffect, useCallback } from 'react';
-import { Helmet } from 'react-helmet';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { v4 as uuidv4 } from 'uuid';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   savePurchase as savePurchaseToDb,
   deletePurchase as deletePurchaseFromDb,
-  getPurchases,
+  getPurchases as fetchPurchasesFromDb,
 } from '@/utils/db/purchases';
 import { addStock, deleteStockByChassis } from '@/utils/db/stock';
 import { Search, Plus, Edit, Trash2, Download } from 'lucide-react';
@@ -19,13 +19,15 @@ import { formatDate, getCurrentMonthDateRange } from '@/utils/dateUtils';
 import PurchaseForm from '@/components/Purchases/PurchaseForm';
 import { useAuth } from '@/contexts/NewSupabaseAuthContext';
 import { PaginationControls } from '@/components/ui/pagination';
-import { initializePurchaseStore, clearPurchaseStore } from '@/stores/purchaseStore';
+import usePurchaseStore, { initializePurchaseStore, clearPurchaseStore } from '@/stores/purchaseStore';
 import useUIStore from '@/stores/uiStore';
 import { useDebounce } from '@/hooks/useDebounce';
+import { cn } from '@/lib/utils';
 
 const PurchaseList = ({ purchases, onAddPurchase, onEditPurchase, onDeletePurchase, loading, totalPages, currentPage, onPageChange, searchTerm, setSearchTerm, dateRange, setDateRange }) => {
   const { toast } = useToast();
   const { canAccess } = useAuth();
+  const queryClient = useQueryClient();
 
   const handleDelete = async (purchaseId, items) => {
     if (window.confirm('Are you sure? This will also remove related items from stock.')) {
@@ -40,20 +42,23 @@ const PurchaseList = ({ purchases, onAddPurchase, onEditPurchase, onDeletePurcha
 
   const handleExport = async () => {
     try {
-      const { data: allData } = await getPurchases({
-        page: 1,
-        pageSize: 10000, // Fetch all matching records
-        searchTerm,
-        startDate: dateRange.start,
-        endDate: dateRange.end,
+      const allData = await queryClient.fetchQuery({
+        queryKey: ['purchases', 'all', searchTerm, dateRange],
+        queryFn: () => fetchPurchasesFromDb({
+          page: 1,
+          pageSize: 10000, // Fetch all
+          searchTerm,
+          startDate: dateRange.start,
+          endDate: dateRange.end,
+        }),
       });
 
-      if (!allData || allData.length === 0) {
+      if (!allData || !allData.data || allData.data.length === 0) {
         toast({ title: "Info", description: "No data to export for the current filters." });
         return;
       }
 
-      const dataToExport = allData.flatMap(p => 
+      const dataToExport = allData.data.flatMap(p => 
         (p.items || []).map(item => ({
           'Party Name': p.party_name,
           'Invoice Date': formatDate(p.invoice_date),
@@ -65,6 +70,7 @@ const PurchaseList = ({ purchases, onAddPurchase, onEditPurchase, onDeletePurcha
           'HSN Code': item.hsn,
           'GST %': item.gst,
           'Price': item.price,
+          'Category': item.category,
         }))
       );
       
@@ -74,6 +80,23 @@ const PurchaseList = ({ purchases, onAddPurchase, onEditPurchase, onDeletePurcha
       toast({ title: "Export Error", description: `Failed to export data: ${error.message}`, variant: "destructive" });
     }
   };
+
+  const highlightedChassisNos = useMemo(() => {
+    if (!searchTerm || purchases.length === 0) return new Set();
+    const lowerSearchTerm = searchTerm.toLowerCase();
+    const chassisSet = new Set();
+    purchases.forEach(p => {
+      (p.items || []).forEach(item => {
+        if (
+          item.chassisNo?.toLowerCase().includes(lowerSearchTerm) ||
+          item.engineNo?.toLowerCase().includes(lowerSearchTerm)
+        ) {
+          chassisSet.add(p.id);
+        }
+      });
+    });
+    return chassisSet;
+  }, [searchTerm, purchases]);
 
   return (
     <div className="space-y-6">
@@ -89,7 +112,7 @@ const PurchaseList = ({ purchases, onAddPurchase, onEditPurchase, onDeletePurcha
           <div className="flex flex-col md:flex-row justify-between gap-4">
             <div className="relative w-full md:w-1/3">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search by Party, Invoice, Chassis..." className="pl-10" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+              <Input placeholder="Search Party, Invoice, Chassis, Engine..." className="pl-10" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
             </div>
             <div className="flex items-center gap-2">
               <Input type="date" value={dateRange.start} onChange={(e) => setDateRange({...dateRange, start: e.target.value})} className="w-auto" />
@@ -115,7 +138,10 @@ const PurchaseList = ({ purchases, onAddPurchase, onEditPurchase, onDeletePurcha
                 {loading ? (
                     <TableRow><TableCell colSpan={6} className="text-center h-24">Loading purchases...</TableCell></TableRow>
                 ) : purchases.length > 0 ? purchases.map((purchase) => (
-                  <TableRow key={purchase.id}>
+                  <TableRow 
+                    key={purchase.id}
+                    className={cn(highlightedChassisNos.has(purchase.id) && 'bg-red-100 dark:bg-red-900/30 text-red-900 dark:text-red-200')}
+                  >
                     <TableCell>{purchase.serial_no}</TableCell>
                     <TableCell>{formatDate(purchase.invoice_date)}</TableCell>
                     <TableCell>{purchase.invoice_no}</TableCell>
@@ -156,81 +182,56 @@ const PurchaseList = ({ purchases, onAddPurchase, onEditPurchase, onDeletePurcha
 
 const PurchasesPage = () => {
   const { openForm, setOpenForm, closeForm } = useUIStore();
-  const [purchases, setPurchases] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [dateRange, setDateRange] = useState(getCurrentMonthDateRange());
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const { toast } = useToast();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const PAGE_SIZE = 50;
 
   const showForm = openForm?.type === 'purchase';
   const isEditing = openForm?.mode === 'edit';
   const editingId = openForm?.id;
 
-  const fetchPurchases = useCallback(async (page, term, range) => {
-    setLoading(true);
-    try {
-      const { data, count } = await getPurchases({
-        page,
-        pageSize: PAGE_SIZE,
-        searchTerm: term,
-        startDate: range.start,
-        endDate: range.end,
-      });
-      setPurchases(data || []);
-      setTotalPages(Math.ceil((count || 0) / PAGE_SIZE));
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: `Failed to fetch purchases: ${error.message}`,
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [toast]);
+  const queryKey = ['purchases', currentPage, debouncedSearchTerm, dateRange];
+
+  const { data, isLoading } = useQuery({
+    queryKey,
+    queryFn: () => fetchPurchasesFromDb({
+      page: currentPage,
+      pageSize: PAGE_SIZE,
+      searchTerm: debouncedSearchTerm,
+      startDate: dateRange.start,
+      endDate: dateRange.end,
+    }),
+    placeholderData: (previousData) => previousData,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchOnWindowFocus: false,
+  });
+
+  const purchases = data?.data ?? [];
+  const totalPages = Math.ceil((data?.count ?? 0) / PAGE_SIZE);
 
   useEffect(() => {
-    fetchPurchases(currentPage, debouncedSearchTerm, dateRange);
-  }, [currentPage, debouncedSearchTerm, dateRange, fetchPurchases]);
-
-  useEffect(() => {
-    if (showForm) {
-      const selectedPurchase = isEditing ? purchases.find(p => p.id === editingId) : null;
-      if (isEditing && !selectedPurchase && !loading) {
-        toast({ title: "Not Found", description: "The purchase you were editing could not be found.", variant: 'destructive' });
-        closeForm();
-        return;
-      }
+    if(showForm) {
+      const selectedPurchase = isEditing ? purchases.find(p => p.id === editingId) : undefined;
       initializePurchaseStore(isEditing, selectedPurchase);
     }
-  }, [showForm, isEditing, editingId, purchases, loading, closeForm, toast]);
+  }, [showForm, isEditing, editingId, purchases]);
 
-  const handleAddPurchase = () => {
-    setOpenForm({ type: 'purchase', mode: 'new' });
-  };
-
-  const handleEditPurchase = (purchase) => {
-    setOpenForm({ type: 'purchase', mode: 'edit', id: purchase.id });
-  };
-
-  const handleSavePurchase = async (purchaseData) => {
-    const selectedPurchase = isEditing ? purchases.find(p => p.id === editingId) : null;
-    try {
-      if (selectedPurchase) {
-        if (selectedPurchase.items && selectedPurchase.items.length > 0) {
-          const oldChassisNos = selectedPurchase.items.map(item => item.chassisNo);
-          await deleteStockByChassis(oldChassisNos);
-        }
+  const saveMutation = useMutation({
+    mutationFn: async (purchaseData) => {
+      const selectedPurchase = isEditing ? purchases.find(p => p.id === editingId) : null;
+      if (selectedPurchase?.items?.length > 0) {
+        const oldChassisNos = selectedPurchase.items.map(item => item.chassisNo);
+        await deleteStockByChassis(oldChassisNos);
       }
       
       const savedData = await savePurchaseToDb(purchaseData);
       
-      if (savedData.items && savedData.items.length > 0) {
+      if (savedData?.items?.length > 0) {
         const newStockItems = savedData.items.map(item => ({
           id: uuidv4(),
           purchase_id: savedData.id,
@@ -242,41 +243,53 @@ const PurchasesPage = () => {
           gst: item.gst,
           price: item.price,
           purchase_date: savedData.invoice_date,
-          user_id: user.id
+          user_id: user.id,
+          category: item.category,
         }));
         await addStock(newStockItems);
       }
-      
+      return savedData;
+    },
+    onSuccess: (savedData) => {
       toast({
         title: "Success",
-        description: `Purchase ${selectedPurchase ? 'updated' : 'created'} and stock updated.`
+        description: `Purchase ${isEditing ? 'updated' : 'created'} and stock updated.`
       });
-
-      clearPurchaseStore(isEditing, editingId);
-      closeForm();
-      fetchPurchases(1, '', getCurrentMonthDateRange());
-      setCurrentPage(1);
-      setSearchTerm('');
-      setDateRange(getCurrentMonthDateRange());
-
-    } catch (error) {
+      queryClient.invalidateQueries({ queryKey: ['purchases'] });
+      queryClient.invalidateQueries({ queryKey: ['stock'] });
+      handleCancel();
+    },
+    onError: (error) => {
       console.error("Failed to save purchase and update stock:", error);
       toast({
         title: "Error",
         description: `Failed to save purchase. ${error.message}`,
         variant: "destructive"
       });
-    }
-  };
-  
-  const handleDeletePurchase = async (purchaseId, items) => {
-    if(items && items.length > 0) {
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async ({ purchaseId, items }) => {
+      if (items?.length > 0) {
         const chassisNosToDelete = items.map(item => item.chassisNo);
         await deleteStockByChassis(chassisNosToDelete);
+      }
+      await deletePurchaseFromDb(purchaseId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['purchases'] });
+      queryClient.invalidateQueries({ queryKey: ['stock'] });
+    },
+    onError: (error) => {
+       toast({ title: "Error", description: `Failed to delete purchase. ${error.message}`, variant: "destructive" });
     }
-    await deletePurchaseFromDb(purchaseId);
-    fetchPurchases(currentPage, searchTerm, dateRange);
-  };
+  });
+
+  const handleAddPurchase = () => setOpenForm({ type: 'purchase', mode: 'new' });
+  const handleEditPurchase = (purchase) => setOpenForm({ type: 'purchase', mode: 'edit', id: purchase.id });
+  const handleSavePurchase = (purchaseData) => saveMutation.mutate(purchaseData);
+  const handleDeletePurchase = (purchaseId, items) => deleteMutation.mutate({ purchaseId, items });
 
   const handleCancel = () => {
     clearPurchaseStore(isEditing, editingId);
@@ -286,6 +299,10 @@ const PurchasesPage = () => {
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
+  
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchTerm, dateRange]);
 
   return (
     <>
@@ -305,7 +322,7 @@ const PurchasesPage = () => {
             onAddPurchase={handleAddPurchase}
             onEditPurchase={handleEditPurchase}
             onDeletePurchase={handleDeletePurchase}
-            loading={loading}
+            loading={isLoading}
             totalPages={totalPages}
             currentPage={currentPage}
             onPageChange={handlePageChange}

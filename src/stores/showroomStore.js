@@ -12,10 +12,10 @@ const createInitialState = (data = {}) => ({
   items: data.items || [],
   extra_charges: data.extra_charges_json || {},
   total_amount: data.grand_total || 0,
-  selectedCustomer: data.customer_details_json ? {
+  selectedCustomer: data.customer ? {
     id: data.customer_id,
     customer_name: data.customer_name,
-    ...data.customer_details_json
+    ...data.customer
   } : null,
 });
 
@@ -44,21 +44,18 @@ const useShowroomStore = create(
 );
 
 export const initializeShowroomStore = (isEditing, data) => {
-  if (isEditing && !data) {
-    console.warn("initializeShowroomStore called in edit mode without data.");
-    return;
-  }
   const uniqueKey = isEditing ? `form-edit-vehicle-invoice-${data.invoice_id}` : 'form-new-vehicle-invoice';
   useShowroomStore.persist.setOptions({ name: uniqueKey });
 
-  setTimeout(() => {
+  // Force rehydration from the new storage key
+  useShowroomStore.persist.rehydrate().then(() => {
     const storedState = useShowroomStore.getState();
-    const needsReset = (isEditing && storedState.id !== data.invoice_id) || (!isEditing && storedState.id);
+    const needsReset = (isEditing && storedState.id !== data.invoice_id) || (!isEditing && storedState.id !== null);
 
     if (needsReset) {
       useShowroomStore.getState().resetForm(isEditing ? data : {});
     }
-  }, 0);
+  });
 };
 
 export const clearShowroomStore = (isEditing, id) => {

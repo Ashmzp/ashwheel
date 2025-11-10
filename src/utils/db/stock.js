@@ -32,15 +32,36 @@ export const addStock = async (stockItems) => {
   return { data, error };
 };
 
-export const getStock = async () => {
+export const getStock = async ({ page = 1, pageSize = 9999, searchTerm = '' } = {}) => {
   const userId = await getCurrentUserId();
-  const { data, error } = await supabase.from('stock').select('*').eq('user_id', userId);
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  let query = supabase
+    .from('stock')
+    .select('*', { count: 'exact' })
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .range(from, to);
+
+  if (searchTerm) {
+    const searchParts = searchTerm.split(',').map(part => part.trim().toLowerCase());
+    if (searchParts.length === 2 && searchParts[0] && searchParts[1]) {
+        query = query.ilike('model_name', `%${searchParts[0]}%`).ilike('colour', `%${searchParts[1]}%`);
+    } else {
+        const lowerSearch = searchTerm.toLowerCase();
+        query = query.or(`model_name.ilike.%${lowerSearch}%,chassis_no.ilike.%${lowerSearch}%,engine_no.ilike.%${lowerSearch}%,colour.ilike.%${lowerSearch}%,category.ilike.%${lowerSearch}%`);
+    }
+  }
+
+  const { data, error, count } = await query;
   if (error) {
     console.error('Error getting stock:', error);
     throw error;
   }
-  return data;
+  return { data, count };
 };
+
 
 export const checkStockExistence = async (chassisNo, engineNo) => {
     const userId = await getCurrentUserId();

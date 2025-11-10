@@ -3,56 +3,56 @@ import {
     getCustomers,
     saveCustomer,
     deleteCustomer
-} from './db/customers';
+} from '@/utils/db/customers';
 import {
     getPurchases,
     savePurchase,
     deletePurchase
-} from './db/purchases';
+} from '@/utils/db/purchases';
 import {
     getStock,
     addStock,
     deleteStockByChassis
-} from './db/stock';
+} from '@/utils/db/stock';
 import {
     getVehicleInvoices,
     getVehicleInvoiceItems,
     saveVehicleInvoice,
     deleteVehicleInvoice
-} from './db/vehicleInvoices';
+} from '@/utils/db/vehicleInvoices';
 import {
     getInvoices,
     saveInvoice,
     deleteInvoice
-} from './db/invoices';
+} from '@/utils/db/invoices';
 import {
     getSettings,
     saveSettings,
     getNextInvoiceNo,
     incrementInvoiceCounter
-} from './db/settings';
+} from '@/utils/db/settings';
 import {
     getWorkshopPurchases,
     saveWorkshopPurchase,
     deleteWorkshopPurchase
-} from './db/workshopPurchases';
+} from '@/utils/db/workshopPurchases';
 import {
     getWorkshopInventory,
     upsertWorkshopInventory
-} from './db/workshopInventory';
+} from '@/utils/db/workshopInventory';
 import {
     getJobCards,
     getJobCardById,
     saveJobCard,
     deleteJobCard,
     getNextJobCardInvoiceNo
-} from './db/jobCards';
+} from '@/utils/db/jobCards';
 import {
     getAllUsers,
     updateUserRoleAndAccess
-} from './db/admin';
-import { getSalesReturns, saveSalesReturn, deleteSalesReturn } from './db/salesReturns';
-import { getPurchaseReturns, savePurchaseReturn, deletePurchaseReturn } from './db/purchaseReturns';
+} from '@/utils/db/admin';
+import { getSalesReturns, saveSalesReturn, deleteSalesReturn } from '@/utils/db/salesReturns';
+import { getPurchaseReturns, savePurchaseReturn, deletePurchaseReturn } from '@/utils/db/purchaseReturns';
 
 
 const getCurrentUserId = async () => {

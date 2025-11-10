@@ -10,16 +10,16 @@ const Sidebar = () => {
   const navItems = [
     { to: '/dashboard', icon: Home, label: 'Dashboard' },
     { to: '/customers', icon: Users, label: 'Customers', module: 'customers' },
-    { to: '/bookings', icon: BookMarked, label: 'Bookings' },
+    { to: '/bookings', icon: BookMarked, label: 'Bookings', module: 'bookings' },
     { to: '/purchases', icon: ShoppingCart, label: 'Vehicle Purchases', module: 'purchases' },
     { to: '/purchase-returns', icon: ArrowUturnDown, label: 'Purchase Returns', module: 'purchase_returns' },
     { to: '/stock', icon: Package, label: 'Vehicle Stock', module: 'stock' },
     { to: '/reports', icon: BarChart2, label: 'Reports', module: 'reports' },
     { to: '/vehicle-invoices', icon: Car, label: 'Vehicle Invoices', module: 'vehicle_invoices' },
     { to: '/sales-returns', icon: ArrowUturnLeft, label: 'Sales Returns', module: 'sales_returns' },
-    { to: '/journal-entry', icon: Book, label: 'Journal Entry' },
-    { to: '/party-ledger', icon: BookCopy, label: 'Party Ledger' },
-    { to: '/receipts', icon: FileText, label: 'Receipt' },
+    { to: '/journal-entry', icon: Book, label: 'Journal Entry', module: 'journal_entry' },
+    { to: '/party-ledger', icon: BookCopy, label: 'Party Ledger', module: 'party_ledger' },
+    { to: '/receipts', icon: FileText, label: 'Receipt', module: 'receipts' },
     { to: '/workshop/purchases', icon: Wrench, label: 'Workshop Purchases', module: 'workshop_purchases' },
     { to: '/workshop/wp-return', icon: ArrowUturnDown, label: 'WP Return', module: 'wp_return' },
     { to: '/workshop/inventory', icon: Package, label: 'Workshop Inventory', module: 'workshop_inventory' },
@@ -52,7 +52,7 @@ const Sidebar = () => {
       return userData?.role === 'admin';
     }
     if (!item.module) {
-      return true; // Always show items without a module, like Dashboard, Profile, Settings, Bookings
+      return true; // Always show items without a module, like Dashboard, Profile, Settings
     }
     // For items with a module, check access
     return canAccess(item.module, 'read');

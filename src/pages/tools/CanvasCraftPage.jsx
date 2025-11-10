@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from 'react';
     import { fabric } from 'fabric';
     import { useDropzone } from 'react-dropzone';

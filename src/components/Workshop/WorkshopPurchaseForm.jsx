@@ -15,6 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import useWorkshopPurchaseStore from '@/stores/workshopPurchaseStore';
 import useSettingsStore from '@/stores/settingsStore';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useQuery } from '@tanstack/react-query';
 
 const defaultWorkshopPurchaseColumns = [
     { id: 'partNo', label: 'Part No.', type: 'default', deletable: false, editable: true },
@@ -29,14 +30,15 @@ const defaultWorkshopPurchaseColumns = [
     { id: 'category', label: 'Category', type: 'default', deletable: false, editable: true },
 ];
 
-const WorkshopPurchaseForm = ({ isEditing, onSave, onCancel }) => {
-  const formData = useWorkshopPurchaseStore(state => state);
-  const { setFormData, addItem, updateItem, removeItem, setItems } = useWorkshopPurchaseStore();
+const WorkshopPurchaseForm = ({ initialData, isEditing, onSave, onCancel }) => {
+  const { 
+    id, serialNo, invoiceDate, invoiceNo, partyName, items,
+    setFormData, addItem, updateItem, removeItem, setItems 
+  } = useWorkshopPurchaseStore();
   const { settings } = useSettingsStore();
   const workshopSettings = settings.workshop_settings || {};
-
+  
   const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const [customers, setCustomers] = useState([]);
   const [partySearch, setPartySearch] = useState('');
   const [showCustomerList, setShowCustomerList] = useState(false);
   const [editablePreview, setEditablePreview] = useState([]);
@@ -44,6 +46,25 @@ const WorkshopPurchaseForm = ({ isEditing, onSave, onCancel }) => {
   const [isCustomerFormOpen, setIsCustomerFormOpen] = useState(false);
 
   const { toast } = useToast();
+
+  const { data: customers = [] } = useQuery({
+      queryKey: ['customers'],
+      queryFn: () => getCustomers({ pageSize: 99999 }).then(res => res.data),
+      staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
+  useEffect(() => {
+      if (isEditing && initialData) {
+        setFormData({
+          id: initialData.id,
+          serialNo: initialData.serial_no,
+          invoiceDate: initialData.invoice_date,
+          invoiceNo: initialData.invoice_no,
+          partyName: initialData.party_name,
+          items: initialData.items || [],
+        });
+      }
+  }, [isEditing, initialData, setFormData]);
 
   const purchaseColumns = useMemo(() => {
     const savedColumns = workshopSettings.workshop_purchase_columns;
@@ -58,22 +79,9 @@ const WorkshopPurchaseForm = ({ isEditing, onSave, onCancel }) => {
     return columns;
   }, [workshopSettings.workshop_purchase_columns, workshopSettings.enable_uom]);
 
-  const fetchInitialData = useCallback(async () => {
-    try {
-      const customerData = await getCustomers({pageSize: 99999});
-      setCustomers(Array.isArray(customerData.data) ? customerData.data : []);
-    } catch (error) {
-        toast({ title: 'Error fetching data', description: error.message, variant: 'destructive'});
-    }
-  }, [toast]);
-
   useEffect(() => {
-    fetchInitialData();
-  }, [fetchInitialData]);
-
-  useEffect(() => {
-    setPartySearch(formData.partyName || '');
-  }, [formData.partyName]);
+    setPartySearch(partyName || '');
+  }, [partyName]);
 
   const filteredCustomers = useMemo(() => {
     if (!partySearch) return [];
@@ -106,7 +114,7 @@ const WorkshopPurchaseForm = ({ isEditing, onSave, onCancel }) => {
       const savedCustomer = await saveCustomer(newCustomerData);
       toast({ title: 'Customer Saved!', description: 'New customer has been added successfully.' });
       setIsCustomerFormOpen(false);
-      await fetchInitialData();
+      // No need to refetch, react-query will handle it
       selectParty(savedCustomer);
     } catch (error) {
       toast({ title: 'Error', description: `Failed to save customer: ${error.message}`, variant: 'destructive' });
@@ -164,7 +172,7 @@ const WorkshopPurchaseForm = ({ isEditing, onSave, onCancel }) => {
   };
 
   const saveFromPreview = () => {
-    setItems([...formData.items, ...editablePreview]);
+    setItems([...items, ...editablePreview]);
     setShowPreview(false);
     setEditablePreview([]);
     toast({ title: 'Items Added', description: `${editablePreview.length} items added from Excel.` });
@@ -176,23 +184,23 @@ const WorkshopPurchaseForm = ({ isEditing, onSave, onCancel }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.partyName || !formData.invoiceNo || formData.items.length === 0) {
+    if (!partyName || !invoiceNo || items.length === 0) {
       toast({ title: 'Validation Error', description: 'Please fill all required fields and add at least one item.', variant: 'destructive' });
       return;
     }
     if (workshopSettings.enable_uom && workshopSettings.uom_mandatory) {
-      if (formData.items.some(item => !item.uom)) {
+      if (items.some(item => !item.uom)) {
         toast({ title: 'Validation Error', description: 'UOM is mandatory for all items. Please fill it.', variant: 'destructive' });
         return;
       }
     }
     const purchaseData = {
-      id: formData.id || uuidv4(),
-      serial_no: formData.serialNo,
-      invoice_no: formData.invoiceNo,
-      invoice_date: formData.invoiceDate,
-      party_name: formData.partyName,
-      items: formData.items.map(({ id, ...rest }) => rest),
+      id: id || uuidv4(),
+      serial_no: serialNo,
+      invoice_no: invoiceNo,
+      invoice_date: invoiceDate,
+      party_name: partyName,
+      items: items.map(({ id, ...rest }) => rest),
     };
     await onSave(purchaseData);
   };
@@ -242,9 +250,9 @@ const WorkshopPurchaseForm = ({ isEditing, onSave, onCancel }) => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div><Label>S.No.</Label><Input value={formData.serialNo || ''} onChange={(e) => setFormData({ serialNo: e.target.value })} disabled className="bg-secondary" /></div>
-              <div><Label>Invoice No *</Label><Input value={formData.invoiceNo} onChange={(e) => setFormData({ invoiceNo: e.target.value })} required /></div>
-              <div><Label>Invoice Date *</Label><Input type="date" value={formData.invoiceDate} onChange={(e) => setFormData({ invoiceDate: e.target.value })} required /></div>
+              <div><Label>S.No.</Label><Input value={serialNo || ''} onChange={(e) => setFormData({ serialNo: e.target.value })} disabled className="bg-secondary" /></div>
+              <div><Label>Invoice No *</Label><Input value={invoiceNo} onChange={(e) => setFormData({ invoiceNo: e.target.value })} required /></div>
+              <div><Label>Invoice Date *</Label><Input type="date" value={invoiceDate} onChange={(e) => setFormData({ invoiceDate: e.target.value })} required /></div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                  <div className="relative">
@@ -285,10 +293,10 @@ const WorkshopPurchaseForm = ({ isEditing, onSave, onCancel }) => {
                     <TableHead>Action</TableHead>
                   </TableRow></TableHeader>
                   <TableBody>
-                    {formData.items.length === 0 ? (
+                    {items.length === 0 ? (
                       <TableRow><TableCell colSpan={purchaseColumns.length + 1} className="text-center py-8 text-muted-foreground">No items added. Add items manually or import from Excel.</TableCell></TableRow>
                     ) : (
-                      formData.items.map((item) => {
+                      items.map((item) => {
                         const total = (item.purchaseRate * item.qty) * (1 + (item.gst || 0) / 100);
                         return (
                           <TableRow key={item.id}>

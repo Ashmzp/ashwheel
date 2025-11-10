@@ -19,7 +19,12 @@ const MISReport = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const { misReport, setMisReportState } = useReportStore();
-  const { activeTab, viewMode, customerFilter } = misReport;
+  
+  const { 
+    activeTab = 'month-comparison', 
+    viewMode = 'model-wise', 
+    customerFilter = 'all' 
+  } = misReport || {};
 
   const [customDateRange, setCustomDateRange] = useState([
     {
@@ -52,8 +57,12 @@ const MISReport = () => {
       if (!user) return null;
       
       const ranges = getDateRanges();
-      const currentRange = ranges[activeTab].current;
-      const previousRange = ranges[activeTab].previous;
+      const currentRange = ranges[activeTab]?.current;
+      const previousRange = ranges[activeTab]?.previous;
+      
+      if (!currentRange) {
+        throw new Error('Invalid date range selected');
+      }
 
       const fetchData = async (startDate, endDate) => {
         const { data, error } = await supabase.rpc('get_vehicle_invoices_report_v4', {
@@ -64,7 +73,7 @@ const MISReport = () => {
           p_page_number: 1
         });
         if (error) throw error;
-        return data[0]?.invoices_data || [];
+        return data?.[0]?.invoices_data || [];
       };
 
       const currentData = await fetchData(currentRange.start, currentRange.end);
@@ -76,7 +85,7 @@ const MISReport = () => {
         let nonRegisteredTotal = 0;
 
         invoices.forEach(invoice => {
-          const isRegistered = invoice.customer?.gst || (invoice.customer_details_json?.gst && invoice.customer_details_json.gst.trim() !== '');
+          const isRegistered = invoice.customer_details_json?.gst && invoice.customer_details_json.gst.trim() !== '';
           const items = invoice.items || [];
           
           items.forEach(item => {
@@ -123,6 +132,7 @@ const MISReport = () => {
     if (!reportData) return null;
 
     const filterByCustomerType = (data) => {
+      if (!data) return null;
       if (customerFilter === 'all') return data;
       
       return {
@@ -149,7 +159,7 @@ const MISReport = () => {
   }, [reportData, customerFilter]);
 
   const handleExport = () => {
-    if (!filteredData) {
+    if (!filteredData || !filteredData.current) {
       toast({ title: 'No Data', description: 'There is no data to export.', variant: 'destructive' });
       return;
     }
@@ -177,7 +187,7 @@ const MISReport = () => {
           row[`${previousLabel} (Registered)`] = customerFilter !== 'non-registered' ? (previousItem?.registered || 0) : 0;
           row[`${previousLabel} (Non-Registered)`] = customerFilter !== 'registered' ? (previousItem?.nonRegistered || 0) : 0;
           row[`${previousLabel} (Total)`] = previousItem?.total || 0;
-          row['Growth'] = ((item.total - (previousItem?.total || 0)) / Math.max(previousItem?.total || 1, 1) * 100).toFixed(1) + '%';
+          row['Growth'] = ((item.total - (previousItem?.total || 1)) / Math.max(previousItem?.total || 1, 1) * 100).toFixed(1) + '%';
         }
 
         dataToExport.push(row);
@@ -234,7 +244,7 @@ const MISReport = () => {
   };
 
   const renderModelWiseReport = () => {
-    if (!filteredData) return null;
+    if (!filteredData || !filteredData.current) return null;
 
     const ranges = getDateRanges();
     const currentLabel = activeTab === 'month-comparison' ? 'This Month' :
@@ -308,7 +318,7 @@ const MISReport = () => {
   };
 
   const renderTotalSummary = () => {
-    if (!filteredData) return null;
+    if (!filteredData || !filteredData.current) return null;
 
     const ranges = getDateRanges();
     const currentLabel = activeTab === 'month-comparison' ? 'This Month' :
@@ -445,72 +455,14 @@ const MISReport = () => {
               <TabsTrigger value="ly-cy-month">LY This Month / CY This Month</TabsTrigger>
               <TabsTrigger value="custom">Custom Range</TabsTrigger>
             </TabsList>
-
-            <TabsContent value="month-comparison" className="mt-6">
+            
+            <div className="mt-6">
               {isLoading ? (
                 <div className="flex justify-center items-center h-48">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
               ) : viewMode === 'model-wise' ? renderModelWiseReport() : renderTotalSummary()}
-            </TabsContent>
-
-            <TabsContent value="year-comparison" className="mt-6">
-              {isLoading ? (
-                <div className="flex justify-center items-center h-48">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-              ) : viewMode === 'model-wise' ? renderModelWiseReport() : renderTotalSummary()}
-            </TabsContent>
-
-            <TabsContent value="ly-cy-month" className="mt-6">
-              {isLoading ? (
-                <div className="flex justify-center items-center h-48">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-              ) : viewMode === 'model-wise' ? renderModelWiseReport() : renderTotalSummary()}
-            </TabsContent>
-
-            <TabsContent value="custom" className="mt-6">
-              {isLoading ? (
-                <div className="flex justify-center items-center h-48">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-              ) : viewMode === 'model-wise' ? (
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">
-                    Custom Period: {format(customDateRange[0].startDate, "dd MMM yyyy")} - {format(customDateRange[0].endDate, "dd MMM yyyy")}
-                  </h3>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Model</TableHead>
-                        {customerFilter !== 'non-registered' && <TableHead className="text-center">Registered</TableHead>}
-                        {customerFilter !== 'registered' && <TableHead className="text-center">Non-Registered</TableHead>}
-                        <TableHead className="text-center">Total</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredData?.current.modelData.map(item => (
-                        <TableRow key={item.model}>
-                          <TableCell className="font-medium">{item.model}</TableCell>
-                          {customerFilter !== 'non-registered' && <TableCell className="text-center">{item.registered}</TableCell>}
-                          {customerFilter !== 'registered' && <TableCell className="text-center">{item.nonRegistered}</TableCell>}
-                          <TableCell className="text-center font-bold">{item.total}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                    <TableFooter>
-                      <TableRow className="bg-secondary/80 font-bold">
-                        <TableCell>TOTAL</TableCell>
-                        {customerFilter !== 'non-registered' && <TableCell className="text-center">{filteredData?.current.totals.registered}</TableCell>}
-                        {customerFilter !== 'registered' && <TableCell className="text-center">{filteredData?.current.totals.nonRegistered}</TableCell>}
-                        <TableCell className="text-center">{filteredData?.current.totals.total}</TableCell>
-                      </TableRow>
-                    </TableFooter>
-                  </Table>
-                </div>
-              ) : renderTotalSummary()}
-            </TabsContent>
+            </div>
           </Tabs>
         </div>
       </CardContent>

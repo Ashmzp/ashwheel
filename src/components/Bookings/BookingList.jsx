@@ -122,8 +122,8 @@ const BookingList = ({ onAdd, onEdit, onDelete }) => {
         if (forExport) return booking.status;
         return <span className={`px-2 py-1 text-xs font-medium rounded-full ${
           booking.status === 'Open' ? 'bg-blue-500/20 text-blue-300' :
-          booking.status === 'Sold' ? 'bg-green-500/20 text-green-300' :
           booking.status === 'Postpone' ? 'bg-yellow-500/20 text-yellow-300' :
+          booking.status === 'Sold' ? 'bg-green-500/20 text-green-300' :
           'bg-red-500/20 text-red-300'
         }`}>{booking.status}</span>;
       default:
@@ -243,7 +243,7 @@ const BookingList = ({ onAdd, onEdit, onDelete }) => {
             <div className="relative flex-1 w-full">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
-                placeholder="Search by name, mobile, model, status..."
+                placeholder="Search by name, mobile, model, receipt no, status..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 w-full"

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React from 'react';
     import { Helmet } from 'react-helmet-async';
     import { useToast } from '@/components/ui/use-toast';
     import { 
@@ -13,57 +13,31 @@ import React, { useState, useCallback } from 'react';
     import { PlusCircle } from 'lucide-react';
     import useWorkshopPurchaseStore from '@/stores/workshopPurchaseStore';
     import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-    import useFormPersistence from '@/hooks/useFormPersistence';
     import { motion, AnimatePresence } from 'framer-motion';
     
     const WorkshopPurchasesPage = () => {
-      const [view, setView] = useState('list');
-      const [selectedPurchaseId, setSelectedPurchaseId] = useState(null);
       const { toast } = useToast();
       const queryClient = useQueryClient();
-      const resetWorkshopPurchaseForm = useWorkshopPurchaseStore(state => state.resetForm);
+      const { 
+        view, setView, 
+        selectedPurchaseId, setSelectedPurchaseId,
+        resetForm
+      } = useWorkshopPurchaseStore();
     
       const { data: purchases = [], isLoading: isLoadingPurchases } = useQuery({
         queryKey: ['workshopPurchases'],
         queryFn: () => getWorkshopPurchases(),
+        staleTime: 1000 * 60 * 5, // 5 minutes
       });
     
       const { data: selectedPurchase, isFetching: isFetchingSelected } = useQuery({
           queryKey: ['workshopPurchase', selectedPurchaseId],
           queryFn: () => getWorkshopPurchaseById(selectedPurchaseId),
-          enabled: !!selectedPurchaseId,
+          enabled: !!selectedPurchaseId && view === 'form',
       });
     
-      const isEditing = !!selectedPurchaseId;
-      const isFormVisible = view === 'form';
-    
-      const getInitialFormData = useCallback(() => {
-        if (isEditing && selectedPurchase) {
-          return {
-            id: selectedPurchase.id,
-            serialNo: selectedPurchase.serial_no,
-            invoiceDate: selectedPurchase.invoice_date ? selectedPurchase.invoice_date.split('T')[0] : '',
-            invoiceNo: selectedPurchase.invoice_no,
-            partyName: selectedPurchase.party_name,
-            items: selectedPurchase.items || [],
-          };
-        }
-        return null;
-      }, [isEditing, selectedPurchase]);
-    
-      const { clearState: clearPurchaseFormPersistence } = useFormPersistence(
-        useWorkshopPurchaseStore,
-        isEditing,
-        selectedPurchaseId,
-        'workshop_purchase',
-        getInitialFormData(),
-        isFormVisible
-      );
-    
       const savePurchaseMutation = useMutation({
-        mutationFn: async ({ purchaseData }) => {
-            await saveWorkshopPurchase(purchaseData);
-        },
+        mutationFn: ({ purchaseData, isEditing }) => saveWorkshopPurchase(purchaseData, isEditing),
         onSuccess: (_, { isEditing }) => {
           queryClient.invalidateQueries({ queryKey: ['workshopPurchases'] });
           queryClient.invalidateQueries({ queryKey: ['workshopInventory'] });
@@ -71,9 +45,9 @@ import React, { useState, useCallback } from 'react';
             title: "Success!",
             description: `Purchase ${isEditing ? 'updated' : 'saved'} successfully. Inventory will be updated.`,
           });
-          setView('list');
+          resetForm();
           setSelectedPurchaseId(null);
-          clearPurchaseFormPersistence();
+          setView('list');
         },
         onError: (error) => {
           toast({
@@ -85,9 +59,7 @@ import React, { useState, useCallback } from 'react';
       });
     
       const deletePurchaseMutation = useMutation({
-        mutationFn: async (purchaseToDelete) => {
-          await deleteWorkshopPurchase(purchaseToDelete.id);
-        },
+        mutationFn: (purchaseToDelete) => deleteWorkshopPurchase(purchaseToDelete.id),
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: ['workshopPurchases'] });
           queryClient.invalidateQueries({ queryKey: ['workshopInventory'] });
@@ -108,16 +80,18 @@ import React, { useState, useCallback } from 'react';
       };
       
       const handleAddNew = () => {
+        resetForm();
         setSelectedPurchaseId(null);
-        resetWorkshopPurchaseForm();
         setView('form');
       };
     
       const handleCancel = () => {
-        setView('list');
+        resetForm();
         setSelectedPurchaseId(null);
-        clearPurchaseFormPersistence();
+        setView('list');
       };
+
+      const isEditing = !!selectedPurchaseId;
     
       return (
         <>
@@ -147,7 +121,13 @@ import React, { useState, useCallback } from 'react';
                       <div className="flex justify-center items-center h-64">
                         <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
                       </div> :
-                      <WorkshopPurchaseForm isEditing={isEditing} onSave={handleSave} onCancel={handleCancel} />
+                      <WorkshopPurchaseForm 
+                        key={selectedPurchaseId || 'new'}
+                        initialData={selectedPurchase}
+                        isEditing={isEditing}
+                        onSave={handleSave} 
+                        onCancel={handleCancel} 
+                      />
                    }
                 </motion.div>
               )}

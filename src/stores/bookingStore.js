@@ -40,7 +40,20 @@ const useBookingStore = create(
       setIsEditing: (editing) => set({ isEditing: editing }),
       
       setFormData: (data) => set(state => ({ formData: { ...state.formData, ...data } })),
-      resetForm: () => set({ formData: {} }),
+      
+      resetForm: () => set(state => {
+        const defaultValues = {
+            booking_date: getCurrentMonthDateRange().start,
+            status: 'Open',
+            custom_fields: {},
+        };
+        const clearedFormData = Object.keys(state.formData).reduce((acc, key) => {
+            acc[key] = undefined;
+            return acc;
+        }, {});
+        
+        return { formData: { ...clearedFormData, ...defaultValues } };
+      }),
       
       setCustomFields: (fields) => {
         const newColumns = [...initialColumns];
@@ -72,7 +85,7 @@ const useBookingStore = create(
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         visibleColumns: state.visibleColumns,
-        // Do not persist allColumns to allow dynamic updates from settings
+        formData: state.formData, // Persist form data
       }),
     }
   )
