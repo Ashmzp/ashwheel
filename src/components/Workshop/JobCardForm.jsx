@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { validateRequired } from '@/utils/validation';
 import { getNextJobCardInvoiceNo } from '@/utils/db/jobCards';
 import { addDaysToDate, getCurrentDate } from '@/utils/dateUtils';
+import { escapeHTML } from '@/utils/sanitize';
 import CustomerVehicleDetails from '@/components/Workshop/CustomerVehicleDetails';
 import JobItems from '@/components/Workshop/JobItems';
 import JobSummary from '@/components/Workshop/JobSummary';
@@ -102,6 +103,8 @@ const JobCardForm = ({ onSave, onCancel, jobCard, isEditing, isSaving, isLoading
   };
   
   const handleCancelClick = () => {
+    resetForm();
+    setErrors({});
     onCancel();
   };
 
