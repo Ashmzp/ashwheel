@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import '@/styles/responsive.css';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { History, Car, Wrench, Users, BarChart3 } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
@@ -49,7 +50,7 @@ const ReportsPage = () => {
         <meta name="description" content="View and analyze real-time stock reports and track vehicle history." />
       </Helmet>
       <div className="p-4 md:p-6 space-y-6">
-        <h1 className="text-3xl font-bold">Reports</h1>
+        <h1 className="page-title">Reports</h1>
         <Tabs value={activeMainTab} onValueChange={handleTabChange}>
           <div className="w-full overflow-x-auto pb-2">
             <TabsList className="inline-flex h-auto items-center justify-center rounded-md bg-muted p-1 text-muted-foreground">

@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import '@/styles/responsive.css';
 import { Helmet } from 'react-helmet-async';
 import { format, startOfToday } from 'date-fns';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -77,7 +78,7 @@ const StatCard = ({ title, value, icon, color }) => (
             <CardTitle className="text-sm font-medium">{title}</CardTitle>
             {icon}
         </CardHeader>
-        <CardContent>
+        <CardContent className="card-compact">
             <div className={`text-2xl font-bold ${color}`}>{value}</div>
         </CardContent>
     </Card>
@@ -169,7 +170,7 @@ const FollowUpPage = () => {
             </Helmet>
             <div className="container mx-auto p-4 space-y-6">
                 <div className="flex justify-between items-center">
-                    <h1 className="text-3xl font-bold">Follow-Up List</h1>
+                    <h1 className="page-title">Follow-Up List</h1>
                     <Button onClick={handleExport} variant="outline" disabled={isLoading}><Download className="mr-2 h-4 w-4" /> Export to Excel</Button>
                 </div>
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import '@/styles/responsive.css';
 import { Helmet } from 'react-helmet';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PlusCircle, Search, Edit, Trash2, FileDown } from 'lucide-react';
@@ -151,7 +152,7 @@ const CustomersPage = () => {
 
   if (isFormOpen || editingCustomer) {
     return (
-      <div className="p-4 md:p-8">
+      <div className="container-responsive py-3 md:py-4">
         <CustomerForm 
           customer={editingCustomer} 
           onSave={handleSaveCustomer} 
@@ -167,13 +168,13 @@ const CustomersPage = () => {
         <title>Customer Management - Showroom Pro</title>
         <meta name="description" content="Manage your showroom customers efficiently." />
       </Helmet>
-      <div className="p-4 md:p-8">
+      <div className="container-responsive py-3 md:py-4">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-          <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
-            <h1 className="text-3xl font-bold">Customer Management</h1>
+          <div className="page-header">
+            <h1 className="page-title">Customer Management</h1>
             {canAccess('customers', 'write') && (
-              <Button onClick={() => setIsFormOpen(true)}>
-                <PlusCircle className="mr-2 h-4 w-4" /> Add New Customer
+              <Button onClick={() => setIsFormOpen(true)} className="btn-compact">
+                <PlusCircle className="mr-1 h-3.5 w-3.5" /> Add New Customer
               </Button>
             )}
           </div>
@@ -181,20 +182,20 @@ const CustomersPage = () => {
 
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2, duration: 0.5 }}>
           <Card>
-            <CardHeader>
-              <div className="flex flex-col md:flex-row justify-between gap-4">
-                <div className="relative w-full md:w-1/3">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <CardHeader className="card-compact">
+              <div className="flex-responsive">
+                <div className="search-bar">
+                  <Search className="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground" />
                   <Input 
                     placeholder="Search by name or mobile..." 
-                    className="pl-10"
+                    className="input-compact pl-8"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
-                <div className="flex items-center gap-2 flex-wrap">
+                <div className="filter-controls">
                     <Select value={filters.type} onValueChange={(value) => setFilters(prev => ({...prev, type: value}))}>
-                        <SelectTrigger className="w-full sm:w-[180px]">
+                        <SelectTrigger className="btn-compact w-full sm:w-auto">
                             <SelectValue placeholder="Filter by type" />
                         </SelectTrigger>
                         <SelectContent>
@@ -203,15 +204,15 @@ const CustomersPage = () => {
                             <SelectItem value="non-registered">Non-Registered</SelectItem>
                         </SelectContent>
                     </Select>
-                    <Input type="date" className="w-full sm:w-auto" value={filters.startDate} onChange={(e) => setFilters(prev => ({...prev, startDate: e.target.value}))} />
-                    <Input type="date" className="w-full sm:w-auto" value={filters.endDate} onChange={(e) => setFilters(prev => ({...prev, endDate: e.target.value}))} />
-                  <Button variant="outline" onClick={handleExport}><FileDown className="mr-2 h-4 w-4" /> Export</Button>
+                    <Input type="date" className="input-compact w-full sm:w-auto" value={filters.startDate} onChange={(e) => setFilters(prev => ({...prev, startDate: e.target.value}))} />
+                    <Input type="date" className="input-compact w-full sm:w-auto" value={filters.endDate} onChange={(e) => setFilters(prev => ({...prev, endDate: e.target.value}))} />
+                  <Button variant="outline" onClick={handleExport} className="btn-compact"><FileDown className="mr-1 h-3.5 w-3.5" /> Export</Button>
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <Table>
+            <CardContent className="card-compact">
+              <div className="scrollable-container">
+                <Table className="table-compact">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Customer Name</TableHead>
@@ -244,16 +245,18 @@ const CustomersPage = () => {
                             </span>
                           </TableCell>
                           <TableCell className="text-right">
-                            {canAccess('customers', 'write') && (
-                              <Button variant="ghost" size="icon" onClick={() => handleEdit(customer)}>
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            )}
-                            {canAccess('customers', 'delete') && (
-                              <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(customer.id)}>
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            )}
+                            <div className="action-buttons">
+                              {canAccess('customers', 'write') && (
+                                <Button variant="ghost" onClick={() => handleEdit(customer)}>
+                                  <Edit />
+                                </Button>
+                              )}
+                              {canAccess('customers', 'delete') && (
+                                <Button variant="ghost" className="text-destructive" onClick={() => handleDelete(customer.id)}>
+                                  <Trash2 />
+                                </Button>
+                              )}
+                            </div>
                           </TableCell>
                         </motion.tr>
                       )) : (

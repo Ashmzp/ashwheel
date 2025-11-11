@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import '@/styles/responsive.css';
 import { Search, Plus, Download, UserCheck, UserX, Package, ArrowUpDown, Printer, Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -197,11 +198,11 @@ const VehicleInvoiceList = ({
   };
   
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Vehicle Invoice Management</h1>
+    <div className="space-y-3">
+      <div className="page-header">
+        <h1 className="page-title">Vehicle Invoice Management</h1>
         {canAccess('vehicle_invoices', 'write') && (
-          <Button onClick={onAddInvoice}><Plus className="w-4 h-4 mr-2" /> Create Vehicle Invoice</Button>
+          <Button onClick={onAddInvoice} className="btn-compact"><Plus className="w-3.5 h-3.5 mr-1" /> Create Vehicle Invoice</Button>
         )}
       </div>
 
@@ -215,23 +216,23 @@ const VehicleInvoiceList = ({
       {summaryLoading && <div className="text-center p-4">Loading summary...</div>}
 
       <Card>
-        <CardHeader>
-          <div className="flex flex-col md:flex-row justify-between gap-4">
-            <div className="relative w-full md:w-1/3">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search by Invoice, Customer, Chassis, Engine..." className="pl-10" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+        <CardHeader className="card-compact">
+          <div className="flex-responsive">
+            <div className="search-bar">
+              <Search className="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Search by Invoice, Customer, Chassis, Engine..." className="input-compact pl-8" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
             </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <Input type="date" value={dateRange.start} onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })} className="w-auto" />
-              <Input type="date" value={dateRange.end} onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })} className="w-auto" />
-              <Button variant="outline" onClick={handleExport}><Download className="mr-2 h-4 w-4" /> Export</Button>
+            <div className="filter-controls">
+              <Input type="date" value={dateRange.start} onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })} className="input-compact" />
+              <Input type="date" value={dateRange.end} onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })} className="input-compact" />
+              <Button variant="outline" onClick={handleExport} className="btn-compact"><Download className="mr-1 h-3.5 w-3.5" /> Export</Button>
               <ColumnSettingsDialog visibleColumns={visibleColumns} setVisibleColumns={setVisibleColumns} storageKey={LOCAL_STORAGE_KEY} />
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
+        <CardContent className="card-compact">
+          <div className="scrollable-container">
+            <Table className="table-compact">
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[50px]">
@@ -270,14 +271,16 @@ const VehicleInvoiceList = ({
                         </TableCell>
                         {visibleColumns.map(colName => renderCellContent(invoice, colName))}
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" title="Print Delivery Challan" onClick={() => onPrint('DeliveryChallan', invoice)}><Printer className="h-4 w-4 text-blue-400" /></Button>
-                          <Button variant="ghost" size="icon" title="Print Tax Invoice" onClick={() => onPrint('TaxInvoice', invoice)}><Printer className="h-4 w-4 text-green-400" /></Button>
+                          <div className="action-buttons">
+                            <Button variant="ghost" title="Print Delivery Challan" onClick={() => onPrint('DeliveryChallan', invoice)}><Printer className="text-blue-400" /></Button>
+                            <Button variant="ghost" title="Print Tax Invoice" onClick={() => onPrint('TaxInvoice', invoice)}><Printer className="text-green-400" /></Button>
                             {canAccess('vehicle_invoices', 'write') && (
-                                <Button variant="ghost" size="icon" title="Edit Invoice" onClick={() => onEditInvoice(invoice)}><Edit className="h-4 w-4" /></Button>
+                                <Button variant="ghost" title="Edit Invoice" onClick={() => onEditInvoice(invoice)}><Edit /></Button>
                             )}
                             {canAccess('vehicle_invoices', 'delete') && (
-                                <Button variant="ghost" size="icon" title="Delete Invoice" className="text-red-500" onClick={() => handleDelete(invoice.invoice_id)}><Trash2 className="h-4 w-4" /></Button>
+                                <Button variant="ghost" title="Delete Invoice" className="text-red-500" onClick={() => handleDelete(invoice.invoice_id)}><Trash2 /></Button>
                             )}
+                          </div>
                         </TableCell>
                     </motion.tr>
                   )) : (
@@ -305,9 +308,9 @@ const VehicleInvoiceList = ({
                   value={pageInput}
                   onChange={(e) => setPageInput(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleGoToPage()}
-                  className="w-16"
+                  className="input-compact w-16"
                 />
-                <Button onClick={handleGoToPage}>Go</Button>
+                <Button onClick={handleGoToPage} className="btn-compact">Go</Button>
               </div>
             </div>
           </div>

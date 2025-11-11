@@ -1,4 +1,5 @@
 import React from 'react';
+import '@/styles/responsive.css';
 import { Helmet } from 'react-helmet-async';
 import MISReport from '@/components/Reports/MISReport';
 
@@ -10,7 +11,7 @@ const MISReportPage = () => {
         <meta name="description" content="Management Information System reports with detailed sales analysis and business insights." />
       </Helmet>
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold">MIS Report</h1>
+        <h1 className="page-title">MIS Report</h1>
         <MISReport />
       </div>
     </>

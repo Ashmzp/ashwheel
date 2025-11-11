@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+import '@/styles/responsive.css';
 import { Helmet } from 'react-helmet';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
@@ -151,7 +152,7 @@ const PurchaseReturnPage = () => {
             <div className="space-y-4">
                 {view === 'list' && (
                     <div className="flex justify-between items-center">
-                        <h1 className="text-2xl font-bold">Purchase Returns Management</h1>
+                        <h1 className="page-title">Purchase Returns Management</h1>
                         {canAccess('purchase_returns', 'write') && (
                             <Button onClick={() => { setEditingReturn(null); resetForm(); setView('form'); }}><Plus className="w-4 h-4 mr-2" /> New Purchase Return</Button>
                         )}

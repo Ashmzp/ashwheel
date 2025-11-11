@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import '@/styles/responsive.css';
 import { Helmet } from 'react-helmet-async';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -107,13 +108,13 @@ const WpReturnPage = () => {
       </Helmet>
       <div className="container mx-auto p-4">
         <Card>
-          <CardHeader>
+          <CardHeader className="card-compact">
             <div className="flex justify-between items-center">
               <div>
-                <CardTitle className="text-2xl font-bold">Workshop Purchase Return (WP Return)</CardTitle>
+                <CardTitle className="page-title">Workshop Purchase Return (WP Return)</CardTitle>
                 <CardDescription>Manage returns of workshop purchases.</CardDescription>
               </div>
-              <Button onClick={handleNew}><PlusCircle className="mr-2 h-4 w-4" /> New Return</Button>
+              <Button onClick={handleNew} className="btn-compact"><PlusCircle className="mr-1 h-3.5 w-3.5" /> New Return</Button>
             </div>
             <div className="mt-4 flex gap-4 items-center">
               <Input
@@ -127,13 +128,13 @@ const WpReturnPage = () => {
               <Button onClick={handleExport} variant="outline"><Download className="mr-2 h-4 w-4" /> Export</Button>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="card-compact">
             {isLoading ? (
               <div className="flex justify-center items-center h-64">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
             ) : (
-              <Table>
+              <Table className="table-compact">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Return Date</TableHead>
@@ -320,14 +321,14 @@ const WpReturnForm = ({ isOpen, onClose, onSave, existingReturn }) => {
           {(selectedPurchase || id) && (
             <>
               {selectedPurchase && <Card>
-                <CardHeader><CardTitle>Selected Purchase Details</CardTitle></CardHeader>
-                <CardContent>
+                <CardHeader className="card-compact"><CardTitle>Selected Purchase Details</CardTitle></CardHeader>
+                <CardContent className="card-compact">
                   <p><strong>Invoice No:</strong> {selectedPurchase.invoice_no}</p>
                   <p><strong>Party:</strong> {selectedPurchase.party_name}</p>
                   <p><strong>Date:</strong> {formatDate(selectedPurchase.invoice_date)}</p>
                 </CardContent>
               </Card>}
-              <Table>
+              <Table className="table-compact">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Part No</TableHead>

@@ -1,4 +1,5 @@
 import React from 'react';
+import '@/styles/responsive.css';
 import { Helmet } from 'react-helmet-async';
 import Bookings from '@/components/Bookings/Bookings';
 

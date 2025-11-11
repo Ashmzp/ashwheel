@@ -259,7 +259,7 @@ const VehicleInvoicesPage = () => {
         <title>Vehicle Invoices - Showroom Pro</title>
         <meta name="description" content="Create and manage vehicle invoices with real-time stock adjustment." />
       </Helmet>
-      <div className="p-4 md:p-8">
+      <div className="container-responsive py-3 md:py-4">
         {showForm ? (
           <VehicleInvoiceForm
             onSave={handleSaveInvoice}

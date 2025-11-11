@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import '@/styles/responsive.css';
 import { Helmet } from 'react-helmet-async';
 import { v4 as uuidv4 } from 'uuid';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -101,18 +102,18 @@ const PurchaseList = ({ purchases, onAddPurchase, onEditPurchase, onDeletePurcha
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Vehicle Purchases</h1>
+        <h1 className="page-title">Vehicle Purchases</h1>
         {canAccess('purchases', 'write') && (
           <Button onClick={onAddPurchase}><Plus className="w-4 h-4 mr-2" /> Add Purchase</Button>
         )}
       </div>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="card-compact">
           <div className="flex flex-col md:flex-row justify-between gap-4">
             <div className="relative w-full md:w-1/3">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search Party, Invoice, Chassis, Engine..." className="pl-10" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+              <Input placeholder="Search Party, Invoice, Chassis, Engine..." className="input-compact pl-8" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
             </div>
             <div className="flex items-center gap-2">
               <Input type="date" value={dateRange.start} onChange={(e) => setDateRange({...dateRange, start: e.target.value})} className="w-auto" />
@@ -121,9 +122,9 @@ const PurchaseList = ({ purchases, onAddPurchase, onEditPurchase, onDeletePurcha
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
+        <CardContent className="card-compact">
+          <div className="scrollable-container">
+            <Table className="table-compact">
               <TableHeader>
                 <TableRow>
                   <TableHead>Serial No</TableHead>
@@ -149,10 +150,10 @@ const PurchaseList = ({ purchases, onAddPurchase, onEditPurchase, onDeletePurcha
                     <TableCell>{purchase.items?.length || 0}</TableCell>
                     <TableCell className="text-right">
                       {canAccess('purchases', 'write') && (
-                        <Button variant="ghost" size="icon" onClick={() => onEditPurchase(purchase)}><Edit className="h-4 w-4" /></Button>
+                        <Button variant="ghost" className="btn-compact" onClick={() => onEditPurchase(purchase)}><Edit className="h-4 w-4" /></Button>
                       )}
                       {canAccess('purchases', 'delete') && (
-                        <Button variant="ghost" size="icon" className="text-red-500" onClick={() => handleDelete(purchase.id, purchase.items)}><Trash2 className="h-4 w-4" /></Button>
+                        <Button variant="ghost" className="btn-compact" className="text-red-500" onClick={() => handleDelete(purchase.id, purchase.items)}><Trash2 className="h-4 w-4" /></Button>
                       )}
                     </TableCell>
                   </TableRow>
@@ -310,7 +311,7 @@ const PurchasesPage = () => {
         <title>Purchases - Showroom Pro</title>
         <meta name="description" content="Manage all your vehicle purchases." />
       </Helmet>
-      <div className="p-4 md:p-8">
+      <div className="container-responsive py-3 md:py-4">
         {showForm ? (
           <PurchaseForm
             onSave={handleSavePurchase}

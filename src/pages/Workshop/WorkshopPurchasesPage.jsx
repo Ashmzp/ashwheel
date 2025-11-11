@@ -1,4 +1,5 @@
 import React from 'react';
+import '@/styles/responsive.css';
     import { Helmet } from 'react-helmet-async';
     import { useToast } from '@/components/ui/use-toast';
     import { 
@@ -103,10 +104,9 @@ import React from 'react';
             <AnimatePresence mode="wait">
               {view === 'list' ? (
                 <motion.div key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                  <div className="flex justify-between items-center mb-6">
+                  <div className="page-header">
                     <h1 className="text-3xl font-bold gradient-text">Workshop Purchases</h1>
-                    <Button onClick={handleAddNew} className="button-glow">
-                      <PlusCircle className="mr-2 h-4 w-4" /> Add New Purchase
+                    <Button onClick={handleAddNew} className="button-glow" className="btn-compact"><PlusCircle className="mr-1 h-3.5 w-3.5" /> Add New Purchase
                     </Button>
                   </div>
                   {isLoadingPurchases ? (
