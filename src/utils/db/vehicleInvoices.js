@@ -23,8 +23,20 @@ export const getVehicleInvoices = async ({ page = 1, pageSize = 50, searchTerm =
         throw error;
     }
 
-    const invoices = data[0]?.invoices_data || [];
-    const count = data[0]?.total_count || 0;
+    // Parse the JSON string if needed
+    let invoices = [];
+    let count = 0;
+
+    if (data && data.length > 0) {
+        const result = data[0];
+        // Handle both JSON string and parsed object
+        if (typeof result.invoices_data === 'string') {
+            invoices = JSON.parse(result.invoices_data) || [];
+        } else {
+            invoices = result.invoices_data || [];
+        }
+        count = result.total_count || 0;
+    }
 
     return { data: invoices, count, error: null };
 };
@@ -150,5 +162,14 @@ export const getVehicleInvoicesForExport = async ({ startDate, endDate, searchTe
     });
     
     if (error) throw error;
-    return data[0]?.invoices_data || [];
+    
+    if (data && data.length > 0) {
+        const result = data[0];
+        // Handle both JSON string and parsed object
+        if (typeof result.invoices_data === 'string') {
+            return JSON.parse(result.invoices_data) || [];
+        }
+        return result.invoices_data || [];
+    }
+    return [];
 };

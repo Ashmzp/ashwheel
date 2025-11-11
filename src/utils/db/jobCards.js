@@ -104,8 +104,9 @@ export const saveJobCard = async (jobCard, isNew, originalJobCard) => {
   }
 
   // Fallback to direct insert/update if RPC fails
-  console.warn('RPC function failed, using direct insert:', rpcError);
+  console.warn('RPC function failed, using direct insert and manual inventory update:', rpcError);
   
+  let savedJobCard;
   if (isNew) {
     const { data, error } = await supabase
       .from('job_cards')
@@ -117,7 +118,7 @@ export const saveJobCard = async (jobCard, isNew, originalJobCard) => {
       console.error('Error inserting job card:', error);
       throw new Error(error.message || 'Failed to create job card.');
     }
-    return data;
+    savedJobCard = data;
   } else {
     const { data, error } = await supabase
       .from('job_cards')
@@ -130,8 +131,48 @@ export const saveJobCard = async (jobCard, isNew, originalJobCard) => {
       console.error('Error updating job card:', error);
       throw new Error(error.message || 'Failed to update job card.');
     }
-    return data;
+    savedJobCard = data;
   }
+
+  // Manually update workshop inventory
+  const newParts = jobCardData.parts_items || [];
+  const oldParts = originalJobCard?.parts_items || [];
+
+  // Calculate inventory changes
+  const inventoryChanges = new Map();
+
+  // Subtract new parts quantities
+  newParts.forEach(part => {
+    if (part.part_no && part.qty > 0) {
+      inventoryChanges.set(part.part_no, (inventoryChanges.get(part.part_no) || 0) - Number(part.qty));
+    }
+  });
+
+  // Add back old parts quantities
+  oldParts.forEach(part => {
+    if (part.part_no && part.qty > 0) {
+      inventoryChanges.set(part.part_no, (inventoryChanges.get(part.part_no) || 0) + Number(part.qty));
+    }
+  });
+
+  // Apply inventory changes
+  for (const [partNo, qtyChange] of inventoryChanges.entries()) {
+    if (qtyChange !== 0) {
+      const { error: invError } = await supabase
+        .from('workshop_inventory')
+        .update({ 
+          quantity: supabase.raw(`quantity + ${qtyChange}`)
+        })
+        .eq('part_no', partNo)
+        .eq('user_id', userId);
+      
+      if (invError) {
+        console.error(`Failed to update inventory for part ${partNo}:`, invError);
+      }
+    }
+  }
+
+  return savedJobCard;
 };
 
 export const deleteJobCard = async (jobCard) => {
