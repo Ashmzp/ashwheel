@@ -10,6 +10,7 @@ import { Slider } from '@/components/ui/slider';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UploadCloud, FileImage, Download, Loader2, Palette } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { sanitizeFilename } from '@/utils/sanitize';
 
 const PngToJpegPage = () => {
   const [file, setFile] = useState(null);
@@ -72,7 +73,7 @@ const PngToJpegPage = () => {
           (blob) => {
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
-            const originalFileName = file.name.substring(0, file.name.lastIndexOf('.'));
+            const originalFileName = sanitizeFilename(file.name.substring(0, file.name.lastIndexOf('.')));
             link.download = `${originalFileName}-ashwheel.jpeg`;
             link.href = url;
             document.body.appendChild(link);

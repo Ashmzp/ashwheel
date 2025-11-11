@@ -1,5 +1,7 @@
+import { sanitizeURL } from '@/utils/sanitize';
+
 const ECOMMERCE_API_URL = "https://api-ecommerce.hostinger.com";
-const ECOMMERCE_STORE_ID = "store_01K474B0JGPBNC157345H2FEXA";
+const ECOMMERCE_STORE_ID = "store_01K474B0JGPBNC157345H2FEXA';
 
 export const formatCurrency = (priceInCents, currencyInfo) => {
 	if (!currencyInfo || priceInCents === null || priceInCents === undefined) {
@@ -360,8 +362,14 @@ export async function getProducts({ids, offset, limit, order, sort_by, is_hidden
 
 	const queryString = queryParams.toString();
 	const url = `${ECOMMERCE_API_URL}/store/${ECOMMERCE_STORE_ID}/products${queryString ? `?${queryString}` : ""}`;
+	
+	// Validate URL before fetching
+	const safeUrl = sanitizeURL(url);
+	if (!safeUrl) {
+		throw new Error('Invalid API URL');
+	}
 
-	const response = await fetch(url, {
+	const response = await fetch(safeUrl, {
 		method: "GET",
 		headers: {
 			"Content-Type": "application/json",

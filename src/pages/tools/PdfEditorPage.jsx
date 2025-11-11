@@ -18,6 +18,8 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
     import { Label } from '@/components/ui/label';
     import { Textarea } from '@/components/ui/textarea';
     import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+    import { sanitizeFilename, escapeHTML } from '@/utils/sanitize';
+    import { getCSRFToken } from '@/utils/csrf';
     
     const usePdfStore = create((set, get) => ({
       history: [[]],
@@ -268,7 +270,8 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
       };
     
       const addText = () => {
-        const newText = { id: uuidv4(), type: 'text', page: activePage, x: 50, y: 50, text: 'Double click to edit', fontSize: 24, fill: 'black', fontFamily: 'Helvetica', width: 200 };
+        const safeText = escapeHTML('Double click to edit');
+        const newText = { id: uuidv4(), type: 'text', page: activePage, x: 50, y: 50, text: safeText, fontSize: 24, fill: 'black', fontFamily: 'Helvetica', width: 200 };
         setObjects(prev => [...prev, newText]);
         setSelectedId(newText.id);
       };
@@ -449,7 +452,8 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
           }
     
           const pdfBytes = await newPdfDoc.save();
-          saveAs(new Blob([pdfBytes], { type: 'application/pdf' }), `${file.name.replace('.pdf', '')}-edited.pdf`);
+          const safeFilename = sanitizeFilename(file.name.replace('.pdf', ''));
+          saveAs(new Blob([pdfBytes], { type: 'application/pdf' }), `${safeFilename}-edited.pdf`);
           toast({ title: 'Download Started', description: 'Your edited PDF is being downloaded.' });
         } catch (e) {
           console.error(e);

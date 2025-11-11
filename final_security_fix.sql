@@ -1,0 +1,66 @@
+-- Final Security Fix Script
+-- Ye script sirf existing functions ko fix karega
+
+-- All existing functions ko fix karo
+ALTER FUNCTION public.check_and_update_expired_access() SET search_path = '';
+ALTER FUNCTION public.generate_and_increment_invoice_no() SET search_path = '';
+ALTER FUNCTION public.generate_and_increment_job_card_no() SET search_path = '';
+ALTER FUNCTION public.generate_invoice_no() SET search_path = '';
+ALTER FUNCTION public.get_all_users_with_session_count() SET search_path = '';
+ALTER FUNCTION public.get_booking_summary() SET search_path = '';
+ALTER FUNCTION public.get_dashboard_stats() SET search_path = '';
+ALTER FUNCTION public.get_financial_year() SET search_path = '';
+ALTER FUNCTION public.get_follow_ups_v2() SET search_path = '';
+ALTER FUNCTION public.get_follow_ups_v3() SET search_path = '';
+ALTER FUNCTION public.get_invoice_summary() SET search_path = '';
+ALTER FUNCTION public.get_invoice_summary_v2() SET search_path = '';
+ALTER FUNCTION public.get_next_invoice_number_v2() SET search_path = '';
+ALTER FUNCTION public.get_next_job_card_invoice_no_v2() SET search_path = '';
+ALTER FUNCTION public.get_party_ledger() SET search_path = '';
+ALTER FUNCTION public.get_party_ledger_v2() SET search_path = '';
+ALTER FUNCTION public.get_party_sale_summary() SET search_path = '';
+ALTER FUNCTION public.get_party_vehicle_invoice_summary() SET search_path = '';
+ALTER FUNCTION public.get_party_wise_sale_report() SET search_path = '';
+ALTER FUNCTION public.get_party_wise_sale_report_v2() SET search_path = '';
+ALTER FUNCTION public.get_sales_by_salesperson() SET search_path = '';
+ALTER FUNCTION public.get_user_role() SET search_path = '';
+ALTER FUNCTION public.get_vehicle_invoices_report() SET search_path = '';
+ALTER FUNCTION public.get_vehicle_invoices_report_v2() SET search_path = '';
+ALTER FUNCTION public.get_vehicle_invoices_report_v3() SET search_path = '';
+ALTER FUNCTION public.get_vehicle_invoices_report_v4() SET search_path = '';
+ALTER FUNCTION public.handle_new_user_default_role() SET search_path = '';
+ALTER FUNCTION public.handle_stock_deletion_on_sale() SET search_path = '';
+ALTER FUNCTION public.handle_updated_at() SET search_path = '';
+ALTER FUNCTION public.is_premium_tools_admin() SET search_path = '';
+ALTER FUNCTION public.manage_wp_return() SET search_path = '';
+ALTER FUNCTION public.manage_ws_return() SET search_path = '';
+ALTER FUNCTION public.normalize_access_keys() SET search_path = '';
+ALTER FUNCTION public.record_invoice_gap() SET search_path = '';
+ALTER FUNCTION public.save_job_card_and_update_inventory() SET search_path = '';
+ALTER FUNCTION public.search_vehicle_invoices() SET search_path = '';
+ALTER FUNCTION public.search_vehicle_invoices_v2() SET search_path = '';
+ALTER FUNCTION public.search_vehicle_invoices_v3() SET search_path = '';
+ALTER FUNCTION public.search_vehicle_invoices_v4() SET search_path = '';
+ALTER FUNCTION public.search_vehicle_invoices_v5() SET search_path = '';
+ALTER FUNCTION public.sync_sold_stock() SET search_path = '';
+ALTER FUNCTION public.track_job_card_history() SET search_path = '';
+ALTER FUNCTION public.track_vehicle_history() SET search_path = '';
+ALTER FUNCTION public.track_vehicle_history_v2() SET search_path = '';
+ALTER FUNCTION public.track_vehicle_history_v3() SET search_path = '';
+ALTER FUNCTION public.track_vehicle_history_v4() SET search_path = '';
+ALTER FUNCTION public.track_vehicle_history_v5() SET search_path = '';
+ALTER FUNCTION public.track_vehicle_history_v6() SET search_path = '';
+ALTER FUNCTION public.track_vehicle_history_v7() SET search_path = '';
+ALTER FUNCTION public.track_vehicle_history_v8() SET search_path = '';
+ALTER FUNCTION public.track_vehicle_history_v9() SET search_path = '';
+ALTER FUNCTION public.track_vehicle_history_v10() SET search_path = '';
+ALTER FUNCTION public.track_vehicle_history_v11() SET search_path = '';
+ALTER FUNCTION public.track_vehicle_history_v12() SET search_path = '';
+ALTER FUNCTION public.track_vehicle_history_v13() SET search_path = '';
+ALTER FUNCTION public.update_inventory_from_purchases() SET search_path = '';
+ALTER FUNCTION public.update_inventory_item_quantity() SET search_path = '';
+ALTER FUNCTION public.upsert_and_update_inventory() SET search_path = '';
+
+-- Extension fix (optional - requires superuser privileges)
+-- CREATE SCHEMA IF NOT EXISTS extensions;
+-- ALTER EXTENSION pg_trgm SET SCHEMA extensions;

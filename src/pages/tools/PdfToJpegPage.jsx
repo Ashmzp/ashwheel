@@ -10,6 +10,7 @@ import React, { useState, useRef, useCallback } from 'react';
     import { saveAs } from 'file-saver';
     import * as pdfjsLib from "pdfjs-dist";
     import pdfWorker from "pdfjs-dist/build/pdf.worker.js?url";
+    import { sanitizeFilename } from '@/utils/sanitize';
 
     pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
@@ -87,7 +88,7 @@ import React, { useState, useRef, useCallback } from 'react';
             }
 
             const pageCount = pdf.numPages;
-            const outputFileName = pdfFile.name.replace(/\.pdf$/i, '');
+            const outputFileName = sanitizeFilename(pdfFile.name.replace(/\.pdf$/i, ''));
 
             if (pageCount === 1) {
                 const page = await pdf.getPage(1);

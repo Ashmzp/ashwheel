@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Copy } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { formatDateTime } from '@/utils/dateUtils';
+import { escapeHTML } from '@/utils/sanitize';
 
 const ProductKeyGenerator = () => {
   const { user } = useAuth();
@@ -95,6 +96,7 @@ const ProductKeyGenerator = () => {
   };
 
   const copyToClipboard = (text) => {
+    const safeText = escapeHTML(text);
     navigator.clipboard.writeText(text);
     toast({ title: 'Copied!', description: 'Key copied to clipboard.' });
   };

@@ -8,6 +8,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Download, ArrowLeft, Loader2, Youtube } from 'lucide-react';
 import { saveAs } from 'file-saver';
+import { sanitizeURL } from '@/utils/sanitize';
 
 const ThumbnailDownloaderPage = () => {
   const [url, setUrl] = useState('');
@@ -49,7 +50,12 @@ const ThumbnailDownloaderPage = () => {
   
   const handleDownload = async (thumbnailUrl, quality) => {
     try {
-        const response = await fetch(thumbnailUrl);
+        // Validate URL before fetching
+        const safeUrl = sanitizeURL(thumbnailUrl);
+        if (!safeUrl || !safeUrl.includes('img.youtube.com')) {
+          throw new Error('Invalid thumbnail URL');
+        }
+        const response = await fetch(safeUrl);
         if (!response.ok) {
             if(quality === 'Max Resolution') {
                 const fallbackUrl = thumbnails.find(t => t.quality === 'High (HD)').url;

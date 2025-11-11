@@ -15,6 +15,7 @@ import { getSettings } from '@/utils/db/settings';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
 import { getCurrentMonthDateRange } from '@/utils/dateUtils';
+import { escapeHTML } from '@/utils/sanitize';
 
 const StatCard = ({ title, value, icon, description, isLoading }) => (
   <Card className="bg-secondary/50 hover:bg-secondary/70 transition-colors duration-300">

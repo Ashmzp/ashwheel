@@ -1,7 +1,10 @@
 /* eslint-disable no-restricted-globals */
 
 const CACHE_NAME = 'ashwheel-cache-v2';
-const OFFLINE_URL = '/offline.html'; // A dedicated offline page
+const OFFLINE_URL = '/offline.html';
+const ALLOWED_ORIGINS = ['https://ashwheel.cloud', 'http://localhost:5173', 'https://supabase.ashwheel.cloud'];
+const ALLOWED_PROTOCOLS = ['http:', 'https:'];
+
 const urlsToCache = [
   '/',
   '/index.html',
@@ -12,6 +15,21 @@ const urlsToCache = [
   '/images/placeholder.jpg',
   OFFLINE_URL
 ];
+
+// Validate request origin and protocol
+const isValidRequest = (url) => {
+  try {
+    const requestUrl = new URL(url);
+    // Check protocol
+    if (!ALLOWED_PROTOCOLS.includes(requestUrl.protocol)) {
+      return false;
+    }
+    // Check origin
+    return ALLOWED_ORIGINS.some(origin => requestUrl.origin === origin || requestUrl.origin === self.location.origin);
+  } catch {
+    return false;
+  }
+};
 
 // Install the service worker and cache the app shell
 self.addEventListener('install', event => {
@@ -44,6 +62,18 @@ self.addEventListener('activate', event => {
 
 // Intercept fetch requests
 self.addEventListener('fetch', event => {
+  // Validate request URL and method
+  if (!isValidRequest(event.request.url)) {
+    console.warn('Blocked request to invalid origin:', event.request.url);
+    return;
+  }
+  
+  // Only cache GET requests
+  if (event.request.method !== 'GET') {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
   // For navigation requests, try network first, then cache, then offline page
   if (event.request.mode === 'navigate') {
     event.respondWith(

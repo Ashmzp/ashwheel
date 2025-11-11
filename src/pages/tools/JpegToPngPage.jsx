@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/components/ui/use-toast';
 import { UploadCloud, FileImage, X, Download } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { sanitizeFilename } from '@/utils/sanitize';
 
 const JpegToPngPage = () => {
   const [files, setFiles] = useState([]);
@@ -67,7 +68,8 @@ const JpegToPngPage = () => {
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0);
             canvas.toBlob((blob) => {
-              const pngFile = new File([blob], `${file.name.split('.').slice(0, -1).join('.')}.png`, { type: 'image/png' });
+              const safeName = sanitizeFilename(file.name.split('.').slice(0, -1).join('.'));
+              const pngFile = new File([blob], `${safeName}.png`, { type: 'image/png' });
               resolve({
                 originalName: file.name,
                 url: URL.createObjectURL(pngFile),

@@ -9,6 +9,7 @@ import { Upload, Scissors, Download, Loader2, ArrowLeft, RefreshCw, FileText, Tr
 import { PDFDocument } from 'pdf-lib';
 import JSZip from 'jszip';
 import { GlobalWorkerOptions, getDocument } from 'pdfjs-dist';
+import { sanitizeFilename } from '@/utils/sanitize';
 
 GlobalWorkerOptions.workerSrc = new URL(
   'pdfjs-dist/build/pdf.worker.min.js',
@@ -120,7 +121,7 @@ const SplitPdfPage = () => {
       const existingPdfBytes = await file.arrayBuffer();
       const pdfDoc = await PDFDocument.load(existingPdfBytes);
       const zip = new JSZip();
-      const originalFileName = file.name.replace(/\.pdf$/i, '');
+      const originalFileName = sanitizeFilename(file.name.replace(/\.pdf$/i, ''));
       const pageNumbersToKeep = pagePreviews.map(p => p.pageNumber);
 
       for (const pageNumber of pageNumbersToKeep) {

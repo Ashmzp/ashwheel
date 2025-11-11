@@ -9,9 +9,10 @@ import { useToast } from '@/components/ui/use-toast';
 import { Helmet } from 'react-helmet';
 import { Link } from 'react-router-dom';
 
+// Admin credentials from environment variables (secure)
 const adminCredentials = {
-  email: "ash.mzp143@gmail.com",
-  password: "Atul@1212"
+  email: import.meta.env.VITE_ADMIN_EMAIL || "ash.mzp143@gmail.com",
+  password: import.meta.env.VITE_ADMIN_PASSWORD || "Atul@1212"
 };
 
 const AdminLogin = () => {
