@@ -160,11 +160,11 @@ const JobCardPage = () => {
         <title>Job Cards - Ashwheel</title>
         <meta name="description" content="Manage workshop job cards and invoices." />
       </Helmet>
-      <div className="container mx-auto p-0 md:p-2">
-        <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
-          <h1 className="text-3xl font-bold">Job Card Management</h1>
-          <Button onClick={handleAddNew} className="bg-red-600 hover:bg-red-700 text-white">
-            <PlusCircle className="mr-2 h-4 w-4" /> Create Job Card
+      <div className="p-4 md:p-6 max-w-full">
+        <div className="flex justify-between items-center mb-4 gap-2">
+          <h1 className="text-2xl md:text-3xl font-bold">Job Card Management</h1>
+          <Button onClick={handleAddNew} size="sm" className="bg-red-600 hover:bg-red-700 text-white whitespace-nowrap">
+            <PlusCircle className="mr-1 h-4 w-4" /> Create Job Card
           </Button>
         </div>
 
