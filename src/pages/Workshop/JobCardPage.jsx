@@ -75,10 +75,10 @@ const JobCardPage = () => {
   }, [user, queryClient]);
 
   const handleFormClose = () => {
-    setActiveTab('list');
+    resetWorkshopForm();
     setSelectedJobCardId(null);
     clearJobCardFormPersistence();
-    resetWorkshopForm();
+    setActiveTab('list');
   };
 
   const saveJobCardMutation = useMutation({
