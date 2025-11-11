@@ -71,7 +71,21 @@ export const saveJobCard = async (jobCard, isNew, originalJobCard) => {
   const userId = await getCurrentUserId();
   if (!userId) throw new Error("User not authenticated.");
 
-  const jobCardData = { ...jobCard, user_id: userId };
+  // Only include valid database columns
+  const validColumns = [
+    'id', 'user_id', 'invoice_no', 'invoice_date', 'customer_id', 'customer_name',
+    'customer_mobile', 'customer_address', 'customer_state', 'manual_jc_no',
+    'jc_no', 'kms', 'reg_no', 'frame_no', 'model', 'job_type', 'mechanic',
+    'next_due_date', 'parts_items', 'labour_items', 'denied_items', 'total_amount'
+  ];
+
+  const jobCardData = {};
+  validColumns.forEach(col => {
+    if (jobCard[col] !== undefined) {
+      jobCardData[col] = jobCard[col];
+    }
+  });
+  jobCardData.user_id = userId;
 
   if (isNew && !jobCardData.invoice_no) {
     const nextInvoiceNo = await getNextJobCardInvoiceNo(jobCardData.invoice_date);
