@@ -78,17 +78,46 @@ export const saveJobCard = async (jobCard, isNew, originalJobCard) => {
     jobCardData.invoice_no = nextInvoiceNo;
   }
 
-  const { data, error } = await supabase.rpc('save_job_card_and_update_inventory', {
+  // Try RPC function first
+  const { data: rpcData, error: rpcError } = await supabase.rpc('save_job_card_and_update_inventory', {
     p_job_card_data: jobCardData,
     p_is_new: isNew,
     p_original_job_card: originalJobCard || null,
   });
 
-  if (error) {
-    console.error('Error saving job card:', error);
-    throw new Error(error.message || 'An unexpected error occurred.');
+  if (!rpcError) {
+    return rpcData;
   }
-  return data;
+
+  // Fallback to direct insert/update if RPC fails
+  console.warn('RPC function failed, using direct insert:', rpcError);
+  
+  if (isNew) {
+    const { data, error } = await supabase
+      .from('job_cards')
+      .insert([jobCardData])
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error inserting job card:', error);
+      throw new Error(error.message || 'Failed to create job card.');
+    }
+    return data;
+  } else {
+    const { data, error } = await supabase
+      .from('job_cards')
+      .update(jobCardData)
+      .eq('id', jobCardData.id)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error updating job card:', error);
+      throw new Error(error.message || 'Failed to update job card.');
+    }
+    return data;
+  }
 };
 
 export const deleteJobCard = async (jobCard) => {
