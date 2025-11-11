@@ -103,7 +103,6 @@ const JobCardForm = ({ onSave, onCancel, jobCard, isEditing, isSaving, isLoading
   };
   
   const handleCancelClick = () => {
-    resetForm();
     setErrors({});
     onCancel();
   };
