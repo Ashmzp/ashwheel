@@ -31,25 +31,26 @@ import React from 'react';
       };
 
       return (
-        <header className="flex items-center justify-between lg:justify-end h-16 px-4 md:px-6 bg-background border-b z-40">
-          <div className="flex items-center gap-4 lg:hidden">
+        <header className="flex items-center justify-between lg:justify-end h-14 px-3 md:px-4 bg-background border-b z-40">
+          <div className="flex items-center gap-2 lg:hidden">
             <Button
               onClick={onOpen}
               variant="ghost"
-              size="icon"
+              size="sm"
+              className="h-8 w-8 p-0"
             >
-              <Menu className="h-6 w-6" />
+              <Menu className="h-5 w-5" />
             </Button>
-            <Link to="/" className="flex items-center gap-2">
-                 <AnimatedLogo className="h-12 w-auto" isLink={false} />
+            <Link to="/" className="flex items-center">
+                 <AnimatedLogo className="h-10 w-auto" isLink={false} />
             </Link>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                  <Avatar className="h-10 w-10">
+                <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0">
+                  <Avatar className="h-9 w-9">
                      <AvatarImage src="/placeholder.jpg" alt="User" />
                     <AvatarFallback>{userInitial}</AvatarFallback>
                   </Avatar>

@@ -1,0 +1,16 @@
+/* Responsive utility classes */
+.container-responsive { @apply w-full mx-auto px-3 sm:px-4 md:px-6; max-width: 100%; }
+.text-responsive-2xl { @apply text-xl sm:text-2xl md:text-3xl; }
+.text-responsive-xl { @apply text-lg sm:text-xl md:text-2xl; }
+.text-responsive-lg { @apply text-base sm:text-lg md:text-xl; }
+.text-responsive-base { @apply text-sm sm:text-base; }
+.text-responsive-sm { @apply text-xs sm:text-sm; }
+.btn-compact { @apply h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm; }
+.input-compact { @apply h-8 text-xs sm:h-9 sm:text-sm; }
+.card-compact { @apply p-2 sm:p-3 md:p-4; }
+.table-compact th, .table-compact td { @apply text-[10px] sm:text-xs py-1.5 sm:py-2 px-2 sm:px-3 whitespace-nowrap; }
+.page-header { @apply flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3 sm:mb-4; }
+.page-title { @apply text-xl sm:text-2xl md:text-3xl font-bold; }
+.action-buttons { @apply flex gap-0.5; }
+.action-buttons button { @apply h-7 w-7 p-0; }
+.action-buttons svg { @apply h-3 w-3; }

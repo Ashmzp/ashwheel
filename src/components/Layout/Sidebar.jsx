@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { Home, Users, ShoppingCart, Package, Settings, Wrench, ClipboardList, Shield, UserCircle, Car, ArrowUpLeft as ArrowUturnLeft, ArrowDownLeft as ArrowUturnDown, BarChart2, BellRing, BarChart3, BookMarked, Book, BookCopy, FileText } from 'lucide-react';
 import { useAuth } from '@/contexts/NewSupabaseAuthContext';
 import AnimatedLogo from '@/components/AnimatedLogo';
+import '@/styles/responsive.css';
 
 const Sidebar = () => {
   const { canAccess, userData, loading, loadingUserData } = useAuth();
@@ -59,35 +60,35 @@ const Sidebar = () => {
   });
 
   return (
-    <aside className="w-64 bg-background text-card-foreground p-4 flex flex-col flex-shrink-0 h-full">
-      <div className="h-16 flex items-center justify-center flex-shrink-0 mb-10">
+    <aside className="w-56 lg:w-60 xl:w-64 bg-background text-card-foreground p-3 flex flex-col flex-shrink-0 h-full">
+      <div className="h-14 flex items-center justify-center flex-shrink-0 mb-6">
         <NavLink to="/">
-          <AnimatedLogo className="h-12 w-auto" isLink={false} />
+          <AnimatedLogo className="h-10 w-auto" isLink={false} />
         </NavLink>
       </div>
-      <div className="flex-grow overflow-y-auto pr-2">
-          <nav className="flex flex-col space-y-2">
+      <div className="flex-grow overflow-y-auto pr-1">
+          <nav className="flex flex-col space-y-1">
             {filteredNavItems.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) =>
-                  `flex items-center p-3 rounded-lg transition-colors text-muted-foreground hover:text-foreground ${
+                  `flex items-center p-2 rounded-lg transition-colors text-xs lg:text-sm text-muted-foreground hover:text-foreground ${
                     isActive
                       ? 'bg-primary text-primary-foreground shadow-lg'
                       : 'hover:bg-accent'
                   }`
                 }
               >
-                <item.icon className="w-5 h-5 mr-3 flex-shrink-0" />
+                <item.icon className="w-4 h-4 mr-2 flex-shrink-0" />
                 <span className="truncate">{item.label}</span>
               </NavLink>
             ))}
           </nav>
       </div>
-      <div className="mt-auto pt-4 text-center text-xs text-muted-foreground flex-shrink-0">
+      <div className="mt-auto pt-3 text-center text-[10px] text-muted-foreground flex-shrink-0">
         <p>Ashwheel Pro v1.2</p>
-        <p>&copy; {new Date().getFullYear()} Ashwheel Inc.</p>
+        <p>&copy; {new Date().getFullYear()}</p>
       </div>
     </aside>
   );

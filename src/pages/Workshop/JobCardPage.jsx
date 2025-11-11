@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import '@/styles/responsive.css';
 import { Helmet } from 'react-helmet-async';
 import { useToast } from '@/components/ui/use-toast';
 import { getJobCards, saveJobCard } from '@/utils/db/jobCards';
@@ -160,11 +161,11 @@ const JobCardPage = () => {
         <title>Job Cards - Ashwheel</title>
         <meta name="description" content="Manage workshop job cards and invoices." />
       </Helmet>
-      <div className="p-4 md:p-6 max-w-full">
-        <div className="flex justify-between items-center mb-4 gap-2">
-          <h1 className="text-2xl md:text-3xl font-bold">Job Card Management</h1>
-          <Button onClick={handleAddNew} size="sm" className="bg-red-600 hover:bg-red-700 text-white whitespace-nowrap">
-            <PlusCircle className="mr-1 h-4 w-4" /> Create Job Card
+      <div className="container-responsive py-3 md:py-4">
+        <div className="page-header">
+          <h1 className="page-title">Job Card Management</h1>
+          <Button onClick={handleAddNew} className="btn-compact bg-red-600 hover:bg-red-700 text-white whitespace-nowrap">
+            <PlusCircle className="mr-1 h-3.5 w-3.5" /> Create Job Card
           </Button>
         </div>
 

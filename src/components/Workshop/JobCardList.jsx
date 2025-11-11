@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import '@/styles/responsive.css';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -89,21 +90,21 @@ const JobCardList = ({ jobCards = [], onEdit, onDelete, isLoading, dateRange, se
   return (
     <>
       <Card>
-        <CardContent className="p-3 md:p-4">
-          <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-2 mb-3">
-            <div className="relative w-full md:max-w-xs">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <CardContent className="card-compact">
+          <div className="flex-responsive mb-3">
+            <div className="search-bar">
+              <Search className="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search by Invoice, Customer, Reg No..."
-                className="pl-8 h-9"
+                className="input-compact pl-8"
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
               />
             </div>
-            <div className="flex items-center gap-1.5 flex-wrap">
+            <div className="filter-controls">
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="flex-1 md:w-auto justify-start text-left font-normal text-xs">
+                  <Button variant="outline" className="btn-compact flex-1 sm:flex-none justify-start text-left font-normal">
                     {format(new Date(dateRange.start), "dd-MMM-yy")}
                   </Button>
                 </PopoverTrigger>
@@ -118,7 +119,7 @@ const JobCardList = ({ jobCards = [], onEdit, onDelete, isLoading, dateRange, se
               </Popover>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="flex-1 md:w-auto justify-start text-left font-normal text-xs">
+                  <Button variant="outline" className="btn-compact flex-1 sm:flex-none justify-start text-left font-normal">
                     {format(new Date(dateRange.end), "dd-MMM-yy")}
                   </Button>
                 </PopoverTrigger>
@@ -131,16 +132,16 @@ const JobCardList = ({ jobCards = [], onEdit, onDelete, isLoading, dateRange, se
                   />
                 </PopoverContent>
               </Popover>
-              <Button onClick={handleExport} variant="outline" size="sm"><Download className="h-4 w-4" /></Button>
+              <Button onClick={handleExport} variant="outline" className="btn-compact"><Download className="h-3.5 w-3.5" /></Button>
               <ColumnSettingsDialog visibleColumns={visibleColumns} setVisibleColumns={setVisibleColumns} saveSettings={saveColumnSettings} />
             </div>
           </div>
-          <div className="overflow-x-auto -mx-3 md:mx-0">
-            <Table>
+          <div className="scrollable-container">
+            <Table className="table-compact">
               <TableHeader>
                 <TableRow>
                   {allJobCardColumns.filter(c => visibleColumns.includes(c.id)).map(col => (
-                    <TableHead key={col.id} className="text-xs whitespace-nowrap">{col.label}</TableHead>
+                    <TableHead key={col.id}>{col.label}</TableHead>
                   ))}
                 </TableRow>
               </TableHeader>
@@ -148,38 +149,38 @@ const JobCardList = ({ jobCards = [], onEdit, onDelete, isLoading, dateRange, se
                 {isLoading ? (
                   <TableRow>
                     <TableCell colSpan={visibleColumns.length} className="text-center">
-                      <div className="flex justify-center items-center p-8">
-                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                      <div className="flex justify-center items-center p-6">
+                        <Loader2 className="w-6 h-6 animate-spin text-primary" />
                       </div>
                     </TableCell>
                   </TableRow>
                 ) : filteredJobCards.length > 0 ? filteredJobCards.map(jc => (
                   <TableRow key={jc.id}>
                     {allJobCardColumns.filter(c => visibleColumns.includes(c.id)).map(col => (
-                      <TableCell key={col.id} className="text-xs py-2">
+                      <TableCell key={col.id}>
                         {col.id === 'actions' ? (
-                          <div className="flex gap-0.5">
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={(e) => handlePreview(e, jc)}><Printer className="h-3.5 w-3.5" /></Button>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => onEdit(jc)}><Edit className="h-3.5 w-3.5" /></Button>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => onDelete(jc.id)}><Trash2 className="h-3.5 w-3.5 text-red-500" /></Button>
+                          <div className="action-buttons">
+                            <Button variant="ghost" onClick={(e) => handlePreview(e, jc)}><Printer /></Button>
+                            <Button variant="ghost" onClick={() => onEdit(jc)}><Edit /></Button>
+                            <Button variant="ghost" onClick={() => onDelete(jc.id)}><Trash2 className="text-red-500" /></Button>
                           </div>
                         ) : col.id === 'status' ? (
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap ${jc.status === 'completed' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
+                          <span className={`status-badge ${jc.status === 'completed' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
                             {jc.status || 'pending'}
                           </span>
                         ) : col.id === 'invoice_date' || col.id === 'next_due_date' ? (
-                          <span className="whitespace-nowrap">{formatDate(jc[col.id])}</span>
+                          formatDate(jc[col.id])
                         ) : col.id === 'total_amount' ? (
-                          <span className="whitespace-nowrap">{`₹${Number(jc.total_amount).toFixed(2)}`}</span>
+                          `₹${Number(jc.total_amount).toFixed(2)}`
                         ) : (
-                          <span className="whitespace-nowrap">{jc[col.id]}</span>
+                          jc[col.id]
                         )}
                       </TableCell>
                     ))}
                   </TableRow>
                 )) : (
                   <TableRow>
-                    <TableCell colSpan={visibleColumns.length} className="h-24 text-center text-sm">No job cards found.</TableCell>
+                    <TableCell colSpan={visibleColumns.length} className="h-20 text-center">No job cards found.</TableCell>
                   </TableRow>
                 )}
               </TableBody>
@@ -217,7 +218,7 @@ const ColumnSettingsDialog = ({ visibleColumns, setVisibleColumns, saveSettings 
     return (
         <Dialog>
             <DialogTrigger asChild>
-                <Button variant="outline" size="sm"><Settings className="h-4 w-4" /></Button>
+                <Button variant="outline" className="btn-compact"><Settings className="h-3.5 w-3.5" /></Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
                 <DialogHeader>
