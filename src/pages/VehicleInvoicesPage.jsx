@@ -74,10 +74,10 @@ const VehicleInvoicesPage = () => {
 
       if (error) throw error;
       
-      const invoices = data[0]?.invoices_data || [];
+      const invoicesData = data[0]?.invoices_data || [];
       const totalCount = data[0]?.total_count || 0;
 
-      return { invoices, totalCount };
+      return { invoices: invoicesData, totalCount };
     },
     enabled: !!dateRange.start && !!dateRange.end && !!user,
     staleTime: 1000 * 60 * 5, // 5 minutes
