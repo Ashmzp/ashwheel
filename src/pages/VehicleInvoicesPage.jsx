@@ -64,27 +64,38 @@ const VehicleInvoicesPage = () => {
   const { data, isLoading: queryLoading, error: queryError } = useQuery({
     queryKey,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_vehicle_invoices_report_v4', {
-        p_start_date: dateRange.start,
-        p_end_date: dateRange.end,
-        p_search_term: debouncedSearchTerm || '',
-        p_page_size: PAGE_SIZE,
-        p_page_number: pagination.currentPage,
-      });
+      // Direct table query as fallback
+      const { data: invoicesData, error, count } = await supabase
+        .from('vehicle_invoices')
+        .select('*, vehicle_invoice_items(*), customers(*)', { count: 'exact' })
+        .eq('user_id', user.id)
+        .gte('invoice_date', dateRange.start)
+        .lte('invoice_date', dateRange.end)
+        .order('invoice_date', { ascending: false })
+        .range((pagination.currentPage - 1) * PAGE_SIZE, pagination.currentPage * PAGE_SIZE - 1);
 
       if (error) {
-        console.error('RPC Error:', error);
+        console.error('Query Error:', error);
         throw error;
       }
       
-      if (!data || data.length === 0) {
-        return { invoices: [], totalCount: 0 };
-      }
-      
-      const invoicesData = data[0]?.invoices_data || [];
-      const totalCount = data[0]?.total_count || 0;
+      // Transform data to match expected format
+      const transformedInvoices = (invoicesData || []).map(inv => ({
+        invoice_id: inv.id,
+        invoice_no: inv.invoice_no,
+        invoice_date: inv.invoice_date,
+        customer_name: inv.customer_name,
+        grand_total: inv.total_amount,
+        customer: inv.customers,
+        items: inv.vehicle_invoice_items,
+        customer_details_json: inv.customer_details,
+        extra_charges_json: inv.extra_charges,
+        model_name: inv.vehicle_invoice_items?.map(i => i.model_name).join(', '),
+        chassis_no: inv.vehicle_invoice_items?.map(i => i.chassis_no).join(', '),
+        engine_no: inv.vehicle_invoice_items?.map(i => i.engine_no).join(', '),
+      }));
 
-      return { invoices: invoicesData, totalCount };
+      return { invoices: transformedInvoices, totalCount: count || 0 };
     },
     enabled: !!dateRange.start && !!dateRange.end && !!user,
     retry: 1,
@@ -106,13 +117,12 @@ const VehicleInvoicesPage = () => {
     if (showForm) {
         const fetchAndInit = async () => {
             if (isEditing) {
-                 const { data: rpcData, error } = await supabase.rpc('get_vehicle_invoices_report_v4', {
-                    p_start_date: '1970-01-01',
-                    p_end_date: getCurrentDate(),
-                    p_search_term: `id:${editingId}`,
-                    p_page_size: 1,
-                    p_page_number: 1,
-                });
+                 const { data: invoiceData, error } = await supabase
+                    .from('vehicle_invoices')
+                    .select('*, vehicle_invoice_items(*), customers(*)')
+                    .eq('id', editingId)
+                    .eq('user_id', user.id)
+                    .single();
 
                 if (error) {
                     toast({ title: "Error", description: "Could not fetch invoice for editing.", variant: 'destructive' });
@@ -120,14 +130,12 @@ const VehicleInvoicesPage = () => {
                     return;
                 }
 
-                const selectedInvoice = rpcData[0]?.invoices_data?.[0];
-
-                if (!selectedInvoice) {
+                if (!invoiceData) {
                      toast({ title: "Not Found", description: "The invoice you were editing could not be found.", variant: 'destructive' });
                      closeForm();
                      return;
                 }
-                initializeShowroomStore(true, selectedInvoice);
+                initializeShowroomStore(true, invoiceData);
             } else {
                 initializeShowroomStore(false, null);
             }
