@@ -37,3 +37,22 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+
+# Sensitive/Private files
+*.json.backup
+*_backup_*.json
+*.sql
+*.db
+*.sqlite
+*.log
+!!k3hUy_qhlogs.txt
+generate-icons.js
+ICON_GENERATION.md
+
+# Database dumps
+/dump/
+
+# Deployment scripts (if contain sensitive info)
+deploy-windows.bat
+vps-*.sh
+setup-git.sh

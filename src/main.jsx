@@ -13,11 +13,7 @@ import React from 'react';
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').then(registration => {
-          console.log('SW registered: ', registration);
-        }).catch(registrationError => {
-          console.log('SW registration failed: ', registrationError);
-        });
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
       });
     }
 
@@ -29,7 +25,6 @@ import React from 'react';
     try {
       GlobalWorkerOptions.workerSrc = pdfjsWorker.toString();
     } catch (error) {
-      console.error("Failed to set PDF.js worker source:", error);
       GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${GlobalWorkerOptions.version}/pdf.worker.min.js`;
     }
 

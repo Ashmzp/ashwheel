@@ -46,9 +46,7 @@ const VehicleInvoiceList = ({
             const parsed = JSON.parse(saved);
             return parsed.filter(col => EXPORT_COLUMNS_CONFIG[col] && !EXPORT_COLUMNS_CONFIG[col].source);
         }
-    } catch (e) {
-        console.error("Failed to parse visible columns from localStorage", e);
-    }
+    } catch (e) {}
     return ALL_COLUMN_KEYS.filter(key => EXPORT_COLUMNS_CONFIG[key].default);
   });
 
