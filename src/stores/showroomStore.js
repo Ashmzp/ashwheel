@@ -3,19 +3,25 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { getCurrentDate } from '@/utils/dateUtils';
 
 const createInitialState = (data = {}) => ({
-  id: data.invoice_id || null,
+  id: data.id || null,
   invoice_date: data.invoice_date || getCurrentDate(),
   invoice_no: data.invoice_no || '',
   customer_id: data.customer_id || null,
   customer_name: data.customer_name || '',
-  customer_details: data.customer_details_json || {},
-  items: data.items || [],
-  extra_charges: data.extra_charges_json || {},
-  total_amount: data.grand_total || 0,
-  selectedCustomer: data.customer ? {
+  customer_details: data.customer_details || {},
+  items: data.vehicle_invoice_items || [],
+  extra_charges: data.extra_charges || {},
+  total_amount: data.total_amount || 0,
+  selectedCustomer: data.customers ? {
     id: data.customer_id,
     customer_name: data.customer_name,
-    ...data.customer
+    guardian_name: data.customers.guardian_name,
+    mobile1: data.customers.mobile1,
+    gst: data.customers.gst,
+    address: data.customers.address,
+    district: data.customers.district,
+    state: data.customers.state,
+    pincode: data.customers.pincode,
   } : null,
 });
 
@@ -44,13 +50,13 @@ const useShowroomStore = create(
 );
 
 export const initializeShowroomStore = (isEditing, data) => {
-  const uniqueKey = isEditing ? `form-edit-vehicle-invoice-${data.invoice_id}` : 'form-new-vehicle-invoice';
+  const uniqueKey = isEditing ? `form-edit-vehicle-invoice-${data.id}` : 'form-new-vehicle-invoice';
   useShowroomStore.persist.setOptions({ name: uniqueKey });
 
   // Force rehydration from the new storage key
   useShowroomStore.persist.rehydrate().then(() => {
     const storedState = useShowroomStore.getState();
-    const needsReset = (isEditing && storedState.id !== data.invoice_id) || (!isEditing && storedState.id !== null);
+    const needsReset = (isEditing && storedState.id !== data.id) || (!isEditing && storedState.id !== null);
 
     if (needsReset) {
       useShowroomStore.getState().resetForm(isEditing ? data : {});
@@ -60,7 +66,11 @@ export const initializeShowroomStore = (isEditing, data) => {
 
 export const clearShowroomStore = (isEditing, id) => {
     const uniqueKey = isEditing ? `form-edit-vehicle-invoice-${id}` : 'form-new-vehicle-invoice';
-    localStorage.removeItem(uniqueKey);
+    try {
+        localStorage.removeItem(uniqueKey);
+    } catch (e) {
+        console.error('Error clearing storage:', e);
+    }
     useShowroomStore.getState().resetForm();
     useShowroomStore.persist.setOptions({ name: 'form-showroom-placeholder' });
 };
