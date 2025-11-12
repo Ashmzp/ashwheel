@@ -10,35 +10,41 @@ const getCurrentUserId = async () => {
 
 export const getVehicleInvoices = async ({ page = 1, pageSize = 50, searchTerm = '', startDate, endDate }) => {
     const userId = await getCurrentUserId();
-    const { data, error } = await supabase.rpc('get_vehicle_invoices_report_v4', {
-        p_start_date: startDate,
-        p_end_date: endDate,
-        p_search_term: searchTerm,
-        p_page_size: pageSize,
-        p_page_number: page,
-    });
+    
+    let query = supabase
+        .from('vehicle_invoices')
+        .select('*, vehicle_invoice_items(*), customers(*)', { count: 'exact' })
+        .eq('user_id', userId)
+        .gte('invoice_date', startDate)
+        .lte('invoice_date', endDate)
+        .order('invoice_date', { ascending: false })
+        .range((page - 1) * pageSize, page * pageSize - 1);
+    
+    if (searchTerm && searchTerm.trim() !== '') {
+        query = query.or(`invoice_no.ilike.%${searchTerm}%,customer_name.ilike.%${searchTerm}%`);
+    }
+    
+    const { data, error, count } = await query;
 
     if (error) {
-        console.error("RPC Error fetching invoices:", error);
+        console.error("Error fetching invoices:", error);
         throw error;
     }
 
-    // Parse the JSON string if needed
-    let invoices = [];
-    let count = 0;
+    // Transform data to match expected format
+    const invoices = (data || []).map(inv => ({
+        invoice_id: inv.id,
+        invoice_no: inv.invoice_no,
+        invoice_date: inv.invoice_date,
+        customer_name: inv.customer_name,
+        grand_total: inv.total_amount,
+        customer: inv.customers,
+        items: inv.vehicle_invoice_items || [],
+        customer_details_json: inv.customer_details,
+        extra_charges_json: inv.extra_charges,
+    }));
 
-    if (data && data.length > 0) {
-        const result = data[0];
-        // Handle both JSON string and parsed object
-        if (typeof result.invoices_data === 'string') {
-            invoices = JSON.parse(result.invoices_data) || [];
-        } else {
-            invoices = result.invoices_data || [];
-        }
-        count = result.total_count || 0;
-    }
-
-    return { data: invoices, count, error: null };
+    return { data: invoices, count: count || 0, error: null };
 };
 
 export const getVehicleInvoiceItems = async (invoiceId) => {
@@ -153,23 +159,34 @@ export const deleteVehicleInvoice = async (invoiceId) => {
 };
 
 export const getVehicleInvoicesForExport = async ({ startDate, endDate, searchTerm }) => {
-    const { data, error } = await supabase.rpc('get_vehicle_invoices_report_v4', {
-        p_start_date: startDate,
-        p_end_date: endDate,
-        p_search_term: searchTerm,
-        p_page_size: 99999,
-        p_page_number: 1
-    });
+    const userId = await getCurrentUserId();
+    
+    let query = supabase
+        .from('vehicle_invoices')
+        .select('*, vehicle_invoice_items(*), customers(*)')
+        .eq('user_id', userId)
+        .gte('invoice_date', startDate)
+        .lte('invoice_date', endDate)
+        .order('invoice_date', { ascending: false });
+    
+    if (searchTerm && searchTerm.trim() !== '') {
+        query = query.or(`invoice_no.ilike.%${searchTerm}%,customer_name.ilike.%${searchTerm}%`);
+    }
+    
+    const { data, error } = await query;
     
     if (error) throw error;
     
-    if (data && data.length > 0) {
-        const result = data[0];
-        // Handle both JSON string and parsed object
-        if (typeof result.invoices_data === 'string') {
-            return JSON.parse(result.invoices_data) || [];
-        }
-        return result.invoices_data || [];
-    }
-    return [];
+    // Transform data to match expected format
+    return (data || []).map(inv => ({
+        invoice_id: inv.id,
+        invoice_no: inv.invoice_no,
+        invoice_date: inv.invoice_date,
+        customer_name: inv.customer_name,
+        grand_total: inv.total_amount,
+        customer: inv.customers,
+        items: inv.vehicle_invoice_items || [],
+        customer_details_json: inv.customer_details,
+        extra_charges_json: inv.extra_charges,
+    }));
 };
