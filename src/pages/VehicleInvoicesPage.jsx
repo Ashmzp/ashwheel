@@ -61,18 +61,25 @@ const VehicleInvoicesPage = () => {
   
   const queryKey = ['vehicleInvoices', dateRange, debouncedSearchTerm, pagination.currentPage, user.id];
 
-  const { data, isLoading: queryLoading } = useQuery({
+  const { data, isLoading: queryLoading, error: queryError } = useQuery({
     queryKey,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_vehicle_invoices_report_v3', {
+      const { data, error } = await supabase.rpc('get_vehicle_invoices_report_v4', {
         p_start_date: dateRange.start,
         p_end_date: dateRange.end,
-        p_search_term: debouncedSearchTerm,
+        p_search_term: debouncedSearchTerm || '',
         p_page_size: PAGE_SIZE,
         p_page_number: pagination.currentPage,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('RPC Error:', error);
+        throw error;
+      }
+      
+      if (!data || data.length === 0) {
+        return { invoices: [], totalCount: 0 };
+      }
       
       const invoicesData = data[0]?.invoices_data || [];
       const totalCount = data[0]?.total_count || 0;
@@ -80,7 +87,8 @@ const VehicleInvoicesPage = () => {
       return { invoices: invoicesData, totalCount };
     },
     enabled: !!dateRange.start && !!dateRange.end && !!user,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 1,
+    staleTime: 1000 * 60 * 5,
   });
 
   const invoices = data?.invoices || [];
@@ -98,7 +106,7 @@ const VehicleInvoicesPage = () => {
     if (showForm) {
         const fetchAndInit = async () => {
             if (isEditing) {
-                 const { data: rpcData, error } = await supabase.rpc('get_vehicle_invoices_report_v3', {
+                 const { data: rpcData, error } = await supabase.rpc('get_vehicle_invoices_report_v4', {
                     p_start_date: '1970-01-01',
                     p_end_date: getCurrentDate(),
                     p_search_term: `id:${editingId}`,
