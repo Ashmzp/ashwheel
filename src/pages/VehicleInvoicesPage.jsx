@@ -64,7 +64,7 @@ const VehicleInvoicesPage = () => {
   const { data, isLoading: queryLoading } = useQuery({
     queryKey,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_vehicle_invoices_report_v4', {
+      const { data, error } = await supabase.rpc('get_vehicle_invoices_report_v3', {
         p_start_date: dateRange.start,
         p_end_date: dateRange.end,
         p_search_term: debouncedSearchTerm,
@@ -98,7 +98,7 @@ const VehicleInvoicesPage = () => {
     if (showForm) {
         const fetchAndInit = async () => {
             if (isEditing) {
-                 const { data: rpcData, error } = await supabase.rpc('get_vehicle_invoices_report_v4', {
+                 const { data: rpcData, error } = await supabase.rpc('get_vehicle_invoices_report_v3', {
                     p_start_date: '1970-01-01',
                     p_end_date: getCurrentDate(),
                     p_search_term: `id:${editingId}`,
