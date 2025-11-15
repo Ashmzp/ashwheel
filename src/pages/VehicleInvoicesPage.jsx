@@ -20,6 +20,7 @@ import useUIStore from '@/stores/uiStore';
 import debounce from 'debounce';
 import { getCurrentDate } from '@/utils/dateUtils';
 import useVehicleInvoiceStore from '@/stores/vehicleInvoiceStore';
+import { DEFAULT_QUERY_CONFIG } from '@/utils/queryConfig';
 
 const PAGE_SIZE = 50;
 
@@ -127,8 +128,7 @@ const VehicleInvoicesPage = () => {
       }
     },
     enabled: !!dateRange.start && !!dateRange.end && !!user,
-    retry: 1,
-    staleTime: 1000 * 60 * 5,
+    ...DEFAULT_QUERY_CONFIG,
   });
 
   const invoices = data?.invoices || [];
