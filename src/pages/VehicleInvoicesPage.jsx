@@ -65,15 +65,41 @@ const VehicleInvoicesPage = () => {
     queryKey,
     queryFn: async () => {
       try {
-        // Direct table query
-        const { data: invoicesData, error, count } = await supabase
+        // Search in items table first if search term exists
+        let invoiceIds = null;
+        if (debouncedSearchTerm && debouncedSearchTerm.trim() !== '') {
+          const { data: itemsData } = await supabase
+            .from('vehicle_invoice_items')
+            .select('invoice_id')
+            .eq('user_id', user.id)
+            .or(`chassis_no.ilike.%${debouncedSearchTerm}%,engine_no.ilike.%${debouncedSearchTerm}%,model_name.ilike.%${debouncedSearchTerm}%`);
+          
+          if (itemsData && itemsData.length > 0) {
+            invoiceIds = [...new Set(itemsData.map(item => item.invoice_id))];
+          }
+        }
+
+        // Build main query
+        let query = supabase
           .from('vehicle_invoices')
           .select('*, vehicle_invoice_items(*), customers(*)', { count: 'exact' })
           .eq('user_id', user.id)
           .gte('invoice_date', dateRange.start)
           .lte('invoice_date', dateRange.end)
-          .order('invoice_date', { ascending: false })
-          .range((pagination.currentPage - 1) * PAGE_SIZE, pagination.currentPage * PAGE_SIZE - 1);
+          .order('invoice_date', { ascending: false });
+
+        // Apply search filter
+        if (debouncedSearchTerm && debouncedSearchTerm.trim() !== '') {
+          if (invoiceIds && invoiceIds.length > 0) {
+            query = query.or(`invoice_no.ilike.%${debouncedSearchTerm}%,customer_name.ilike.%${debouncedSearchTerm}%,id.in.(${invoiceIds.join(',')})`);
+          } else {
+            query = query.or(`invoice_no.ilike.%${debouncedSearchTerm}%,customer_name.ilike.%${debouncedSearchTerm}%`);
+          }
+        }
+
+        query = query.range((pagination.currentPage - 1) * PAGE_SIZE, pagination.currentPage * PAGE_SIZE - 1);
+
+        const { data: invoicesData, error, count } = await query;
 
         if (error) {
           throw new Error(`Failed to fetch invoices: ${error.message}`);
