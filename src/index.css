@@ -77,6 +77,25 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+  
+  /* Prevent visual flickers on tab switches */
+  html, body, #root {
+    visibility: visible !important;
+    opacity: 1 !important;
+    transition: none !important;
+  }
+  
+  /* Disable all transitions that might cause blinking */
+  *, *::before, *::after {
+    transition-duration: 0s !important;
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+  
+  /* Prevent layout shifts */
+  main, .container-responsive {
+    contain: layout style paint;
+  }
 }
 
 .non-printable {
@@ -112,4 +131,19 @@
   min-height: 297mm;
   height: auto;
   box-sizing: border-box;
+}
+
+/* Additional anti-flicker rules */
+.animate-spin {
+  animation: none !important;
+}
+
+.motion-reduce {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* Prevent Suspense fallback flickers */
+.suspense-fallback {
+  display: none !important;
 }
