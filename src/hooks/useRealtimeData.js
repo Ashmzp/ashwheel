@@ -18,9 +18,14 @@ export const useRealtimeData = (tableName, options = {}) => {
     filter,
   } = options;
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (force = false) => {
     if (!user) {
       setLoading(false);
+      return;
+    }
+
+    // Prevent unnecessary refetches unless forced
+    if (!force && data.length > 0 && !loading) {
       return;
     }
 
@@ -56,7 +61,7 @@ export const useRealtimeData = (tableName, options = {}) => {
     } finally {
       setLoading(false);
     }
-  }, [user, tableName, select, order, ascending, page, pageSize, filter]);
+  }, [user, tableName, select, order, ascending, page, pageSize, filter, data.length, loading]);
 
   useEffect(() => {
     fetchData();

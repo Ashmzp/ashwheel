@@ -128,6 +128,7 @@ const VehicleInvoicesPage = () => {
       }
     },
     enabled: !!dateRange.start && !!dateRange.end && !!user,
+    placeholderData: (previousData) => previousData,
     ...DEFAULT_QUERY_CONFIG,
   });
 

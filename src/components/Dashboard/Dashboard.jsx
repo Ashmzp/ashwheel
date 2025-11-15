@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Helmet } from 'react-helmet';
 import { supabase } from '@/lib/customSupabaseClient';
+import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/components/ui/use-toast';
+import { DEFAULT_QUERY_CONFIG } from '@/utils/queryConfig';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { motion } from 'framer-motion';
@@ -40,20 +42,7 @@ const Dashboard = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const [companyName, setCompanyName] = useState('');
-  const [stats, setStats] = useState({
-    totalpurchaseqty: 0,
-    registeredsaleqty: 0,
-    nonregisteredsaleqty: 0,
-    totalsaleqty: 0,
-    totalcustomers: 0,
-  });
-  const [stockCount, setStockCount] = useState(0);
-  const [openBookingsCount, setOpenBookingsCount] = useState(0);
-  const [salesByPerson, setSalesByPerson] = useState([]);
-  const [loadingStats, setLoadingStats] = useState(true);
-  const [loadingSalesperson, setLoadingSalesperson] = useState(true);
-  const [loadingStock, setLoadingStock] = useState(true);
-  const [loadingBookings, setLoadingBookings] = useState(true);
+
   const [dateRange, setDateRange] = useState([
     {
       startDate: startOfMonth(new Date()),
@@ -93,83 +82,74 @@ const Dashboard = () => {
     fetchInitialData();
   }, [user]);
 
-  const fetchData = async () => {
-    if (!user) return;
+  const startDate = format(dateRange[0].startDate, 'yyyy-MM-dd');
+  const endDate = format(dateRange[0].endDate, 'yyyy-MM-dd');
 
-    setLoadingStats(true);
-    setLoadingSalesperson(true);
-    setLoadingStock(true);
-    setLoadingBookings(true);
+  // Dashboard stats query
+  const { data: stats = { totalpurchaseqty: 0, registeredsaleqty: 0, nonregisteredsaleqty: 0, totalsaleqty: 0, totalcustomers: 0 }, isLoading: loadingStats } = useQuery({
+    queryKey: ['dashboardStats', user?.id, startDate, endDate, selectedParties],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_dashboard_stats', {
+        p_user_id: user.id,
+        p_start_date: startDate,
+        p_end_date: endDate,
+        p_party_names: selectedParties.length > 0 ? selectedParties : null,
+      });
+      if (error) throw error;
+      return data[0] || { totalpurchaseqty: 0, registeredsaleqty: 0, nonregisteredsaleqty: 0, totalsaleqty: 0, totalcustomers: 0 };
+    },
+    enabled: !!user,
+    ...DEFAULT_QUERY_CONFIG,
+  });
 
-    const startDate = format(dateRange[0].startDate, 'yyyy-MM-dd');
-    const endDate = format(dateRange[0].endDate, 'yyyy-MM-dd');
+  // Sales by person query
+  const { data: salesByPerson = [], isLoading: loadingSalesperson } = useQuery({
+    queryKey: ['salesByPerson', startDate, endDate],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_sales_by_salesperson', {
+        p_start_date: startDate,
+        p_end_date: endDate,
+      });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user,
+    ...DEFAULT_QUERY_CONFIG,
+  });
 
-    // Fetch dashboard stats
-    const { data: statsData, error: statsError } = await supabase.rpc('get_dashboard_stats', {
-      p_user_id: user.id,
-      p_start_date: startDate,
-      p_end_date: endDate,
-      p_party_names: selectedParties.length > 0 ? selectedParties : null,
-    });
+  // Stock count query
+  const { data: stockCount = 0, isLoading: loadingStock } = useQuery({
+    queryKey: ['stockCount', user?.id],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('stock')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!user,
+    ...DEFAULT_QUERY_CONFIG,
+  });
 
-    if (statsError) {
-      toast({ title: 'Error fetching stats', description: statsError.message, variant: 'destructive' });
-      setStats({ totalpurchaseqty: 0, registeredsaleqty: 0, nonregisteredsaleqty: 0, totalsaleqty: 0, totalcustomers: 0 });
-    } else {
-      setStats(statsData[0] || { totalpurchaseqty: 0, registeredsaleqty: 0, nonregisteredsaleqty: 0, totalsaleqty: 0, totalcustomers: 0 });
-    }
-    setLoadingStats(false);
-
-    // Fetch sales by salesperson
-    const { data: salesData, error: salesError } = await supabase.rpc('get_sales_by_salesperson', {
-      p_start_date: startDate,
-      p_end_date: endDate,
-    });
-
-    if (salesError) {
-      toast({ title: 'Error fetching salesperson data', description: salesError.message, variant: 'destructive' });
-      setSalesByPerson([]);
-    } else {
-      setSalesByPerson(salesData || []);
-    }
-    setLoadingSalesperson(false);
-
-    // Fetch stock count
-    const { count: stockDataCount, error: stockError } = await supabase
-      .from('stock')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id);
-
-    if (stockError) {
-      toast({ title: 'Error fetching stock count', description: stockError.message, variant: 'destructive' });
-      setStockCount(0);
-    } else {
-      setStockCount(stockDataCount || 0);
-    }
-    setLoadingStock(false);
-
-    // Fetch open bookings count for the CURRENT MONTH only
-    const { start: currentMonthStart, end: currentMonthEnd } = getCurrentMonthDateRange();
-    const { count: bookingsCount, error: bookingsError } = await supabase
-      .from('bookings')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id)
-      .eq('status', 'Open')
-      .gte('booking_date', currentMonthStart)
-      .lte('booking_date', currentMonthEnd);
-
-    if (bookingsError) {
-      toast({ title: 'Error fetching open bookings', description: bookingsError.message, variant: 'destructive' });
-      setOpenBookingsCount(0);
-    } else {
-      setOpenBookingsCount(bookingsCount || 0);
-    }
-    setLoadingBookings(false);
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, [user, dateRange, selectedParties, toast]);
+  // Open bookings query
+  const { data: openBookingsCount = 0, isLoading: loadingBookings } = useQuery({
+    queryKey: ['openBookings', user?.id],
+    queryFn: async () => {
+      const { start: currentMonthStart, end: currentMonthEnd } = getCurrentMonthDateRange();
+      const { count, error } = await supabase
+        .from('bookings')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('status', 'Open')
+        .gte('booking_date', currentMonthStart)
+        .lte('booking_date', currentMonthEnd);
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!user,
+    ...DEFAULT_QUERY_CONFIG,
+  });
 
   const totalSalesByPerson = useMemo(() => {
     return salesByPerson.reduce((acc, curr) => acc + (curr.sales_count || 0), 0);
@@ -240,10 +220,10 @@ const Dashboard = () => {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-          <StatCard title="Total Purchase" value={stats.totalpurchaseqty} icon={<ShoppingCart className="h-4 w-4 text-muted-foreground" />} description="Vehicles purchased" isLoading={loadingStats} />
-          <StatCard title="Registered Sale" value={stats.registeredsaleqty} icon={<Car className="h-4 w-4 text-muted-foreground" />} description="Sales to registered customers" isLoading={loadingStats} />
-          <StatCard title="Non-Registered Sale" value={stats.nonregisteredsaleqty} icon={<Car className="h-4 w-4 text-muted-foreground" />} description="Sales to non-registered customers" isLoading={loadingStats} />
-          <StatCard title="Total Sale" value={stats.totalsaleqty} icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />} description="Total vehicles sold" isLoading={loadingStats} />
+          <StatCard title="Total Purchase" value={stats?.totalpurchaseqty || 0} icon={<ShoppingCart className="h-4 w-4 text-muted-foreground" />} description="Vehicles purchased" isLoading={loadingStats} />
+          <StatCard title="Registered Sale" value={stats?.registeredsaleqty || 0} icon={<Car className="h-4 w-4 text-muted-foreground" />} description="Sales to registered customers" isLoading={loadingStats} />
+          <StatCard title="Non-Registered Sale" value={stats?.nonregisteredsaleqty || 0} icon={<Car className="h-4 w-4 text-muted-foreground" />} description="Sales to non-registered customers" isLoading={loadingStats} />
+          <StatCard title="Total Sale" value={stats?.totalsaleqty || 0} icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />} description="Total vehicles sold" isLoading={loadingStats} />
           <StatCard title="Vehicle Stock" value={stockCount} icon={<Warehouse className="h-4 w-4 text-muted-foreground" />} description="Vehicles in stock" isLoading={loadingStock} />
           <StatCard title="Open Bookings" value={openBookingsCount} icon={<BookOpen className="h-4 w-4 text-muted-foreground" />} description="This month's open bookings" isLoading={loadingBookings} />
         </div>

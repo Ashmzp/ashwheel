@@ -33,14 +33,16 @@ import React from 'react';
       defaultOptions: {
         queries: {
           refetchOnWindowFocus: false,
-          refetchOnReconnect: true,
+          refetchOnReconnect: false, // Prevent auto-refresh on reconnect
+          refetchOnMount: false, // Don't refetch if data is cached
           retry: 1,
           staleTime: 1000 * 60 * 30, // 30 minutes - data stays fresh
           cacheTime: 1000 * 60 * 60, // 1 hour - cache retention
-          refetchOnMount: false, // Don't refetch if data is cached
+          networkMode: 'online', // Only fetch when online
         },
         mutations: {
           retry: 1,
+          networkMode: 'online',
         },
       },
     });

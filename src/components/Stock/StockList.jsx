@@ -30,7 +30,11 @@ const StockList = () => {
   const { data: stockData, isLoading } = useQuery({
     queryKey: ['allStockForFiltering'],
     queryFn: () => fetchStockFromDb({ page: 1, pageSize: 100000 }), // Fetch all for filtering
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 60 * 1000, // 30 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    placeholderData: (previousData) => previousData,
   });
 
   const { allStock, modelNames } = useMemo(() => {
