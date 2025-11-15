@@ -12,18 +12,39 @@ export const getVehicleInvoices = async ({ page = 1, pageSize = 50, searchTerm =
     try {
         const userId = await getCurrentUserId();
         
+        // If search term exists, search in items table first
+        let invoiceIds = null;
+        if (searchTerm && searchTerm.trim() !== '') {
+            const { data: itemsData } = await supabase
+                .from('vehicle_invoice_items')
+                .select('invoice_id')
+                .eq('user_id', userId)
+                .or(`chassis_no.ilike.%${searchTerm}%,engine_no.ilike.%${searchTerm}%,model_name.ilike.%${searchTerm}%`);
+            
+            if (itemsData && itemsData.length > 0) {
+                invoiceIds = [...new Set(itemsData.map(item => item.invoice_id))];
+            }
+        }
+        
         let query = supabase
             .from('vehicle_invoices')
             .select('*, vehicle_invoice_items(*), customers(*)', { count: 'exact' })
             .eq('user_id', userId)
             .gte('invoice_date', startDate)
             .lte('invoice_date', endDate)
-            .order('invoice_date', { ascending: false })
-            .range((page - 1) * pageSize, page * pageSize - 1);
+            .order('invoice_date', { ascending: false });
         
         if (searchTerm && searchTerm.trim() !== '') {
-            query = query.or(`invoice_no.ilike.%${searchTerm}%,customer_name.ilike.%${searchTerm}%`);
+            if (invoiceIds && invoiceIds.length > 0) {
+                // Search in both invoice fields and matched invoice IDs from items
+                query = query.or(`invoice_no.ilike.%${searchTerm}%,customer_name.ilike.%${searchTerm}%,id.in.(${invoiceIds.join(',')})`);
+            } else {
+                // Only search in invoice fields
+                query = query.or(`invoice_no.ilike.%${searchTerm}%,customer_name.ilike.%${searchTerm}%`);
+            }
         }
+        
+        query = query.range((page - 1) * pageSize, page * pageSize - 1);
         
         const { data, error, count } = await query;
 
@@ -42,6 +63,7 @@ export const getVehicleInvoices = async ({ page = 1, pageSize = 50, searchTerm =
             items: inv.vehicle_invoice_items || [],
             customer_details_json: inv.customer_details,
             extra_charges_json: inv.extra_charges,
+            gst_number: inv.customer_details?.gst || inv.customers?.gst || '',
         }));
 
         return { data: invoices, count: count || 0, error: null };
@@ -187,6 +209,20 @@ export const getVehicleInvoicesForExport = async ({ startDate, endDate, searchTe
     try {
         const userId = await getCurrentUserId();
         
+        // If search term exists, search in items table first
+        let invoiceIds = null;
+        if (searchTerm && searchTerm.trim() !== '') {
+            const { data: itemsData } = await supabase
+                .from('vehicle_invoice_items')
+                .select('invoice_id')
+                .eq('user_id', userId)
+                .or(`chassis_no.ilike.%${searchTerm}%,engine_no.ilike.%${searchTerm}%,model_name.ilike.%${searchTerm}%`);
+            
+            if (itemsData && itemsData.length > 0) {
+                invoiceIds = [...new Set(itemsData.map(item => item.invoice_id))];
+            }
+        }
+        
         let query = supabase
             .from('vehicle_invoices')
             .select('*, vehicle_invoice_items(*), customers(*)')
@@ -196,7 +232,11 @@ export const getVehicleInvoicesForExport = async ({ startDate, endDate, searchTe
             .order('invoice_date', { ascending: false });
         
         if (searchTerm && searchTerm.trim() !== '') {
-            query = query.or(`invoice_no.ilike.%${searchTerm}%,customer_name.ilike.%${searchTerm}%`);
+            if (invoiceIds && invoiceIds.length > 0) {
+                query = query.or(`invoice_no.ilike.%${searchTerm}%,customer_name.ilike.%${searchTerm}%,id.in.(${invoiceIds.join(',')})`);
+            } else {
+                query = query.or(`invoice_no.ilike.%${searchTerm}%,customer_name.ilike.%${searchTerm}%`);
+            }
         }
         
         const { data, error } = await query;
@@ -214,6 +254,7 @@ export const getVehicleInvoicesForExport = async ({ startDate, endDate, searchTe
             items: inv.vehicle_invoice_items || [],
             customer_details_json: inv.customer_details,
             extra_charges_json: inv.extra_charges,
+            gst_number: inv.customer_details?.gst || inv.customers?.gst || '',
         }));
     } catch (error) {
         throw new Error(error.message || 'Failed to export vehicle invoices');

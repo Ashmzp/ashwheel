@@ -181,6 +181,23 @@ const VehicleInvoiceList = ({
     const value = config.getter ? config.getter(invoice) : invoice[config.key];
     const displayValue = config.format ? config.format(value) : (value ?? '');
 
+    // Special formatting for multi-line display
+    if (['Model Name', 'Chassis No', 'Engine No'].includes(colName) && invoice.items?.length > 0) {
+      return (
+        <TableCell key={`${invoice.invoice_id}-${colName}`}>
+          <div className="space-y-1">
+            {invoice.items.map((item, idx) => (
+              <div key={idx} className="text-sm">
+                {colName === 'Model Name' && item.model_name}
+                {colName === 'Chassis No' && item.chassis_no}
+                {colName === 'Engine No' && item.engine_no}
+              </div>
+            ))}
+          </div>
+        </TableCell>
+      );
+    }
+
     return (
       <TableCell key={`${invoice.invoice_id}-${colName}`}>{displayValue}</TableCell>
     );

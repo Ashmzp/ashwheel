@@ -35,7 +35,12 @@ import React from 'react';
           refetchOnWindowFocus: false,
           refetchOnReconnect: true,
           retry: 1,
-          staleTime: 1000 * 60 * 5, // 5 minutes
+          staleTime: 1000 * 60 * 30, // 30 minutes - data stays fresh
+          cacheTime: 1000 * 60 * 60, // 1 hour - cache retention
+          refetchOnMount: false, // Don't refetch if data is cached
+        },
+        mutations: {
+          retry: 1,
         },
       },
     });
