@@ -33,12 +33,14 @@ import React from 'react';
       defaultOptions: {
         queries: {
           refetchOnWindowFocus: false,
-          refetchOnReconnect: false, // Prevent auto-refresh on reconnect
-          refetchOnMount: false, // Don't refetch if data is cached
-          retry: 1,
-          staleTime: 1000 * 60 * 30, // 30 minutes - data stays fresh
-          cacheTime: 1000 * 60 * 60, // 1 hour - cache retention
-          networkMode: 'online', // Only fetch when online
+          refetchOnReconnect: false,
+          refetchOnMount: false,
+          refetchInterval: false,
+          refetchIntervalInBackground: false,
+          retry: 0,
+          staleTime: Infinity, // Never consider data stale
+          gcTime: 1000 * 60 * 60 * 24, // 24 hours cache retention
+          networkMode: 'online',
         },
         mutations: {
           retry: 1,
@@ -48,16 +50,14 @@ import React from 'react';
     });
 
     ReactDOM.createRoot(document.getElementById('root')).render(
-      <React.StrictMode>
-        <HelmetProvider>
-          <BrowserRouter>
-            <QueryClientProvider client={queryClient}>
-              <NewAuthProvider>
-                <App />
-                <Toaster />
-              </NewAuthProvider>
-            </QueryClientProvider>
-          </BrowserRouter>
-        </HelmetProvider>
-      </React.StrictMode>
+      <HelmetProvider>
+        <BrowserRouter>
+          <QueryClientProvider client={queryClient}>
+            <NewAuthProvider>
+              <App />
+              <Toaster />
+            </NewAuthProvider>
+          </QueryClientProvider>
+        </BrowserRouter>
+      </HelmetProvider>
     );

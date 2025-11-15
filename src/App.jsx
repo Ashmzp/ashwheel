@@ -1,6 +1,5 @@
 import React, { Suspense, lazy } from 'react';
 import { useLocation } from 'react-router-dom';
-import { AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/NewSupabaseAuthContext';
 import SeoWrapper from '@/components/SeoWrapper';
 import AppRoutes from '@/AppRoutes';
@@ -51,14 +50,12 @@ function App() {
   }
 
   const mainContent = (
-    <AnimatePresence mode="wait">
-        <Suspense fallback={<LoadingFallback />}>
-            <ScrollToTop />
-            <SeoWrapper {...seoProps}>
-                <AppRoutes />
-            </SeoWrapper>
-        </Suspense>
-    </AnimatePresence>
+    <Suspense fallback={<LoadingFallback />}>
+        <ScrollToTop />
+        <SeoWrapper {...seoProps}>
+            <AppRoutes />
+        </SeoWrapper>
+    </Suspense>
   );
 
   const showLayout = user && !loading && !loadingUserData && !isPrintRoute && !isAuthRoute;
