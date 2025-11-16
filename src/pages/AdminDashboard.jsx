@@ -103,11 +103,17 @@ const AdminDashboard = () => {
     const { toast } = useToast();
     const queryClient = useQueryClient();
     const [isAddUserDialogOpen, setAddUserDialogOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
 
     const { data: users = [], isLoading, isError, error } = useQuery({
         queryKey: ['adminUsers'],
         queryFn: fetchUsers,
     });
+
+    const filteredUsers = users.filter(user => 
+        user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.role?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     useEffect(() => {
         if (isError) {
@@ -140,7 +146,15 @@ const AdminDashboard = () => {
 
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-bold">User Management</h2>
-                    <Button onClick={() => setAddUserDialogOpen(true)}><PlusCircle className="mr-2 h-4 w-4" /> Add User</Button>
+                    <div className="flex gap-2">
+                        <Input 
+                            placeholder="Search users..." 
+                            value={searchTerm} 
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-64"
+                        />
+                        <Button onClick={() => setAddUserDialogOpen(true)}><PlusCircle className="mr-2 h-4 w-4" /> Add User</Button>
+                    </div>
                     <AddUserDialog isOpen={isAddUserDialogOpen} setIsOpen={setAddUserDialogOpen} onUserAdded={handleUserAdded} />
                 </div>
 
@@ -163,8 +177,8 @@ const AdminDashboard = () => {
                             <TableBody>
                                 {isLoading ? (
                                     <TableRow><TableCell colSpan="6" className="text-center"><Loader2 className="mx-auto h-6 w-6 animate-spin" /></TableCell></TableRow>
-                                ) : users.length > 0 ? (
-                                    users.map(user => (
+                                ) : filteredUsers.length > 0 ? (
+                                    filteredUsers.map(user => (
                                         <TableRow key={user.id}>
                                             <TableCell>{user.email}</TableCell>
                                             <TableCell>{user.role}</TableCell>
