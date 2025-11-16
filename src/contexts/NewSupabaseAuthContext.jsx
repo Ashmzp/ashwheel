@@ -161,7 +161,13 @@ export const NewAuthProvider = ({ children }) => {
 
 
   const signUp = useCallback(async (email, password) => {
-    const { error } = await supabase.auth.signUp({ email, password });
+    const { data, error } = await supabase.auth.signUp({ 
+      email, 
+      password,
+      options: {
+        emailRedirectTo: window.location.origin + '/dashboard'
+      }
+    });
     if (error) {
       toast({
         variant: "destructive",
@@ -169,7 +175,7 @@ export const NewAuthProvider = ({ children }) => {
         description: error.message || "Something went wrong",
       });
     }
-    return { error };
+    return { data, error };
   }, [toast]);
 
   const signIn = useCallback(async (email, password) => {
@@ -191,10 +197,15 @@ export const NewAuthProvider = ({ children }) => {
             .eq('id', signInData.user.id)
             .single();
 
-        if (profileError && profileError.code !== 'PGRST116') { // Ignore not found error for admin login test
-            await signOut();
-            toast({ variant: "destructive", title: "Sign in Failed", description: "Could not retrieve user profile." });
-            return { data: null, error: profileError };
+        if (profileError) {
+            console.error('Profile fetch error:', profileError);
+            if (profileError.code !== 'PGRST116') {
+                await signOut();
+                toast({ variant: "destructive", title: "Sign in Failed", description: "Could not retrieve user profile." });
+                return { data: null, error: profileError };
+            }
+            // If profile not found, treat as regular user with default settings
+            console.warn('User profile not found, using defaults');
         }
 
         // Admins can log in from multiple devices
@@ -203,7 +214,8 @@ export const NewAuthProvider = ({ children }) => {
             return { data: signInData, error: null };
         }
 
-        const maxDevices = userProfile?.max_devices || 1;
+        // Default to 3 devices if not set
+        const maxDevices = userProfile?.max_devices ?? 3;
         const deviceId = getDeviceId();
 
         const { data: activeSessions, error: sessionsError } = await supabase
