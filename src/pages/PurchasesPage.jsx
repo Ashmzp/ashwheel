@@ -28,7 +28,7 @@ import { cn } from '@/lib/utils';
 
 const PurchaseList = ({ purchases, onAddPurchase, onEditPurchase, onDeletePurchase, loading, totalPages, currentPage, onPageChange, searchTerm, setSearchTerm, dateRange, setDateRange }) => {
   const { toast } = useToast();
-  const { canAccess } = useAuth();
+  const { canWrite, canDelete, isExpired } = useAuth();
   const queryClient = useQueryClient();
 
   const handleDelete = async (purchaseId, items) => {
@@ -104,10 +104,16 @@ const PurchaseList = ({ purchases, onAddPurchase, onEditPurchase, onDeletePurcha
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="page-title">Vehicle Purchases</h1>
-        {canAccess('purchases', 'write') && (
+        {canWrite('purchases') && (
           <Button onClick={onAddPurchase}><Plus className="w-4 h-4 mr-2" /> Add Purchase</Button>
         )}
       </div>
+
+      {isExpired && (
+        <div className="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 p-3 rounded-md mb-4">
+          ⚠️ Your subscription has expired. You are in READ-ONLY mode. Contact admin for renewal.
+        </div>
+      )}
 
       <Card>
         <CardHeader className="card-compact">
@@ -150,10 +156,10 @@ const PurchaseList = ({ purchases, onAddPurchase, onEditPurchase, onDeletePurcha
                     <TableCell>{purchase.party_name}</TableCell>
                     <TableCell>{purchase.items?.length || 0}</TableCell>
                     <TableCell className="text-right">
-                      {canAccess('purchases', 'write') && (
+                      {canWrite('purchases') && (
                         <Button variant="ghost" className="btn-compact" onClick={() => onEditPurchase(purchase)}><Edit className="h-4 w-4" /></Button>
                       )}
-                      {canAccess('purchases', 'delete') && (
+                      {canDelete('purchases') && (
                         <Button variant="ghost" className="btn-compact" className="text-red-500" onClick={() => handleDelete(purchase.id, purchase.items)}><Trash2 className="h-4 w-4" /></Button>
                       )}
                     </TableCell>

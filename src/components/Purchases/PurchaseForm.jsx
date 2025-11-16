@@ -29,7 +29,7 @@ const PurchaseForm = ({ onSave, onCancel }) => {
     setItems: setItemsInStore,
     addItem,
   } = usePurchaseStore();
-  const { user } = useAuth();
+  const { user, isExpired } = useAuth();
   
   const [partyNameSearch, setPartyNameSearch] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -200,7 +200,12 @@ const PurchaseForm = ({ onSave, onCancel }) => {
           <CardTitle>{id ? 'Edit Purchase' : 'Add New Purchase'}</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          {isExpired && (
+            <div className="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 p-3 rounded-md mb-4">
+              ⚠️ Your subscription has expired. Form is in READ-ONLY mode.
+            </div>
+          )}
+          <form onSubmit={handleSubmit} className={`space-y-6 ${isExpired ? 'pointer-events-none opacity-60' : ''}`}>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <Label htmlFor="serialNo">Serial No</Label>
@@ -264,8 +269,8 @@ const PurchaseForm = ({ onSave, onCancel }) => {
             </div>
 
             <div className="flex gap-4 justify-end">
-              <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>Cancel</Button>
-              <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Saving...' : (id ? 'Update Purchase' : 'Save Purchase')}</Button>
+              <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting || isExpired}>Cancel</Button>
+              <Button type="submit" disabled={isSubmitting || isExpired}>{isSubmitting ? 'Saving...' : (id ? 'Update Purchase' : 'Save Purchase')}</Button>
             </div>
           </form>
         </CardContent>

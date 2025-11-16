@@ -131,11 +131,33 @@ export const NewAuthProvider = ({ children }) => {
   const { userData, loadingUserData, refetchUserData } = useUserDataHook(user, signOut);
   const { access, can } = usePermissionsHook(userData);
 
+  const [isExpired, setIsExpired] = useState(false);
+
+  useEffect(() => {
+    if (!userData?.app_valid_till) {
+      setIsExpired(false);
+      return;
+    }
+    const today = new Date().toISOString().split('T')[0];
+    setIsExpired(userData.app_valid_till < today);
+  }, [userData]);
+
   const canAccess = useCallback((module, action = 'read') => {
     if (userData?.role === 'admin') return true;
-    if (!module) return true; // For general pages like settings/profile
+    if (!module) return true;
+    if (isExpired && action !== 'read') return false; // Read-only on expiry
     return can(module, action);
-  }, [userData, can]);
+  }, [userData, can, isExpired]);
+
+  const canWrite = useCallback((module) => {
+    if (isExpired) return false;
+    return canAccess(module, 'write');
+  }, [isExpired, canAccess]);
+
+  const canDelete = useCallback((module) => {
+    if (isExpired) return false;
+    return canAccess(module, 'delete');
+  }, [isExpired, canAccess]);
 
 
   const signUp = useCallback(async (email, password) => {
@@ -241,11 +263,14 @@ export const NewAuthProvider = ({ children }) => {
     loadingUserData,
     access,
     canAccess,
+    canWrite,
+    canDelete,
+    isExpired,
     refetchUserData,
     signUp,
     signIn,
     signOut,
-  }), [user, session, loading, userData, loadingUserData, access, canAccess, refetchUserData, signUp, signIn, signOut]);
+  }), [user, session, loading, userData, loadingUserData, access, canAccess, canWrite, canDelete, isExpired, refetchUserData, signUp, signIn, signOut]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
