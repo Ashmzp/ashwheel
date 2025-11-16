@@ -1,4 +1,4 @@
-import React, { useMemo, memo } from 'react';
+import React, { useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/NewSupabaseAuthContext';
 import AppRoutes from '@/AppRoutes';
@@ -13,16 +13,16 @@ import PwaInstallPrompt from '@/components/PwaInstallPrompt';
 
 const LoadingFallback = () => null;
 
-const PublicLayout = memo(({ children }) => (
+const PublicLayout = ({ children }) => (
   <div className="flex flex-col min-h-screen">
     <PublicHeader />
     <div className="flex-1">{children}</div>
     <Footer />
     <PwaInstallPrompt />
   </div>
-));
+);
 
-const App = memo(function App() {
+function App() {
   const { user, loading, loadingUserData } = useAuth();
   const location = useLocation();
 
@@ -72,7 +72,5 @@ const App = memo(function App() {
     </PublicLayout>
   );
 }
-
-});
 
 export default App;
