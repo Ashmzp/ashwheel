@@ -10,66 +10,57 @@ import PublicHeader from '@/components/Layout/PublicHeader';
 import MobileSidebar from '@/components/Layout/MobileSidebar';
 import PwaInstallPrompt from '@/components/PwaInstallPrompt';
 
-
-const LoadingFallback = () => null;
-
-const PublicLayout = ({ children }) => (
-  <div className="flex flex-col min-h-screen">
-    <PublicHeader />
-    <div className="flex-1">{children}</div>
-    <Footer />
-    <PwaInstallPrompt />
-  </div>
-);
-
 function App() {
   const { user, loading, loadingUserData } = useAuth();
   const location = useLocation();
 
-  const isPrintRoute = useMemo(() => location.pathname.startsWith('/print'), [location.pathname]);
-  const isAuthRoute = useMemo(() => 
+  const isPrintRoute = location.pathname.startsWith('/print');
+  const isAuthRoute =
     location.pathname === '/login' ||
     location.pathname === '/admin-login' ||
-    location.pathname === '/auth/callback',
-    [location.pathname]
-  );
+    location.pathname === '/auth/callback';
 
-  const mainContent = <AppRoutes />;
+  // IMPORTANT: Memoized, will not remount UI
+  const mainContent = useMemo(() => <AppRoutes />, []);
 
-  const showLayout = user && !loading && !loadingUserData && !isPrintRoute && !isAuthRoute;
-
-  if (showLayout) {
+  // Layout always mounted → no flicker
+  if (isPrintRoute) {
     return (
-      <>
-        <MobileSidebar />
-        <div className="flex h-screen bg-secondary/40">
-          <div className="hidden lg:flex">
-            <Sidebar />
-          </div>
-          <div className="flex flex-col flex-1 overflow-hidden">
-            <Header />
-            <main className="flex-1 overflow-y-auto">
-              {mainContent}
-            </main>
-          </div>
-        </div>
-        <PwaInstallPrompt />
-      </>
+      <div className="bg-white">
+        {mainContent}
+      </div>
     );
   }
 
-  if (isPrintRoute) {
-      return (
-        <div className="bg-white">
-            {mainContent}
-        </div>
-      );
+  // Public pages but layout should NOT flicker
+  if (!user || loading || loadingUserData || isAuthRoute) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <PublicHeader />
+        <div className="flex-1">{mainContent}</div>
+        <Footer />
+        <PwaInstallPrompt />
+      </div>
+    );
   }
 
+  // App Layout — always mounted
   return (
-    <PublicLayout>
-      {mainContent}
-    </PublicLayout>
+    <>
+      <MobileSidebar />
+      <div className="flex h-screen bg-secondary/40">
+        <div className="hidden lg:flex">
+          <Sidebar />
+        </div>
+        <div className="flex flex-col flex-1 overflow-hidden">
+          <Header />
+          <main className="flex-1 overflow-y-auto">
+            {mainContent}
+          </main>
+        </div>
+      </div>
+      <PwaInstallPrompt />
+    </>
   );
 }
 
