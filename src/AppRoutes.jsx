@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/NewSupabaseAuthContext';
 import HomePage from '@/pages/HomePage';
 import UserLogin from '@/pages/UserLogin';
 import AdminLogin from '@/pages/AdminLogin';
-import SignUp from '@/pages/SignUp';
+import SignupPage from '@/pages/SignupPage';
 import AuthCallback from '@/pages/AuthCallback';
 import Dashboard from '@/components/Dashboard/Dashboard';
 import CustomersPage from '@/pages/CustomersPage';
@@ -90,7 +90,7 @@ const AppRoutes = () => {
         <Route path="/" element={user ? <Navigate to="/dashboard" /> : <HomePage />} />
         <Route path="/login" element={<UserLogin />} />
         <Route path="/admin-login" element={<AdminLogin />} />
-        <Route path="/signup" element={<SignUp />} />
+        <Route path="/signup" element={<SignupPage />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
 
         {/* Static Pages */}

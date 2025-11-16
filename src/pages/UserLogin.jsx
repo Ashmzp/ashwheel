@@ -50,10 +50,13 @@ const UserLogin = () => {
           </CardContent>
           <CardFooter className="flex-col gap-4">
             <p className="text-sm text-muted-foreground">
-              <Link to="/" className="font-semibold text-primary hover:underline">Back to Home</Link>
+              Don't have an account? <Link to="/signup" className="font-semibold text-primary hover:underline">Sign Up - Free Trial</Link>
             </p>
             <p className="text-sm text-muted-foreground">
               Are you an Admin? <Link to="/admin-login" className="font-semibold text-primary hover:underline">Login Here</Link>
+            </p>
+            <p className="text-sm text-muted-foreground">
+              <Link to="/" className="font-semibold text-primary hover:underline">Back to Home</Link>
             </p>
           </CardFooter>
         </Card>
