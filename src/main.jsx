@@ -51,7 +51,7 @@ import React from 'react';
 
     ReactDOM.createRoot(document.getElementById('root')).render(
       <HelmetProvider>
-        <BrowserRouter>
+        <BrowserRouter future={{ v7_startTransition: true }}>
           <QueryClientProvider client={queryClient}>
             <NewAuthProvider>
               <App />

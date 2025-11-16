@@ -1,11 +1,7 @@
-import React, { lazy } from 'react';
+import React, { useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/NewSupabaseAuthContext';
-import SeoWrapper from '@/components/SeoWrapper';
 import AppRoutes from '@/AppRoutes';
-import { getSeoProps } from '@/config/seoConfig';
-import useHydration from '@/hooks/useHydration';
-import ScrollToTop from '@/components/ScrollToTop';
 
 import Sidebar from '@/components/Layout/Sidebar';
 import Header from '@/components/Layout/Header';
@@ -29,28 +25,16 @@ const PublicLayout = ({ children }) => (
 function App() {
   const { user, loading, loadingUserData } = useAuth();
   const location = useLocation();
-  const isHydrated = useHydration();
 
-  const isPrintRoute = location.pathname.startsWith('/print');
-  const isAuthRoute =
+  const isPrintRoute = useMemo(() => location.pathname.startsWith('/print'), [location.pathname]);
+  const isAuthRoute = useMemo(() => 
     location.pathname === '/login' ||
     location.pathname === '/admin-login' ||
-    location.pathname === '/auth/callback';
-  
-  const seoProps = getSeoProps(location.pathname);
-
-  if (!isHydrated) {
-    return <LoadingFallback />;
-  }
-
-  const mainContent = (
-    <>
-        <ScrollToTop />
-        <SeoWrapper {...seoProps}>
-            <AppRoutes />
-        </SeoWrapper>
-    </>
+    location.pathname === '/auth/callback',
+    [location.pathname]
   );
+
+  const mainContent = useMemo(() => <AppRoutes />, []);
 
   const showLayout = user && !loading && !loadingUserData && !isPrintRoute && !isAuthRoute;
 

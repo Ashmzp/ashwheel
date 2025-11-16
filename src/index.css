@@ -96,6 +96,19 @@
   main, .container-responsive {
     contain: layout style paint;
   }
+  
+  /* Force GPU acceleration and prevent repaints */
+  #root, main {
+    will-change: auto;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+  
+  /* Prevent any flash of content */
+  body {
+    content-visibility: auto;
+  }
 }
 
 .non-printable {
