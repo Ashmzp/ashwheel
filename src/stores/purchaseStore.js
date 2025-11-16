@@ -10,7 +10,7 @@ const createInitialState = (data = {}) => ({
   partyName: '',
   items: [],
   serial_no: 0,
-  initialized: false,
+  initializedFor: null, // 'new' | <id> | null
   ...data,
 });
 
@@ -18,6 +18,8 @@ const usePurchaseStore = create(
   persist(
     (set, get) => ({
       ...createInitialState(),
+
+      // basic setters
       setFormData: (data) => set((state) => ({ ...state, ...data })),
       setItems: (items) => set({ items }),
       addItem: (item) => set((state) => ({ items: [...state.items, item] })),
@@ -29,72 +31,74 @@ const usePurchaseStore = create(
         })),
       removeItem: (id) =>
         set((state) => ({ items: state.items.filter((i) => i.id !== id) })),
-      setInitialized: (value) => set({ initialized: value }),
-      resetForm: (initialData = {}) => {
-        set(createInitialState(initialData));
+
+      // initialize the form for either 'new' or editing an existing purchase
+      initialize: (mode, data = null) => {
+        const state = get();
+        const target = mode === 'edit' && data?.id ? data.id : (mode === 'new' ? 'new' : null);
+        if (state.initializedFor === target) {
+          // already initialized for same mode/id -> no-op
+          return;
+        }
+
+        if (mode === 'edit' && data) {
+          set({
+            ...createInitialState({
+              id: data.id,
+              created_at: data.created_at ?? null,
+              invoiceDate: data.invoice_date ?? getCurrentDate(),
+              invoiceNo: data.invoice_no ?? '',
+              partyName: data.party_name ?? '',
+              items: data.items ?? [],
+              serial_no: data.serial_no ?? 0,
+            }),
+            initializedFor: data.id,
+          });
+        } else {
+          // new
+          set({
+            ...createInitialState(),
+            initializedFor: 'new',
+          });
+        }
       },
+
+      // fully reset form and clear initializedFor
+      clear: () => set({ ...createInitialState(), initializedFor: null }),
     }),
     {
-      name: 'form-purchase-placeholder',
+      name: 'purchase-form', // single stable storage key
       storage: createJSONStorage(() => localStorage),
+      // persist only data fields
       partialize: (state) =>
-        Object.fromEntries(
-          Object.entries(state).filter(([key]) => typeof state[key] !== 'function')
-        ),
+        ({
+          id: state.id,
+          created_at: state.created_at,
+          invoiceDate: state.invoiceDate,
+          invoiceNo: state.invoiceNo,
+          partyName: state.partyName,
+          items: state.items,
+          serial_no: state.serial_no,
+          initializedFor: state.initializedFor,
+        }),
     }
   )
 );
 
 const initializePurchaseStore = (isEditing, data) => {
-  const state = usePurchaseStore.getState();
-  
-  // Don't reinitialize if already initialized for this session
-  if (state.initialized) {
-    return;
-  }
-  
-  const uniqueKey = isEditing ? `form-edit-purchase-${data.id}` : 'form-new-purchase';
-  const currentKey = usePurchaseStore.persist.getOptions().name;
-
-  if (currentKey !== uniqueKey) {
-    usePurchaseStore.persist.rehydrate();
-    usePurchaseStore.persist.setOptions({ name: uniqueKey });
-    
-    usePurchaseStore.persist.rehydrate().then(() => {
-        const storedState = usePurchaseStore.getState();
-        if (isEditing) {
-            if (storedState.id !== data.id) {
-                const initialState = {
-                    ...data,
-                    invoiceDate: data.invoice_date,
-                    invoiceNo: data.invoice_no,
-                    partyName: data.party_name,
-                    initialized: true,
-                };
-                usePurchaseStore.getState().resetForm(initialState);
-            } else {
-                usePurchaseStore.getState().setInitialized(true);
-            }
-        } else {
-            if (storedState.id) {
-                usePurchaseStore.getState().resetForm({ initialized: true });
-            } else {
-                usePurchaseStore.getState().setInitialized(true);
-            }
-        }
-    });
-  } else {
-    usePurchaseStore.getState().setInitialized(true);
-  }
+  const mode = isEditing ? 'edit' : 'new';
+  usePurchaseStore.getState().initialize(mode, data);
 };
 
-
-const clearPurchaseStore = (isEditing, id) => {
-    const uniqueKey = isEditing ? `form-edit-purchase-${id}` : 'form-new-purchase';
-    localStorage.removeItem(uniqueKey);
-    usePurchaseStore.getState().resetForm();
-    usePurchaseStore.getState().setInitialized(false);
-    usePurchaseStore.persist.setOptions({ name: 'form-purchase-placeholder' });
+const clearPurchaseStore = () => {
+  // clear persisted storage and reset store
+  try {
+    localStorage.removeItem('purchase-form');
+  } catch (e) {
+    console.warn('Unable to remove purchase-form from localStorage', e);
+  }
+  usePurchaseStore.getState().clear();
 };
 
-export { usePurchaseStore as default, initializePurchaseStore, clearPurchaseStore };
+export default usePurchaseStore;
+export { initializePurchaseStore, clearPurchaseStore };
