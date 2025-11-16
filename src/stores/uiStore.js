@@ -10,7 +10,7 @@ const useUIStore = create(
     }),
     {
       name: 'form-ui-state',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => sessionStorage), // sessionStorage prevents cross-tab persistence
     }
   )
 );
