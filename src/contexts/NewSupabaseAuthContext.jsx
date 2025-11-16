@@ -190,6 +190,15 @@ export const NewAuthProvider = ({ children }) => {
       return { data: null, error: signInError };
     }
 
+    if (!signInData || !signInData.user) {
+      toast({
+        variant: "destructive",
+        title: "Sign in Failed",
+        description: "Please verify your email before signing in. Check your inbox.",
+      });
+      return { data: null, error: { message: "Email not verified" } };
+    }
+
     if (signInData.user) {
         const { data: userProfile, error: profileError } = await supabase
             .from('users')
