@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -8,20 +8,18 @@ import { validateRequired, validateChassisNo, validateEngineNo } from '@/utils/v
 import { checkStockExistence } from '@/utils/db/stock';
 import usePurchaseStore from '@/stores/purchaseStore';
 
-const PurchaseItemsTable = () => {
-  const { items, addItem, updateItem, removeItem } = usePurchaseStore((state) => ({
-    items: state.items,
-    addItem: state.addItem,
-    updateItem: state.updateItem,
-    removeItem: state.removeItem,
-  }));
+const PurchaseItemsTable = memo(() => {
+  const items = usePurchaseStore((state) => state.items);
+  const addItem = usePurchaseStore((state) => state.addItem);
+  const updateItem = usePurchaseStore((state) => state.updateItem);
+  const removeItem = usePurchaseStore((state) => state.removeItem);
   
   const [newItem, setNewItem] = useState({
     modelName: '', chassisNo: '', engineNo: '', colour: '', category: '', hsn: '', gst: '', price: '0'
   });
   const { toast } = useToast();
 
-  const handleAddItem = async () => {
+  const handleAddItem = useCallback(async () => {
     const errors = {};
     if (!validateRequired(newItem.modelName)) errors.modelName = true;
     if (!validateChassisNo(newItem.chassisNo)) errors.chassisNo = true;
@@ -46,27 +44,27 @@ const PurchaseItemsTable = () => {
 
     addItem({ ...newItem, id: Date.now().toString(), chassisNo: newItem.chassisNo.toUpperCase(), engineNo: newItem.engineNo.toUpperCase() });
     setNewItem({ modelName: '', chassisNo: '', engineNo: '', colour: '', category: '', hsn: '', gst: '', price: '0' });
-  };
+  }, [newItem, items, addItem, toast]);
 
-  const handleRemoveItem = (itemId) => {
+  const handleRemoveItem = useCallback((itemId) => {
     removeItem(itemId);
-  };
+  }, [removeItem]);
   
-  const handleItemInputChange = (e, id, field) => {
+  const handleItemInputChange = useCallback((e, id, field) => {
     let value = e.target.value;
     if (field === 'chassisNo' || field === 'engineNo') {
       value = value.toUpperCase();
     }
     updateItem(id, { [field]: value });
-  };
+  }, [updateItem]);
 
-  const handleNewItemInputChange = (e, field) => {
+  const handleNewItemInputChange = useCallback((e, field) => {
     let value = e.target.value;
     if (field === 'chassisNo' || field === 'engineNo') {
       value = value.toUpperCase();
     }
     setNewItem(p => ({ ...p, [field]: value }));
-  };
+  }, []);
 
   return (
     <div className="border rounded-lg overflow-hidden">
@@ -122,5 +120,7 @@ const PurchaseItemsTable = () => {
     </div>
   );
 };
+
+});
 
 export default PurchaseItemsTable;

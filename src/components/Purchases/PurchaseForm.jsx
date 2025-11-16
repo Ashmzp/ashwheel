@@ -35,6 +35,7 @@ const PurchaseForm = ({ onSave, onCancel }) => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const firstLoadRef = useRef(false);
   const { toast } = useToast();
 
   const { data: customers = [] } = useQuery({
@@ -67,12 +68,12 @@ const PurchaseForm = ({ onSave, onCancel }) => {
   }, [setFormData, user.id, id]);
 
   useEffect(() => {
-    // Only for NEW forms AND only once
-    if (!id) {
+    // Only first time when opening NEW form
+    if (!firstLoadRef.current && !id) {
+      firstLoadRef.current = true;
       getNextSerialNo();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // empty dependency - run only once on mount
+  }, [id, getNextSerialNo]);
 
   const handlePartyNameChange = (e) => {
     const term = e.target.value;
