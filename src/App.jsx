@@ -20,10 +20,10 @@ function App() {
     location.pathname === '/admin-login' ||
     location.pathname === '/auth/callback';
 
-  // IMPORTANT: Memoized, will not remount UI
+  // Memoize once → prevents re-renders
   const mainContent = useMemo(() => <AppRoutes />, []);
 
-  // Layout always mounted → no flicker
+  // PRINT PAGES (simple)
   if (isPrintRoute) {
     return (
       <div className="bg-white">
@@ -32,34 +32,38 @@ function App() {
     );
   }
 
-  // Public pages but layout should NOT flicker
-  if (!user || loading || loadingUserData || isAuthRoute) {
-    return (
-      <div className="flex flex-col min-h-screen">
-        <PublicHeader />
-        <div className="flex-1">{mainContent}</div>
-        <Footer />
-        <PwaInstallPrompt />
-      </div>
-    );
-  }
+  // 🎯 CORE FIX:
+  // Layout NEVER switches → no blink
+  const isPublic = !user || isAuthRoute;
 
-  // App Layout — always mounted
   return (
     <>
-      <MobileSidebar />
-      <div className="flex h-screen bg-secondary/40">
-        <div className="hidden lg:flex">
-          <Sidebar />
+      {/* Public Routes Layout */}
+      {isPublic ? (
+        <div className="flex flex-col min-h-screen">
+          <PublicHeader />
+          <div className="flex-1">{mainContent}</div>
+          <Footer />
+          <PwaInstallPrompt />
         </div>
-        <div className="flex flex-col flex-1 overflow-hidden">
-          <Header />
-          <main className="flex-1 overflow-y-auto">
-            {mainContent}
-          </main>
-        </div>
-      </div>
-      <PwaInstallPrompt />
+      ) : (
+        // Private App Layout
+        <>
+          <MobileSidebar />
+          <div className="flex h-screen bg-secondary/40">
+            <div className="hidden lg:flex">
+              <Sidebar />
+            </div>
+            <div className="flex flex-col flex-1 overflow-hidden">
+              <Header />
+              <main className="flex-1 overflow-y-auto">
+                {mainContent}
+              </main>
+            </div>
+          </div>
+          <PwaInstallPrompt />
+        </>
+      )}
     </>
   );
 }
