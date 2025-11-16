@@ -24,7 +24,7 @@ import { DEFAULT_QUERY_CONFIG } from '@/utils/queryConfig';
 
 const PAGE_SIZE = 50;
 
-const VehicleInvoicesPage = () => {
+const VehicleInvoicesPage = React.memo(() => {
   const { openForm, setOpenForm, closeForm } = useUIStore();
   const [printData, setPrintData] = useState(null);
 
@@ -378,5 +378,7 @@ const VehicleInvoicesPage = () => {
     </>
   );
 };
+
+});
 
 export default VehicleInvoicesPage;
