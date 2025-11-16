@@ -8,7 +8,7 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
 BEGIN
-  INSERT INTO public.users (id, email, role, access, app_valid_till)
+  INSERT INTO public.users (id, email, role, access, app_valid_till, max_devices)
   VALUES (
     new.id, 
     new.email, 
@@ -33,7 +33,8 @@ BEGIN
         'party_ledger', 'full',
         'receipts', 'full'
     ),
-    (CURRENT_DATE + INTERVAL '30 days')::date  -- 30 days free trial
+    (CURRENT_DATE + INTERVAL '30 days')::date,  -- 30 days free trial
+    1  -- Allow 1 device by default
   );
   RETURN new;
 END;
@@ -48,7 +49,13 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_new_user_default_role();
 
+-- 3. Fix existing users who don't have max_devices set
+UPDATE public.users 
+SET max_devices = 1 
+WHERE max_devices IS NULL AND role = 'user';
+
 -- ✅ Done! Now new signups will get:
 -- - 30 days free trial
 -- - Full access to all modules
 -- - Auto read-only mode after expiry
+-- - 1 device limit (can be changed by admin)
