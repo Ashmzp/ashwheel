@@ -119,8 +119,6 @@ const PurchaseItemsTable = memo(() => {
       </Table>
     </div>
   );
-};
-
 });
 
 export default PurchaseItemsTable;
