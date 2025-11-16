@@ -17,8 +17,18 @@ import { useAuth } from '@/contexts/NewSupabaseAuthContext';
 import { useQuery } from '@tanstack/react-query';
 
 const PurchaseForm = ({ onSave, onCancel }) => {
-  const { id, created_at, serial_no, invoiceDate, invoiceNo, partyName, items } = usePurchaseStore();
-  const { setFormData, setItems: setItemsInStore, addItem } = usePurchaseStore();
+  const {
+    id,
+    created_at,
+    serial_no,
+    invoiceDate,
+    invoiceNo,
+    partyName,
+    items,
+    setFormData,
+    setItems: setItemsInStore,
+    addItem,
+  } = usePurchaseStore();
   const { user } = useAuth();
   
   const [partyNameSearch, setPartyNameSearch] = useState('');
@@ -57,8 +67,12 @@ const PurchaseForm = ({ onSave, onCancel }) => {
   }, [setFormData, user.id, id]);
 
   useEffect(() => {
-    getNextSerialNo();
-  }, [getNextSerialNo]);
+    // Only for NEW forms AND only once
+    if (!id) {
+      getNextSerialNo();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // empty dependency - run only once on mount
 
   const handlePartyNameChange = (e) => {
     const term = e.target.value;
