@@ -112,8 +112,11 @@ export const NewAuthProvider = ({ children }) => {
             if(currentSession?.user) {
               await getSettings().catch(e => console.error("Failed to fetch settings on sign in", e));
             }
-        } else if (event === "SIGNED_OUT") {
+        } else if (event === "SIGNED_OUT" || event === "TOKEN_REFRESH_FAILED") {
            clearSessionData();
+           if (event === "TOKEN_REFRESH_FAILED") {
+             toast({ title: "Session Expired", description: "Please login again.", variant: "destructive" });
+           }
            navigate('/login');
         } else if (event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
            handleSession(currentSession);
