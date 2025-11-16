@@ -68,12 +68,14 @@ const PurchaseForm = ({ onSave, onCancel }) => {
   }, [setFormData, user.id, id]);
 
   useEffect(() => {
-    // Only first time when opening NEW form
-    if (!firstLoadRef.current && !id) {
+    if (!firstLoadRef.current) {
       firstLoadRef.current = true;
-      getNextSerialNo();
+      
+      if (!id) {
+        getNextSerialNo();
+      }
     }
-  }, [id, getNextSerialNo]);
+  }, []);
 
   const handlePartyNameChange = (e) => {
     const term = e.target.value;

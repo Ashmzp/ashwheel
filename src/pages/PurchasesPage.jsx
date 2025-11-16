@@ -217,11 +217,17 @@ const PurchasesPage = () => {
   const totalPages = Math.ceil((data?.count ?? 0) / PAGE_SIZE);
 
   useEffect(() => {
-    if (showForm) {
-      const selectedPurchase = isEditing ? purchases.find(p => p.id === editingId) : undefined;
+    if (!showForm) return;
+
+    const selectedPurchase = isEditing
+      ? purchases.find(p => p.id === editingId)
+      : undefined;
+
+    // Only initialize if not already initialized for this mode/id
+    if (!usePurchaseStore.getState().initializedFor) {
       initializePurchaseStore(isEditing, selectedPurchase);
     }
-  }, [showForm]); // intentionally minimal - only run when form opens
+  }, [showForm, isEditing, editingId, purchases]);
 
   const saveMutation = useMutation({
     mutationFn: async (purchaseData) => {
