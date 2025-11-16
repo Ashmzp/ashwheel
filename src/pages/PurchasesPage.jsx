@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import '@/styles/responsive.css';
 import { Helmet } from 'react-helmet-async';
 import { v4 as uuidv4 } from 'uuid';
@@ -22,6 +22,7 @@ import { useAuth } from '@/contexts/NewSupabaseAuthContext';
 import { PaginationControls } from '@/components/ui/pagination';
 import usePurchaseStore, { initializePurchaseStore, clearPurchaseStore } from '@/stores/purchaseStore';
 import useUIStore from '@/stores/uiStore';
+import usePurchaseUIStore from '@/stores/purchaseUIStore';
 import { useDebounce } from '@/hooks/useDebounce';
 import { cn } from '@/lib/utils';
 
@@ -183,9 +184,7 @@ const PurchaseList = ({ purchases, onAddPurchase, onEditPurchase, onDeletePurcha
 
 const PurchasesPage = () => {
   const { openForm, setOpenForm, closeForm } = useUIStore();
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [dateRange, setDateRange] = useState(getCurrentMonthDateRange());
+  const { searchTerm, setSearchTerm, dateRange, setDateRange, currentPage, setCurrentPage } = usePurchaseUIStore();
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const { toast } = useToast();
   const { user } = useAuth();
