@@ -1,107 +1,91 @@
-import React, { Suspense, lazy } from 'react';
+import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/contexts/NewSupabaseAuthContext';
-import { Loader2 } from 'lucide-react';
 
-const LoadingFallback = () => (
-  <div className="flex justify-center items-center h-screen w-full bg-background">
-    <Loader2 className="animate-spin h-16 w-16 text-primary" />
-  </div>
-);
-
-// Pages
-const HomePage = lazy(() => import('@/pages/HomePage'));
-const UserLogin = lazy(() => import('@/pages/UserLogin'));
-const AdminLogin = lazy(() => import('@/pages/AdminLogin'));
-const SignUp = lazy(() => import('@/pages/SignUp'));
-const AuthCallback = lazy(() => import('@/pages/AuthCallback'));
-const Dashboard = lazy(() => import('@/components/Dashboard/Dashboard'));
-const CustomersPage = lazy(() => import('@/pages/CustomersPage'));
-const PurchasesPage = lazy(() => import('@/pages/PurchasesPage'));
-const StockPage = lazy(() => import('@/pages/StockPage'));
-const ReportsPage = lazy(() => import('@/pages/ReportsPage'));
-const SettingsPage = lazy(() => import('@/pages/SettingsPage'));
-const UserProfile = lazy(() => import('@/pages/UserProfile'));
-const AdminDashboard = lazy(() => import('@/pages/AdminDashboard'));
-const UserManagementPage = lazy(() => import('@/pages/UserManagementPage'));
-const VehicleInvoicesPage = lazy(() => import('@/pages/VehicleInvoicesPage'));
-const SalesReturnPage = lazy(() => import('@/pages/SalesReturnPage'));
-const PurchaseReturnPage = lazy(() => import('@/pages/PurchaseReturnPage'));
-const BookingsPage = lazy(() => import('@/pages/BookingsPage'));
-const MISReportPage = lazy(() => import('@/pages/MISReportPage'));
-
-// Workshop Pages
-const JobCardPage = lazy(() => import('@/pages/Workshop/JobCardPage'));
-const JobCardPrintPage = lazy(() => import('@/pages/Workshop/JobCardPrintPage'));
-const WorkshopInventoryPage = lazy(() => import('@/pages/Workshop/WorkshopInventoryPage'));
-const WorkshopPurchasesPage = lazy(() => import('@/pages/Workshop/WorkshopPurchasesPage'));
-const WpReturnPage = lazy(() => import('@/pages/Workshop/WpReturnPage'));
-const WsReturnPage = lazy(() => import('@/pages/Workshop/WsReturnPage'));
-const FollowUpPage = lazy(() => import('@/pages/Workshop/FollowUpPage'));
-
-// New Modules
-const JournalEntryPage = lazy(() => import('@/pages/JournalEntryPage'));
-const PartyLedgerPage = lazy(() => import('@/pages/PartyLedgerPage'));
-const ReceiptPage = lazy(() => import('@/pages/ReceiptPage'));
-
-// Static Pages
-const AshwheelProPage = lazy(() => import('@/pages/AshwheelProPage'));
-const AboutUsPage = lazy(() => import('@/pages/AboutUsPage'));
-const ContactPage = lazy(() => import('@/pages/ContactPage'));
-const FeedbackPage = lazy(() => import('@/pages/FeedbackPage'));
-const PrivacyPolicyPage = lazy(() => import('@/pages/PrivacyPolicyPage'));
-const TermsAndConditionsPage = lazy(() => import('@/pages/TermsAndConditionsPage'));
-
-// Tool Pages
-const PdfEditorPage = lazy(() => import('@/pages/tools/PdfEditorPage'));
-const SplitPdfPage = lazy(() => import('@/pages/tools/SplitPdfPage'));
-const PdfMergerPage = lazy(() => import('@/pages/tools/PdfMergerPage'));
-const CompressPdfPage = lazy(() => import('@/pages/tools/PdfCompressorPage'));
-const PdfToJpegPage = lazy(() => import('@/pages/tools/PdfToJpegPage'));
-const PdfToTextPage = lazy(() => import('@/pages/tools/PdfToTextPage'));
-const JpegToPdfPage = lazy(() => import('@/pages/tools/JpegToPdfPage'));
-const WordToPdfPage = lazy(() => import('@/pages/tools/WordToPdfPage'));
-const CanvasCraftPage = lazy(() => import('@/pages/tools/CanvasCraftPage'));
-const CropAnythingPage = lazy(() => import('@/pages/tools/CropAnythingPage'));
-const ImageCompressorPage = lazy(() => import('@/pages/tools/ImageCompressorPage'));
-const ImageResizerPage = lazy(() => import('@/pages/tools/ImageResizerPage'));
-const JpegToPngPage = lazy(() => import('@/pages/tools/JpegToPngPage'));
-const PngToJpegPage = lazy(() => import('@/pages/tools/PngToJpegPage'));
-const PassportPhotoMakerPage = lazy(() => import('@/pages/tools/PassportPhotoMakerPage'));
-const AadhaarFormatterPage = lazy(() => import('@/pages/tools/AadhaarFormatterPage'));
-const PasswordGeneratorPage = lazy(() => import('@/pages/tools/PasswordGeneratorPage'));
-const UnitConverterPage = lazy(() => import('@/pages/tools/UnitConverterPage'));
-const ColorPickerPage = lazy(() => import('@/pages/tools/ColorPickerPage'));
-const TextCaseConverterPage = lazy(() => import('@/pages/tools/TextCaseConverterPage'));
-const BmiCalculatorPage = lazy(() => import('@/pages/tools/BmiCalculatorPage'));
-const JsonFormatterPage = lazy(() => import('@/pages/tools/JsonFormatterPage'));
-const PomodoroTimerPage = lazy(() => import('@/pages/tools/PomodoroTimerPage'));
-const TextSummarizerPage = lazy(() => import('@/pages/tools/TextSummarizerPage'));
-const HabitTrackerPage = lazy(() => import('@/pages/tools/HabitTrackerPage'));
-const PollMakerPage = lazy(() => import('@/pages/tools/PollMakerPage'));
-const ThumbnailDownloaderPage = lazy(() => import('@/pages/tools/ThumbnailDownloaderPage'));
-const WordCounterPage = lazy(() => import('@/pages/tools/WordCounterPage'));
-const QrCodeGeneratorPage = lazy(() => import('@/pages/tools/QrCodeGeneratorPage'));
-const MagicQrCodeGeneratorPage = lazy(() => import('@/pages/tools/MagicQrCodeGeneratorPage'));
-const GstCalculatorPage = lazy(() => import('@/pages/tools/GstCalculatorPage'));
-const EmiCalculatorPage = lazy(() => import('@/pages/tools/EmiCalculatorPage'));
-const SipCalculatorPage = lazy(() => import('@/pages/tools/SipCalculatorPage'));
-const TaxableAmountCalculatorPage = lazy(() => import('@/pages/tools/TaxableAmountCalculatorPage'));
-const AgeCalculatorPage = lazy(() => import('@/pages/tools/AgeCalculatorPage'));
-const DateDifferenceCalculatorPage = lazy(() => import('@/pages/tools/DateDifferenceCalculatorPage'));
-const UrlShortenerPage = lazy(() => import('@/pages/tools/UrlShortenerPage'));
-const InvoiceGeneratorPage = lazy(() => import('@/pages/tools/InvoiceGeneratorPage'));
-const ResumeBuilderPage = lazy(() => import('@/pages/tools/ResumeBuilderPage'));
-const MarriageBiodataMakerPage = lazy(() => import('@/pages/tools/MarriageBiodataMakerPage'));
-const PlaceholderPage = lazy(() => import('@/pages/PlaceholderPage'));
+// Direct imports - NO lazy loading
+import HomePage from '@/pages/HomePage';
+import UserLogin from '@/pages/UserLogin';
+import AdminLogin from '@/pages/AdminLogin';
+import SignUp from '@/pages/SignUp';
+import AuthCallback from '@/pages/AuthCallback';
+import Dashboard from '@/components/Dashboard/Dashboard';
+import CustomersPage from '@/pages/CustomersPage';
+import PurchasesPage from '@/pages/PurchasesPage';
+import StockPage from '@/pages/StockPage';
+import ReportsPage from '@/pages/ReportsPage';
+import SettingsPage from '@/pages/SettingsPage';
+import UserProfile from '@/pages/UserProfile';
+import AdminDashboard from '@/pages/AdminDashboard';
+import UserManagementPage from '@/pages/UserManagementPage';
+import VehicleInvoicesPage from '@/pages/VehicleInvoicesPage';
+import SalesReturnPage from '@/pages/SalesReturnPage';
+import PurchaseReturnPage from '@/pages/PurchaseReturnPage';
+import BookingsPage from '@/pages/BookingsPage';
+import MISReportPage from '@/pages/MISReportPage';
+import JobCardPage from '@/pages/Workshop/JobCardPage';
+import JobCardPrintPage from '@/pages/Workshop/JobCardPrintPage';
+import WorkshopInventoryPage from '@/pages/Workshop/WorkshopInventoryPage';
+import WorkshopPurchasesPage from '@/pages/Workshop/WorkshopPurchasesPage';
+import WpReturnPage from '@/pages/Workshop/WpReturnPage';
+import WsReturnPage from '@/pages/Workshop/WsReturnPage';
+import FollowUpPage from '@/pages/Workshop/FollowUpPage';
+import JournalEntryPage from '@/pages/JournalEntryPage';
+import PartyLedgerPage from '@/pages/PartyLedgerPage';
+import ReceiptPage from '@/pages/ReceiptPage';
+import AshwheelProPage from '@/pages/AshwheelProPage';
+import AboutUsPage from '@/pages/AboutUsPage';
+import ContactPage from '@/pages/ContactPage';
+import FeedbackPage from '@/pages/FeedbackPage';
+import PrivacyPolicyPage from '@/pages/PrivacyPolicyPage';
+import TermsAndConditionsPage from '@/pages/TermsAndConditionsPage';
+import PdfEditorPage from '@/pages/tools/PdfEditorPage';
+import SplitPdfPage from '@/pages/tools/SplitPdfPage';
+import PdfMergerPage from '@/pages/tools/PdfMergerPage';
+import CompressPdfPage from '@/pages/tools/PdfCompressorPage';
+import PdfToJpegPage from '@/pages/tools/PdfToJpegPage';
+import PdfToTextPage from '@/pages/tools/PdfToTextPage';
+import JpegToPdfPage from '@/pages/tools/JpegToPdfPage';
+import WordToPdfPage from '@/pages/tools/WordToPdfPage';
+import CanvasCraftPage from '@/pages/tools/CanvasCraftPage';
+import CropAnythingPage from '@/pages/tools/CropAnythingPage';
+import ImageCompressorPage from '@/pages/tools/ImageCompressorPage';
+import ImageResizerPage from '@/pages/tools/ImageResizerPage';
+import JpegToPngPage from '@/pages/tools/JpegToPngPage';
+import PngToJpegPage from '@/pages/tools/PngToJpegPage';
+import PassportPhotoMakerPage from '@/pages/tools/PassportPhotoMakerPage';
+import AadhaarFormatterPage from '@/pages/tools/AadhaarFormatterPage';
+import PasswordGeneratorPage from '@/pages/tools/PasswordGeneratorPage';
+import UnitConverterPage from '@/pages/tools/UnitConverterPage';
+import ColorPickerPage from '@/pages/tools/ColorPickerPage';
+import TextCaseConverterPage from '@/pages/tools/TextCaseConverterPage';
+import BmiCalculatorPage from '@/pages/tools/BmiCalculatorPage';
+import JsonFormatterPage from '@/pages/tools/JsonFormatterPage';
+import PomodoroTimerPage from '@/pages/tools/PomodoroTimerPage';
+import TextSummarizerPage from '@/pages/tools/TextSummarizerPage';
+import HabitTrackerPage from '@/pages/tools/HabitTrackerPage';
+import PollMakerPage from '@/pages/tools/PollMakerPage';
+import ThumbnailDownloaderPage from '@/pages/tools/ThumbnailDownloaderPage';
+import WordCounterPage from '@/pages/tools/WordCounterPage';
+import QrCodeGeneratorPage from '@/pages/tools/QrCodeGeneratorPage';
+import MagicQrCodeGeneratorPage from '@/pages/tools/MagicQrCodeGeneratorPage';
+import GstCalculatorPage from '@/pages/tools/GstCalculatorPage';
+import EmiCalculatorPage from '@/pages/tools/EmiCalculatorPage';
+import SipCalculatorPage from '@/pages/tools/SipCalculatorPage';
+import TaxableAmountCalculatorPage from '@/pages/tools/TaxableAmountCalculatorPage';
+import AgeCalculatorPage from '@/pages/tools/AgeCalculatorPage';
+import DateDifferenceCalculatorPage from '@/pages/tools/DateDifferenceCalculatorPage';
+import UrlShortenerPage from '@/pages/tools/UrlShortenerPage';
+import InvoiceGeneratorPage from '@/pages/tools/InvoiceGeneratorPage';
+import ResumeBuilderPage from '@/pages/tools/ResumeBuilderPage';
+import MarriageBiodataMakerPage from '@/pages/tools/MarriageBiodataMakerPage';
+import PlaceholderPage from '@/pages/PlaceholderPage';
 
 const AppRoutes = () => {
   const { user } = useAuth();
 
   return (
-    <Suspense fallback={<LoadingFallback />}>
-      <Routes>
+    <Routes>
         {/* Public Routes */}
         <Route path="/" element={user ? <Navigate to="/dashboard" /> : <HomePage />} />
         <Route path="/login" element={<UserLogin />} />
@@ -197,7 +181,6 @@ const AppRoutes = () => {
         {/* Catch-all */}
         <Route path="*" element={<PlaceholderPage title="404 - Not Found" message="The page you are looking for does not exist." />} />
       </Routes>
-    </Suspense>
   );
 };
 
