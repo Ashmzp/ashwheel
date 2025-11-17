@@ -17,14 +17,25 @@ const UserManagementPage = () => {
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
-    const { data: authUsersData, error: authUsersError } = await supabase.from('users').select('id, email, role, created_at, access');
-    if (authUsersError) {
-      toast({ variant: 'destructive', title: 'Error fetching users', description: authUsersError.message });
+    try {
+      // Fetch all users including unverified ones
+      const { data: authUsersData, error: authUsersError } = await supabase
+        .from('users')
+        .select('id, email, role, created_at, access, email_confirmed_at')
+        .order('created_at', { ascending: false });
+      
+      if (authUsersError) throw authUsersError;
+      
+      setUsers(authUsersData || []);
+    } catch (error) {
+      toast({ 
+        variant: 'destructive', 
+        title: 'Error fetching users', 
+        description: error.message 
+      });
+    } finally {
       setLoading(false);
-      return;
     }
-    setUsers(authUsersData || []);
-    setLoading(false);
   }, [toast]);
 
   useEffect(() => {
@@ -34,13 +45,16 @@ const UserManagementPage = () => {
   const handleDeleteUser = async (userId) => {
     setDeletingUserId(userId);
     try {
-      const { data, error } = await supabase.functions.invoke('admin-user-management', {
-        body: JSON.stringify({ action: 'delete_user', userId: userId }),
+      // Use RPC function to delete user completely
+      const { data, error } = await supabase.rpc('delete_user_completely', {
+        target_user_id: userId
       });
 
       if (error) throw error;
       
-      if (data.error) throw new Error(data.error);
+      if (data && !data.success) {
+        throw new Error(data.error || 'Failed to delete user');
+      }
 
       toast({
         title: 'Success',
@@ -51,7 +65,7 @@ const UserManagementPage = () => {
       toast({
         variant: 'destructive',
         title: 'Error deleting user',
-        description: error.message,
+        description: error.message || 'Failed to delete user. Make sure you have admin permissions.',
       });
     } finally {
       setDeletingUserId(null);
@@ -84,6 +98,7 @@ const UserManagementPage = () => {
                     <TableRow>
                       <TableHead>Email</TableHead>
                       <TableHead>Role</TableHead>
+                      <TableHead>Status</TableHead>
                       <TableHead>Created At</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -93,6 +108,15 @@ const UserManagementPage = () => {
                       <TableRow key={user.id}>
                         <TableCell className="font-medium">{user.email}</TableCell>
                         <TableCell>{user.role}</TableCell>
+                        <TableCell>
+                          <span className={`px-2 py-1 rounded text-xs ${
+                            user.email_confirmed_at 
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                              : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                          }`}>
+                            {user.email_confirmed_at ? 'Verified' : 'Unverified'}
+                          </span>
+                        </TableCell>
                         <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
                         <TableCell className="text-right">
                           <AlertDialog>
