@@ -4,7 +4,7 @@ import React from 'react';
     import { motion } from 'framer-motion';
     import { Button } from '@/components/ui/button';
     import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-    import { CheckCircle, BarChart2, Users, HardHat, Car, Wrench, ArrowRight } from 'lucide-react';
+    import { CheckCircle, BarChart2, Users, HardHat, Car, Wrench, ArrowRight, Sparkles, Clock, Shield } from 'lucide-react';
     const featureVariants = {
       hidden: {
         opacity: 0,
@@ -51,6 +51,21 @@ import React from 'react';
                 </Helmet>
 
                 <div className="bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-black text-gray-800 dark:text-gray-200">
+                    {/* Free Trial Banner */}
+                    <motion.div 
+                        initial={{ y: -100, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ duration: 0.6 }}
+                        className="bg-gradient-to-r from-primary via-purple-600 to-pink-600 text-white py-3 px-4 text-center"
+                    >
+                        <div className="flex items-center justify-center gap-2 flex-wrap">
+                            <Sparkles className="h-5 w-5 animate-pulse" />
+                            <span className="font-bold text-lg">🎉 30 Days FREE Trial</span>
+                            <span className="hidden sm:inline">|</span>
+                            <span className="text-sm">Full Access to All Modules • No Credit Card Required</span>
+                        </div>
+                    </motion.div>
+
                     {/* Hero Section */}
                     <motion.section initial={{
             opacity: 0
@@ -94,13 +109,54 @@ import React from 'react';
               }} transition={{
                 duration: 0.5,
                 delay: 0.6
-              }} className="mt-10">
-                                <Button size="lg" asChild>
-                                    <Link to="/login">Get Started Now <ArrowRight className="ml-2 h-5 w-5" /></Link>
+              }} className="mt-10 flex flex-col sm:flex-row gap-4 justify-center items-center">
+                                <Button size="lg" className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90" asChild>
+                                    <Link to="/signup">Start Free Trial <ArrowRight className="ml-2 h-5 w-5" /></Link>
+                                </Button>
+                                <Button size="lg" variant="outline" asChild>
+                                    <Link to="/login">Sign In</Link>
                                 </Button>
                             </motion.div>
+                            <motion.p 
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: 0.8 }}
+                                className="mt-6 text-sm text-muted-foreground flex items-center justify-center gap-2"
+                            >
+                                <CheckCircle className="h-4 w-4 text-green-500" />
+                                No credit card required
+                                <CheckCircle className="h-4 w-4 text-green-500" />
+                                Cancel anytime
+                            </motion.p>
                         </div>
                     </motion.section>
+
+                    {/* Trial Benefits Section */}
+                    <section className="py-16 px-4 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-900">
+                        <div className="container mx-auto">
+                            <div className="text-center mb-12">
+                                <h2 className="text-3xl md:text-4xl font-bold">Why Start Your Free Trial Today?</h2>
+                                <p className="mt-4 text-lg text-muted-foreground">Experience the full power of Ashwheel Pro risk-free</p>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                                <Card className="text-center p-6 border-2 hover:border-primary transition-colors">
+                                    <Clock className="h-12 w-12 mx-auto text-primary mb-4" />
+                                    <h3 className="font-bold text-xl mb-2">30 Days Full Access</h3>
+                                    <p className="text-muted-foreground">Try every feature without limitations</p>
+                                </Card>
+                                <Card className="text-center p-6 border-2 hover:border-primary transition-colors">
+                                    <Shield className="h-12 w-12 mx-auto text-primary mb-4" />
+                                    <h3 className="font-bold text-xl mb-2">No Payment Required</h3>
+                                    <p className="text-muted-foreground">Start immediately, no credit card needed</p>
+                                </Card>
+                                <Card className="text-center p-6 border-2 hover:border-primary transition-colors">
+                                    <Users className="h-12 w-12 mx-auto text-primary mb-4" />
+                                    <h3 className="font-bold text-xl mb-2">Expert Support</h3>
+                                    <p className="text-muted-foreground">Get help whenever you need it</p>
+                                </Card>
+                            </div>
+                        </div>
+                    </section>
 
                     {/* Features Section */}
                     <section className="py-20 px-4 bg-secondary/20">
@@ -188,45 +244,43 @@ import React from 'react';
                     </section>
                     
                     {/* Call to Action */}
-                    <section className="py-20 px-4">
+                    <section className="py-20 px-4 bg-gradient-to-r from-primary via-purple-600 to-pink-600 text-white">
                         <div className="container mx-auto text-center">
-                            <motion.h2 initial={{
-                opacity: 0,
-                y: 20
-              }} whileInView={{
-                opacity: 1,
-                y: 0
-              }} viewport={{
-                once: true
-              }} className="text-3xl md:text-4xl font-bold">
-                                Ready to Transform Your Dealership?
-                            </motion.h2>
-                            <motion.p initial={{
-                opacity: 0,
-                y: 20
-              }} whileInView={{
-                opacity: 1,
-                y: 0
-              }} viewport={{
-                once: true
-              }} transition={{
-                delay: 0.2
-              }} className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">Successful dealers who trust Ashwheel Pro to streamline their operations and boost their bottom line.</motion.p>
-                            <motion.div initial={{
-                scale: 0.8,
-                opacity: 0
-              }} whileInView={{
-                scale: 1,
-                opacity: 1
-              }} viewport={{
-                once: true
-              }} transition={{
-                delay: 0.4,
-                duration: 0.5
-              }} className="mt-8">
-                                <Button size="lg" asChild>
-                                    <a href="mailto:support@ashwheel.com">Contact Now</a>
-                                </Button>
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                whileInView={{ opacity: 1, scale: 1 }}
+                                viewport={{ once: true }}
+                                className="max-w-4xl mx-auto"
+                            >
+                                <Sparkles className="h-16 w-16 mx-auto mb-6 animate-pulse" />
+                                <h2 className="text-3xl md:text-5xl font-bold mb-6">
+                                    Start Your 30-Day Free Trial Now!
+                                </h2>
+                                <p className="text-xl mb-8 opacity-90">
+                                    Join hundreds of successful dealers who trust Ashwheel Pro
+                                </p>
+                                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
+                                    <Button size="lg" variant="secondary" className="text-primary font-bold" asChild>
+                                        <Link to="/signup">Get Started Free <ArrowRight className="ml-2 h-5 w-5" /></Link>
+                                    </Button>
+                                    <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10" asChild>
+                                        <a href="mailto:support@ashwheel.cloud">Contact Sales</a>
+                                    </Button>
+                                </div>
+                                <div className="flex flex-wrap justify-center gap-6 text-sm">
+                                    <div className="flex items-center gap-2">
+                                        <CheckCircle className="h-5 w-5" />
+                                        <span>Full Access to All Modules</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <CheckCircle className="h-5 w-5" />
+                                        <span>No Credit Card Required</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <CheckCircle className="h-5 w-5" />
+                                        <span>Cancel Anytime</span>
+                                    </div>
+                                </div>
                             </motion.div>
                         </div>
                     </section>
