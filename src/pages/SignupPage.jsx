@@ -12,6 +12,8 @@ import { supabase } from '@/lib/customSupabaseClient';
 const SignupPage = () => {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [otp, setOtp] = useState('');
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -22,29 +24,41 @@ const SignupPage = () => {
   const handleSendOtp = async (e) => {
     e.preventDefault();
     
-    if (!email && !phone) {
-      toast({ title: "Error", description: "Please enter email or phone number", variant: "destructive" });
+    if (!email) {
+      toast({ title: "Error", description: "Please enter email", variant: "destructive" });
+      return;
+    }
+
+    if (!password || password.length < 6) {
+      toast({ title: "Error", description: "Password must be at least 6 characters", variant: "destructive" });
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      toast({ title: "Error", description: "Passwords don't match", variant: "destructive" });
       return;
     }
 
     setLoading(true);
     
-    const signUpData = email 
-      ? { email, options: { emailRedirectTo: window.location.origin + '/dashboard' } }
-      : { phone };
+    // First create account with password
+    const { error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      phone: phone || undefined,
+      options: { 
+        emailRedirectTo: window.location.origin + '/dashboard'
+      }
+    });
     
-    const { error } = await supabase.auth.signInWithOtp(signUpData);
-    
-    if (!error) {
+    if (!signUpError) {
       setShowOtpInput(true);
       toast({ 
         title: "OTP Sent!", 
-        description: email 
-          ? "Please check your email for the verification code." 
-          : "Please check your phone for the verification code."
+        description: "Please check your email for the verification code."
       });
     } else {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: "Error", description: signUpError.message, variant: "destructive" });
     }
     setLoading(false);
   };
@@ -59,16 +73,16 @@ const SignupPage = () => {
 
     setLoading(true);
     
-    const verifyData = email
-      ? { email, token: otp, type: 'email' }
-      : { phone, token: otp, type: 'sms' };
-    
-    const { error } = await supabase.auth.verifyOtp(verifyData);
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token: otp,
+      type: 'email'
+    });
     
     if (!error) {
       toast({ 
         title: "Success!", 
-        description: "Verified! You get 30 days free trial!" 
+        description: "Account verified! You get 30 days free trial!" 
       });
       setTimeout(() => navigate('/dashboard'), 2000);
     } else {
@@ -101,7 +115,28 @@ const SignupPage = () => {
                     onChange={(e) => setEmail(e.target.value)} 
                     required 
                   />
-                  <p className="text-xs text-muted-foreground">We'll send a 6-digit OTP to verify your email</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-password">Password</Label>
+                  <Input 
+                    id="signup-password" 
+                    type="password" 
+                    placeholder="Minimum 6 characters"
+                    value={password} 
+                    onChange={(e) => setPassword(e.target.value)} 
+                    required 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirm-password">Confirm Password</Label>
+                  <Input 
+                    id="confirm-password" 
+                    type="password" 
+                    placeholder="Re-enter password"
+                    value={confirmPassword} 
+                    onChange={(e) => setConfirmPassword(e.target.value)} 
+                    required 
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-phone">Phone Number (Optional)</Label>
@@ -114,6 +149,7 @@ const SignupPage = () => {
                   />
                   <p className="text-xs text-muted-foreground">Include country code (e.g., +91 for India)</p>
                 </div>
+                <p className="text-xs text-muted-foreground">We'll send a 6-digit OTP to verify your email</p>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? 'Sending OTP...' : 'Send OTP - Start Free Trial'}
                 </Button>
@@ -147,7 +183,7 @@ const SignupPage = () => {
                     setOtp('');
                   }}
                 >
-                  Change Email/Phone
+                  Change Email
                 </Button>
               </form>
             )}
