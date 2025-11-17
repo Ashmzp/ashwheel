@@ -107,7 +107,15 @@ const UserManagementPage = () => {
                     {users.map((user) => (
                       <TableRow key={user.id}>
                         <TableCell className="font-medium">{user.email}</TableCell>
-                        <TableCell>{user.role}</TableCell>
+                        <TableCell>
+                          <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                            user.role === 'admin'
+                              ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+                              : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                          }`}>
+                            {user.role}
+                          </span>
+                        </TableCell>
                         <TableCell>
                           <span className={`px-2 py-1 rounded text-xs ${
                             user.email_confirmed_at 
@@ -119,27 +127,31 @@ const UserManagementPage = () => {
                         </TableCell>
                         <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
                         <TableCell className="text-right">
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="destructive" size="sm" disabled={deletingUserId === user.id}>
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  This action cannot be undone. This will permanently delete the user account and all associated data.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDeleteUser(user.id)} disabled={deletingUserId === user.id}>
-                                  {deletingUserId === user.id ? 'Deleting...' : 'Continue'}
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+                          {user.role !== 'admin' ? (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="destructive" size="sm" disabled={deletingUserId === user.id}>
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This action cannot be undone. This will permanently delete the user account and all associated data.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDeleteUser(user.id)} disabled={deletingUserId === user.id}>
+                                    {deletingUserId === user.id ? 'Deleting...' : 'Continue'}
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">Protected</span>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}
