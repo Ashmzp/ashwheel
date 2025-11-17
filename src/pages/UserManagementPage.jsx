@@ -6,13 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { motion } from 'framer-motion';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Trash2 } from 'lucide-react';
+
+
 
 const UserManagementPage = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [deletingUserId, setDeletingUserId] = useState(null);
+
   const { toast } = useToast();
 
   const fetchUsers = useCallback(async () => {
@@ -42,35 +42,7 @@ const UserManagementPage = () => {
     fetchUsers();
   }, [fetchUsers]);
 
-  const handleDeleteUser = async (userId) => {
-    setDeletingUserId(userId);
-    try {
-      // Use RPC function to delete user completely
-      const { data, error } = await supabase.rpc('delete_user_completely', {
-        target_user_id: userId
-      });
 
-      if (error) throw error;
-      
-      if (data && !data.success) {
-        throw new Error(data.error || 'Failed to delete user');
-      }
-
-      toast({
-        title: 'Success',
-        description: 'User deleted successfully.',
-      });
-      fetchUsers();
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error deleting user',
-        description: error.message || 'Failed to delete user. Make sure you have admin permissions.',
-      });
-    } finally {
-      setDeletingUserId(null);
-    }
-  };
 
   return (
     <>
@@ -127,31 +99,7 @@ const UserManagementPage = () => {
                         </TableCell>
                         <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
                         <TableCell className="text-right">
-                          {user.role !== 'admin' ? (
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="destructive" size="sm" disabled={deletingUserId === user.id}>
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    This action cannot be undone. This will permanently delete the user account and all associated data.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => handleDeleteUser(user.id)} disabled={deletingUserId === user.id}>
-                                    {deletingUserId === user.id ? 'Deleting...' : 'Continue'}
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">Protected</span>
-                          )}
+                          <span className="text-xs text-muted-foreground">View Only</span>
                         </TableCell>
                       </TableRow>
                     ))}
