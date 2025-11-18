@@ -23,7 +23,7 @@ import { supabase } from '@/lib/customSupabaseClient';
       }
 
       if (searchTerm) {
-        query = query.or(`customer_name.ilike.%${searchTerm}%,mobile1.ilike.%${searchTerm}%,mobile2.ilike.%${searchTerm}%`);
+        query = query.or(`customer_name.ilike.%${searchTerm}%,mobile1.ilike.%${searchTerm}%,mobile2.ilike.%${searchTerm}%,gst.ilike.%${searchTerm}%`);
       }
 
       if (filters.type) {

@@ -20,12 +20,14 @@ import { toast } from '@/components/ui/use-toast';
 import { getCustomers, deleteCustomer } from '@/utils/storage';
 import { exportToExcel } from '@/utils/excel';
 import { formatDate, isDateInRange } from '@/utils/dateUtils';
+import { useDebounce } from '@/hooks/useDebounce';
 
 const CustomerList = ({ onAddCustomer, onEditCustomer }) => {
   const [customers, setCustomers] = useState([]);
   const [filteredCustomers, setFilteredCustomers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [showFilters, setShowFilters] = useState(false);
   const [stats, setStats] = useState({
     total: 0,
@@ -38,41 +40,30 @@ const CustomerList = ({ onAddCustomer, onEditCustomer }) => {
   }, []);
 
   useEffect(() => {
-    filterCustomers();
-  }, [customers, searchTerm, dateRange]);
+    loadCustomers();
+  }, [debouncedSearchTerm, dateRange]);
 
   const loadCustomers = async () => {
-    const customerData = await getCustomers();
-    setCustomers(customerData);
+    const { data: customerData } = await getCustomers({ 
+      searchTerm: debouncedSearchTerm,
+      filters: {
+        startDate: dateRange.start,
+        endDate: dateRange.end
+      }
+    });
+    setCustomers(customerData || []);
     
-    const registered = customerData.filter(c => c.gst).length;
+    const registered = (customerData || []).filter(c => c.gst).length;
     setStats({
-      total: customerData.length,
+      total: (customerData || []).length,
       registered,
-      nonRegistered: customerData.length - registered
+      nonRegistered: (customerData || []).length - registered
     });
   };
 
   const filterCustomers = () => {
-    let filtered = customers;
-
-    // Search filter
-    if (searchTerm) {
-      filtered = filtered.filter(customer =>
-        customer.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        customer.mobile1.includes(searchTerm) ||
-        (customer.gst && customer.gst.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
-    }
-
-    // Date range filter
-    if (dateRange.start || dateRange.end) {
-      filtered = filtered.filter(customer =>
-        isDateInRange(customer.created_at, dateRange.start, dateRange.end)
-      );
-    }
-
-    setFilteredCustomers(filtered);
+    // Since we're now filtering at database level, just set customers as filtered
+    setFilteredCustomers(customers);
   };
 
   const handleDeleteCustomer = async (customerId) => {
@@ -169,36 +160,36 @@ const CustomerList = ({ onAddCustomer, onEditCustomer }) => {
       {/* Search and Filters */}
       <Card>
         <CardContent className="p-6">
-          <div className="flex flex-col md:flex-row gap-4 items-center">
-            <div className="flex-1">
+          <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center">
+            <div className="flex-1 min-w-0">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
                   placeholder="Search by name, mobile, or GST number..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 h-10"
                 />
               </div>
             </div>
             
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2 lg:flex-shrink-0">
               <Button
                 variant="outline"
                 onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center gap-2"
+                className="flex items-center justify-center gap-2 h-10 px-4"
               >
                 <Filter className="w-4 h-4" />
-                Filters
+                <span className="hidden sm:inline">Filters</span>
               </Button>
               
               <Button
                 onClick={handleExportToExcel}
-                className="export-button flex items-center gap-2"
+                className="export-button flex items-center justify-center gap-2 h-10 px-4"
                 disabled={filteredCustomers.length === 0}
               >
                 <Download className="w-4 h-4" />
-                Export
+                <span className="hidden sm:inline">Export</span>
               </Button>
             </div>
           </div>
@@ -211,25 +202,33 @@ const CustomerList = ({ onAddCustomer, onEditCustomer }) => {
               exit={{ opacity: 0, height: 0 }}
               className="mt-4 pt-4 border-t border-white/20"
             >
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Start Date</label>
+                  <label className="block text-sm font-medium mb-2 text-gray-300">Start Date</label>
                   <Input
                     type="date"
                     value={dateRange.start}
                     onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+                    className="h-10"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">End Date</label>
+                  <label className="block text-sm font-medium mb-2 text-gray-300">End Date</label>
                   <Input
                     type="date"
                     value={dateRange.end}
                     onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+                    className="h-10"
                   />
                 </div>
-                <div className="flex items-end">
-                  <Button variant="outline" onClick={clearFilters} className="w-full">
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-gray-300">All Types</label>
+                  <div className="h-10 flex items-center px-3 bg-gray-800 border border-gray-700 rounded-md text-sm text-gray-400">
+                    All Customer Types
+                  </div>
+                </div>
+                <div>
+                  <Button variant="outline" onClick={clearFilters} className="w-full h-10">
                     Clear Filters
                   </Button>
                 </div>
