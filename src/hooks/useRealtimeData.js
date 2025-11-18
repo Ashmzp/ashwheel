@@ -24,11 +24,6 @@ export const useRealtimeData = (tableName, options = {}) => {
       return;
     }
 
-    // Prevent unnecessary refetches unless forced
-    if (!force && data.length > 0 && !loading) {
-      return;
-    }
-
     setLoading(true);
     setError(null);
 
@@ -61,7 +56,7 @@ export const useRealtimeData = (tableName, options = {}) => {
     } finally {
       setLoading(false);
     }
-  }, [user, tableName, select, order, ascending, page, pageSize, filter, data.length, loading]);
+  }, [user, tableName, select, order, ascending, page, pageSize, filter]);
 
   useEffect(() => {
     fetchData();
@@ -70,22 +65,28 @@ export const useRealtimeData = (tableName, options = {}) => {
   useEffect(() => {
     if (!user) return;
 
+    // Disable realtime for production to avoid WebSocket issues
+    if (import.meta.env.PROD) return;
+
     const channel = supabase
       .channel(`public:${tableName}:${user.id}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: tableName, filter: `user_id=eq.${user.id}` },
         (payload) => {
-          if (payload.eventType === 'INSERT') {
-            setData((prevData) => [payload.new, ...prevData].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
-            setCount((prevCount) => prevCount + 1);
-          } else if (payload.eventType === 'UPDATE') {
-            setData((prevData) =>
-              prevData.map((item) => (item.id === payload.new.id ? payload.new : item))
-            );
-          } else if (payload.eventType === 'DELETE') {
-            setData((prevData) => prevData.filter((item) => item.id !== payload.old.id));
-            setCount((prevCount) => prevCount - 1);
+          // Only update if we're on page 1 to avoid pagination conflicts
+          if (page === 1) {
+            if (payload.eventType === 'INSERT') {
+              setData((prevData) => [payload.new, ...prevData].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
+              setCount((prevCount) => prevCount + 1);
+            } else if (payload.eventType === 'UPDATE') {
+              setData((prevData) =>
+                prevData.map((item) => (item.id === payload.new.id ? payload.new : item))
+              );
+            } else if (payload.eventType === 'DELETE') {
+              setData((prevData) => prevData.filter((item) => item.id !== payload.old.id));
+              setCount((prevCount) => prevCount - 1);
+            }
           }
         }
       )
@@ -94,7 +95,7 @@ export const useRealtimeData = (tableName, options = {}) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [tableName, user]);
+  }, [tableName, user, page]);
 
   return { data, loading, error, count, refetch: fetchData };
 };

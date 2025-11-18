@@ -148,6 +148,8 @@ const CustomersPage = () => {
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
+    // Force refetch when page changes
+    setTimeout(() => refetch(true), 100);
   };
 
   if (isFormOpen || editingCustomer) {
