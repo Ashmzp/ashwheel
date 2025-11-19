@@ -6,7 +6,8 @@
 export const sanitizeSearchTerm = (input) => {
   if (!input || typeof input !== 'string') return '';
   return input
-    .replace(/[';--]/g, '')
+    .replace(/[';\-]/g, '')  // Escape dash to avoid regex range error
+    .replace(/--/g, '')       // Remove SQL comment syntax
     .replace(/(\bOR\b|\bAND\b|\bUNION\b|\bSELECT\b|\bDROP\b|\bINSERT\b|\bUPDATE\b|\bDELETE\b)/gi, '')
     .trim()
     .substring(0, 100);
