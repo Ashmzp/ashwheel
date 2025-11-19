@@ -124,7 +124,11 @@ import { validateSession } from '../security/authValidator';
         throw error;
       }
       return data;
-    };
+    } catch (error) {
+      logError(error, { function: 'saveCustomer' });
+      throw error;
+    }
+  };
 
     export const deleteCustomer = async (id) => {
       const { data: jobCards, error: jobCardsError } = await supabase
