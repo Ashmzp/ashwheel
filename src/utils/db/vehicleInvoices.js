@@ -1,6 +1,8 @@
 import { supabase } from '@/lib/customSupabaseClient';
 import { v4 as uuidv4 } from 'uuid';
 import { addStock } from './stock';
+import { sanitizeSearchTerm, validateSession, validatePageSize } from '@/utils/security/inputValidator';
+import { safeErrorMessage, logError } from '@/utils/security/errorHandler';
 
 const getCurrentUserId = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -10,16 +12,18 @@ const getCurrentUserId = async () => {
 
 export const getVehicleInvoices = async ({ page = 1, pageSize = 50, searchTerm = '', startDate, endDate }) => {
     try {
+        await validateSession();
         const userId = await getCurrentUserId();
+        const validPageSize = validatePageSize(pageSize);
+        const sanitizedSearch = sanitizeSearchTerm(searchTerm);
         
-        // If search term exists, search in items table first
         let invoiceIds = null;
-        if (searchTerm && searchTerm.trim() !== '') {
+        if (sanitizedSearch) {
             const { data: itemsData } = await supabase
                 .from('vehicle_invoice_items')
                 .select('invoice_id')
                 .eq('user_id', userId)
-                .or(`chassis_no.ilike.%${searchTerm}%,engine_no.ilike.%${searchTerm}%,model_name.ilike.%${searchTerm}%`);
+                .or(`chassis_no.ilike.%${sanitizedSearch}%,engine_no.ilike.%${sanitizedSearch}%,model_name.ilike.%${sanitizedSearch}%`);
             
             if (itemsData && itemsData.length > 0) {
                 invoiceIds = [...new Set(itemsData.map(item => item.invoice_id))];
@@ -34,25 +38,23 @@ export const getVehicleInvoices = async ({ page = 1, pageSize = 50, searchTerm =
             .lte('invoice_date', endDate)
             .order('invoice_date', { ascending: false });
         
-        if (searchTerm && searchTerm.trim() !== '') {
+        if (sanitizedSearch) {
             if (invoiceIds && invoiceIds.length > 0) {
-                // Search in both invoice fields and matched invoice IDs from items
-                query = query.or(`invoice_no.ilike.%${searchTerm}%,customer_name.ilike.%${searchTerm}%,id.in.(${invoiceIds.join(',')})`);
+                query = query.or(`invoice_no.ilike.%${sanitizedSearch}%,customer_name.ilike.%${sanitizedSearch}%,id.in.(${invoiceIds.join(',')})`);
             } else {
-                // Only search in invoice fields
-                query = query.or(`invoice_no.ilike.%${searchTerm}%,customer_name.ilike.%${searchTerm}%`);
+                query = query.or(`invoice_no.ilike.%${sanitizedSearch}%,customer_name.ilike.%${sanitizedSearch}%`);
             }
         }
         
-        query = query.range((page - 1) * pageSize, page * pageSize - 1);
+        query = query.range((page - 1) * validPageSize, page * validPageSize - 1);
         
         const { data, error, count } = await query;
 
         if (error) {
-            throw new Error(`Failed to fetch invoices: ${error.message}`);
+            logError(error, 'getVehicleInvoices');
+            throw new Error(safeErrorMessage(error));
         }
 
-        // Transform data to match expected format
         const invoices = (data || []).map(inv => ({
             invoice_id: inv.id,
             invoice_no: inv.invoice_no,
@@ -68,7 +70,8 @@ export const getVehicleInvoices = async ({ page = 1, pageSize = 50, searchTerm =
 
         return { data: invoices, count: count || 0, error: null };
     } catch (error) {
-        throw new Error(error.message || 'Failed to fetch vehicle invoices');
+        logError(error, 'getVehicleInvoices');
+        throw new Error(safeErrorMessage(error));
     }
 };
 
@@ -87,6 +90,7 @@ export const getVehicleInvoiceItems = async (invoiceId) => {
 
 export const saveVehicleInvoice = async (invoiceData) => {
     try {
+        await validateSession();
         const userId = await getCurrentUserId();
         const isUpdating = !!invoiceData.id;
 
@@ -196,27 +200,32 @@ export const saveVehicleInvoice = async (invoiceData) => {
 
 export const deleteVehicleInvoice = async (invoiceId) => {
     try {
-        // The trigger will handle restoring items to stock based on daily_report_settings
+        await validateSession();
         const { error } = await supabase.from('vehicle_invoices').delete().eq('id', invoiceId);
-        if (error) throw new Error(`Failed to delete invoice: ${error.message}`);
+        if (error) {
+          logError(error, 'deleteVehicleInvoice');
+          throw new Error(safeErrorMessage(error));
+        }
         return { error: null };
     } catch (error) {
-        throw new Error(error.message || 'Failed to delete vehicle invoice');
+        logError(error, 'deleteVehicleInvoice');
+        throw new Error(safeErrorMessage(error));
     }
 };
 
 export const getVehicleInvoicesForExport = async ({ startDate, endDate, searchTerm }) => {
     try {
+        await validateSession();
         const userId = await getCurrentUserId();
+        const sanitizedSearch = sanitizeSearchTerm(searchTerm);
         
-        // If search term exists, search in items table first
         let invoiceIds = null;
-        if (searchTerm && searchTerm.trim() !== '') {
+        if (sanitizedSearch) {
             const { data: itemsData } = await supabase
                 .from('vehicle_invoice_items')
                 .select('invoice_id')
                 .eq('user_id', userId)
-                .or(`chassis_no.ilike.%${searchTerm}%,engine_no.ilike.%${searchTerm}%,model_name.ilike.%${searchTerm}%`);
+                .or(`chassis_no.ilike.%${sanitizedSearch}%,engine_no.ilike.%${sanitizedSearch}%,model_name.ilike.%${sanitizedSearch}%`);
             
             if (itemsData && itemsData.length > 0) {
                 invoiceIds = [...new Set(itemsData.map(item => item.invoice_id))];
@@ -231,19 +240,21 @@ export const getVehicleInvoicesForExport = async ({ startDate, endDate, searchTe
             .lte('invoice_date', endDate)
             .order('invoice_date', { ascending: false });
         
-        if (searchTerm && searchTerm.trim() !== '') {
+        if (sanitizedSearch) {
             if (invoiceIds && invoiceIds.length > 0) {
-                query = query.or(`invoice_no.ilike.%${searchTerm}%,customer_name.ilike.%${searchTerm}%,id.in.(${invoiceIds.join(',')})`);
+                query = query.or(`invoice_no.ilike.%${sanitizedSearch}%,customer_name.ilike.%${sanitizedSearch}%,id.in.(${invoiceIds.join(',')})`);
             } else {
-                query = query.or(`invoice_no.ilike.%${searchTerm}%,customer_name.ilike.%${searchTerm}%`);
+                query = query.or(`invoice_no.ilike.%${sanitizedSearch}%,customer_name.ilike.%${sanitizedSearch}%`);
             }
         }
         
         const { data, error } = await query;
         
-        if (error) throw new Error(`Failed to fetch invoices for export: ${error.message}`);
+        if (error) {
+          logError(error, 'getVehicleInvoicesForExport');
+          throw new Error(safeErrorMessage(error));
+        }
         
-        // Transform data to match expected format
         return (data || []).map(inv => ({
             invoice_id: inv.id,
             invoice_no: inv.invoice_no,
@@ -257,6 +268,7 @@ export const getVehicleInvoicesForExport = async ({ startDate, endDate, searchTe
             gst_number: inv.customer_details?.gst || inv.customers?.gst || '',
         }));
     } catch (error) {
-        throw new Error(error.message || 'Failed to export vehicle invoices');
+        logError(error, 'getVehicleInvoicesForExport');
+        throw new Error(safeErrorMessage(error));
     }
 };

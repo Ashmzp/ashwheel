@@ -1,5 +1,7 @@
 import { supabase } from '@/lib/customSupabaseClient';
 import { v4 as uuidv4 } from 'uuid';
+import { validateSession } from '@/utils/security/inputValidator';
+import { safeErrorMessage, logError } from '@/utils/security/errorHandler';
 
 const getCurrentUserId = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -8,46 +10,66 @@ const getCurrentUserId = async () => {
 };
 
 export const getPriceList = async () => {
-    const userId = await getCurrentUserId();
-    const { data, error } = await supabase
-        .from('price_list')
-        .select('*')
-        .eq('user_id', userId)
-        .order('model_name');
-    
-    if (error) {
-        console.error('Error fetching price list:', error);
-        throw error;
+    try {
+      await validateSession();
+      const userId = await getCurrentUserId();
+      const { data, error } = await supabase
+          .from('price_list')
+          .select('*')
+          .eq('user_id', userId)
+          .order('model_name');
+      
+      if (error) {
+        logError(error, 'getPriceList');
+        throw new Error(safeErrorMessage(error));
+      }
+      return data;
+    } catch (error) {
+      logError(error, 'getPriceList');
+      throw new Error(safeErrorMessage(error));
     }
-    return data;
 };
 
 export const savePriceListItem = async (item) => {
-    const userId = await getCurrentUserId();
+    try {
+      await validateSession();
+      const userId = await getCurrentUserId();
     const payload = {
         ...item,
         user_id: userId,
         id: item.id || uuidv4(),
     };
-    const { data, error } = await supabase.from('price_list').upsert(payload).select().single();
-    if (error) {
-        console.error('Error saving price list item:', error);
-        throw error;
+      const { data, error } = await supabase.from('price_list').upsert(payload).select().single();
+      if (error) {
+        logError(error, 'savePriceListItem');
+        throw new Error(safeErrorMessage(error));
+      }
+      return data;
+    } catch (error) {
+      logError(error, 'savePriceListItem');
+      throw new Error(safeErrorMessage(error));
     }
-    return data;
 };
 
 export const deletePriceListItem = async (id) => {
-    const { error } = await supabase.from('price_list').delete().eq('id', id);
-    if (error) {
-        console.error('Error deleting price list item:', error);
-        throw error;
+    try {
+      await validateSession();
+      const { error } = await supabase.from('price_list').delete().eq('id', id);
+      if (error) {
+        logError(error, 'deletePriceListItem');
+        throw new Error(safeErrorMessage(error));
+      }
+      return { error: null };
+    } catch (error) {
+      logError(error, 'deletePriceListItem');
+      throw new Error(safeErrorMessage(error));
     }
-    return { error: null };
 };
 
 export const bulkInsertPriceList = async (items) => {
-    const userId = await getCurrentUserId();
+    try {
+      await validateSession();
+      const userId = await getCurrentUserId();
     const itemsToInsert = items.map(item => ({
         user_id: userId,
         model_name: item['Model Name'],
@@ -56,10 +78,14 @@ export const bulkInsertPriceList = async (items) => {
         category: item['Category'],
     }));
 
-    const { data, error } = await supabase.from('price_list').upsert(itemsToInsert, { onConflict: 'user_id, model_name' });
-    if (error) {
-        console.error('Error bulk inserting price list:', error);
-        throw error;
+      const { data, error } = await supabase.from('price_list').upsert(itemsToInsert, { onConflict: 'user_id, model_name' });
+      if (error) {
+        logError(error, 'bulkInsertPriceList');
+        throw new Error(safeErrorMessage(error));
+      }
+      return data;
+    } catch (error) {
+      logError(error, 'bulkInsertPriceList');
+      throw new Error(safeErrorMessage(error));
     }
-    return data;
 };

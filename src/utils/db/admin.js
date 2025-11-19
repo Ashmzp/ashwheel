@@ -1,19 +1,33 @@
 import { supabase } from '@/lib/customSupabaseClient';
+import { validateSession } from '@/utils/security/inputValidator';
+import { safeErrorMessage, logError } from '@/utils/security/errorHandler';
 
 export const getAllUsers = async () => {
-    const { data, error } = await supabase.from('users').select('id, email, role, access, created_at');
-    if (error) {
-        console.error('Error fetching users:', error);
-        throw error;
+    try {
+      await validateSession();
+      const { data, error } = await supabase.from('users').select('id, email, role, access, created_at');
+      if (error) {
+        logError(error, 'getAllUsers');
+        throw new Error(safeErrorMessage(error));
+      }
+      return data;
+    } catch (error) {
+      logError(error, 'getAllUsers');
+      throw new Error(safeErrorMessage(error));
     }
-    return data;
 };
 
 export const updateUserRoleAndAccess = async (userId, role, access) => {
-    const { data, error } = await supabase.from('users').update({ role, access }).eq('id', userId);
-    if (error) {
-        console.error('Error updating user permissions:', error);
-        throw error;
+    try {
+      await validateSession();
+      const { data, error } = await supabase.from('users').update({ role, access }).eq('id', userId);
+      if (error) {
+        logError(error, 'updateUserRoleAndAccess');
+        throw new Error(safeErrorMessage(error));
+      }
+      return data;
+    } catch (error) {
+      logError(error, 'updateUserRoleAndAccess');
+      throw new Error(safeErrorMessage(error));
     }
-    return data;
 };

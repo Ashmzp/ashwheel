@@ -1,5 +1,7 @@
 import { supabase } from '@/lib/customSupabaseClient';
 import { v4 as uuidv4 } from 'uuid';
+import { sanitizeSearchTerm, validateSession, validatePageSize } from '@/utils/security/inputValidator';
+import { safeErrorMessage, logError } from '@/utils/security/errorHandler';
 
 const getCurrentUserId = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -8,20 +10,24 @@ const getCurrentUserId = async () => {
 };
 
 export const getPurchases = async ({ page = 1, pageSize = 10, searchTerm = '', startDate, endDate }) => {
-    const userId = await getCurrentUserId();
-    const from = (page - 1) * pageSize;
-    const to = from + pageSize - 1;
+    try {
+      await validateSession();
+      const userId = await getCurrentUserId();
+      const validPageSize = validatePageSize(pageSize);
+      const from = (page - 1) * validPageSize;
+      const to = from + validPageSize - 1;
+      const sanitizedSearch = sanitizeSearchTerm(searchTerm);
 
-    let query = supabase
-        .from('purchases')
-        .select('*', { count: 'exact' })
-        .eq('user_id', userId)
-        .order('invoice_date', { ascending: false })
-        .order('created_at', { ascending: false });
-    
-    if (pageSize !== 10000) { // Don't apply range for full export
-        query = query.range(from, to);
-    }
+      let query = supabase
+          .from('purchases')
+          .select('*', { count: 'exact' })
+          .eq('user_id', userId)
+          .order('invoice_date', { ascending: false })
+          .order('created_at', { ascending: false });
+      
+      if (validPageSize !== 500) {
+          query = query.range(from, to);
+      }
         
     // Always apply date range unless searching
     if (!searchTerm) {
@@ -33,30 +39,31 @@ export const getPurchases = async ({ page = 1, pageSize = 10, searchTerm = '', s
         }
     }
 
-    const { data, error, count } = await query;
+      const { data, error, count } = await query;
 
-    if (error) {
-        console.error('Error fetching purchases:', error);
-        throw error;
+      if (error) {
+        logError(error, 'getPurchases');
+        throw new Error(safeErrorMessage(error));
+      }
+      
+      if (sanitizedSearch && data) {
+          const filteredData = data.filter(purchase => {
+              if (purchase.party_name?.toLowerCase().includes(sanitizedSearch) || purchase.invoice_no?.toLowerCase().includes(sanitizedSearch)) {
+                  return true;
+              }
+              return (purchase.items || []).some(item => 
+                  (item.chassisNo && item.chassisNo.toLowerCase().includes(sanitizedSearch)) ||
+                  (item.engineNo && item.engineNo.toLowerCase().includes(sanitizedSearch))
+              );
+          });
+          return { data: filteredData, count: filteredData.length };
+      }
+
+      return { data, count };
+    } catch (error) {
+      logError(error, 'getPurchases');
+      throw new Error(safeErrorMessage(error));
     }
-    
-    // Client-side filtering for chassis_no/engine_no if searchTerm is present
-    if (searchTerm && data) {
-        const lowercasedSearchTerm = searchTerm.toLowerCase();
-        const filteredData = data.filter(purchase => {
-            if (purchase.party_name.toLowerCase().includes(lowercasedSearchTerm) || purchase.invoice_no.toLowerCase().includes(lowercasedSearchTerm)) {
-                return true;
-            }
-            return (purchase.items || []).some(item => 
-                (item.chassisNo && item.chassisNo.toLowerCase().includes(lowercasedSearchTerm)) ||
-                (item.engineNo && item.engineNo.toLowerCase().includes(lowercasedSearchTerm))
-            );
-        });
-        return { data: filteredData, count: filteredData.length };
-    }
-
-
-    return { data, count };
 };
 
 export const getPurchaseById = async (id) => {
@@ -74,7 +81,9 @@ export const getPurchaseById = async (id) => {
 };
 
 export const savePurchase = async (purchaseData) => {
-    const userId = await getCurrentUserId();
+    try {
+      await validateSession();
+      const userId = await getCurrentUserId();
     const isUpdating = !!purchaseData.id;
 
     const payload = {
@@ -96,18 +105,28 @@ export const savePurchase = async (purchaseData) => {
         .single();
 
     if (error) {
-        console.error('Error saving purchase:', error);
-        throw error;
+        logError(error, 'savePurchase');
+        throw new Error(safeErrorMessage(error));
     }
 
     return data;
+  } catch (error) {
+    logError(error, 'savePurchase');
+    throw new Error(safeErrorMessage(error));
+  }
 };
 
 export const deletePurchase = async (id) => {
-    const { error } = await supabase.from('purchases').delete().eq('id', id);
-    if (error) {
-        console.error('Error deleting purchase:', error);
-        throw error;
+    try {
+      await validateSession();
+      const { error } = await supabase.from('purchases').delete().eq('id', id);
+      if (error) {
+        logError(error, 'deletePurchase');
+        throw new Error(safeErrorMessage(error));
+      }
+      return { success: true };
+    } catch (error) {
+      logError(error, 'deletePurchase');
+      throw new Error(safeErrorMessage(error));
     }
-    return { success: true };
 };

@@ -254,6 +254,18 @@ export default defineConfig({
 		},
 	},
 	build: {
+		sourcemap: false, // Disable source maps in production
+		minify: 'terser',
+		terserOptions: {
+			compress: {
+				drop_console: true, // Remove console.* in production
+				drop_debugger: true, // Remove debugger statements
+				pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.warn'],
+			},
+			format: {
+				comments: false, // Remove comments
+			},
+		},
 		rollupOptions: {
 			external: [
 				'@babel/parser',

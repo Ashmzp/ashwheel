@@ -25,8 +25,6 @@ const ProductKeyGenerator = () => {
   const fetchKeys = useCallback(async () => {
     setLoadingKeys(true);
     try {
-      // The select query now explicitly joins with the users table.
-      // The FK constraint fk_used_by_user makes this possible.
       const { data, error } = await supabase
         .from('product_keys')
         .select(`
@@ -42,7 +40,7 @@ const ProductKeyGenerator = () => {
       
       if (error) throw error;
       
-      setKeys(data);
+      setKeys(data || []);
 
     } catch (error) {
       console.error("Error fetching keys:", error);
@@ -63,10 +61,14 @@ const ProductKeyGenerator = () => {
 
   const handleGenerate = async (e) => {
     e.preventDefault();
-    if (!validityDays || validityDays < 1 || validityDays > 3650) {
+    
+    // Enhanced input validation
+    const days = parseInt(validityDays, 10);
+    if (isNaN(days) || days < 1 || days > 3650) {
       toast({ variant: 'destructive', title: 'Invalid Input', description: 'Validity must be between 1 and 3650 days.' });
       return;
     }
+    
     setIsLoading(true);
     setGeneratedKey(null);
 
@@ -95,10 +97,28 @@ const ProductKeyGenerator = () => {
     }
   };
 
-  const copyToClipboard = (text) => {
-    const safeText = escapeHTML(text);
-    navigator.clipboard.writeText(text);
-    toast({ title: 'Copied!', description: 'Key copied to clipboard.' });
+  const copyToClipboard = async (text) => {
+    try {
+      const safeText = escapeHTML(text);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        toast({ title: 'Copied!', description: 'Key copied to clipboard.' });
+      } else {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        toast({ title: 'Copied!', description: 'Key copied to clipboard.' });
+      }
+    } catch (error) {
+      console.error('Copy failed:', error);
+      toast({ variant: 'destructive', title: 'Copy Failed', description: 'Could not copy to clipboard.' });
+    }
   };
 
   return (
@@ -118,7 +138,10 @@ const ProductKeyGenerator = () => {
                 min="1"
                 max="3650"
                 value={validityDays}
-                onChange={(e) => setValidityDays(parseInt(e.target.value, 10) || 0)}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value, 10);
+                  setValidityDays(isNaN(val) ? 30 : Math.max(1, Math.min(3650, val)));
+                }}
                 required
               />
             </div>

@@ -1,18 +1,23 @@
 import { supabase } from '@/lib/customSupabaseClient';
-    import { getCurrentUserId } from '@/utils/db';
+import { getCurrentUserId } from '@/utils/db';
+import { sanitizeSearchTerm, validateSession } from '@/utils/security/inputValidator';
+import { safeErrorMessage, logError } from '@/utils/security/errorHandler';
     
-    export const getWorkshopPurchases = async ({ searchTerm = '', dateRange = {} } = {}) => {
-      const userId = await getCurrentUserId();
-      if (!userId) return [];
-      
-      let query = supabase
-        .from('workshop_purchases')
-        .select('*')
-        .eq('user_id', userId);
+export const getWorkshopPurchases = async ({ searchTerm = '', dateRange = {} } = {}) => {
+  try {
+    await validateSession();
+    const userId = await getCurrentUserId();
+    if (!userId) return [];
+    const sanitizedSearch = sanitizeSearchTerm(searchTerm);
     
-      if (searchTerm) {
-        query = query.or(`party_name.ilike.%${searchTerm}%,invoice_no.ilike.%${searchTerm}%`);
-      }
+    let query = supabase
+      .from('workshop_purchases')
+      .select('*')
+      .eq('user_id', userId);
+  
+    if (sanitizedSearch) {
+      query = query.or(`party_name.ilike.%${sanitizedSearch}%,invoice_no.ilike.%${sanitizedSearch}%`);
+    }
     
       if (dateRange.start) {
         query = query.gte('invoice_date', dateRange.start);
@@ -21,14 +26,18 @@ import { supabase } from '@/lib/customSupabaseClient';
         query = query.lte('invoice_date', dateRange.end);
       }
     
-      const { data, error } = await query.order('serial_no', { ascending: false });
-      
-      if (error) {
-        console.error('Error getting workshop purchases:', error);
-        throw error;
-      }
-      return data;
-    };
+    const { data, error } = await query.order('serial_no', { ascending: false });
+    
+    if (error) {
+      logError(error, 'getWorkshopPurchases');
+      throw new Error(safeErrorMessage(error));
+    }
+    return data;
+  } catch (error) {
+    logError(error, 'getWorkshopPurchases');
+    throw new Error(safeErrorMessage(error));
+  }
+};
     
     export const getWorkshopPurchaseById = async (id) => {
       if (!id) return null;
@@ -49,27 +58,39 @@ import { supabase } from '@/lib/customSupabaseClient';
       return data;
     };
     
-    export const saveWorkshopPurchase = async (purchase) => {
-      const userId = await getCurrentUserId();
-      if (!userId) throw new Error("User not authenticated.");
+export const saveWorkshopPurchase = async (purchase) => {
+  try {
+    await validateSession();
+    const userId = await getCurrentUserId();
+    if (!userId) throw new Error("User not authenticated.");
+  
+    const purchaseData = { ...purchase, user_id: userId };
+    const { data, error } = await supabase.from('workshop_purchases').upsert(purchaseData, { onConflict: 'id' }).select().single();
+    if (error) {
+      logError(error, 'saveWorkshopPurchase');
+      throw new Error(safeErrorMessage(error));
+    }
+    return data;
+  } catch (error) {
+    logError(error, 'saveWorkshopPurchase');
+    throw new Error(safeErrorMessage(error));
+  }
+};
     
-      const purchaseData = { ...purchase, user_id: userId };
-      const { data, error } = await supabase.from('workshop_purchases').upsert(purchaseData, { onConflict: 'id' }).select().single();
-      if (error) {
-        console.error('Error saving workshop purchase:', error);
-        throw error;
-      }
-      return data;
-    };
-    
-    export const deleteWorkshopPurchase = async (id) => {
-      const userId = await getCurrentUserId();
-      if (!userId) throw new Error("User not authenticated.");
-    
-      const { error } = await supabase.from('workshop_purchases').delete().eq('id', id).eq('user_id', userId);
-      if (error) {
-        console.error('Error deleting workshop purchase:', error);
-        throw error;
-      }
-      return { error };
-    };
+export const deleteWorkshopPurchase = async (id) => {
+  try {
+    await validateSession();
+    const userId = await getCurrentUserId();
+    if (!userId) throw new Error("User not authenticated.");
+  
+    const { error } = await supabase.from('workshop_purchases').delete().eq('id', id).eq('user_id', userId);
+    if (error) {
+      logError(error, 'deleteWorkshopPurchase');
+      throw new Error(safeErrorMessage(error));
+    }
+    return { error };
+  } catch (error) {
+    logError(error, 'deleteWorkshopPurchase');
+    throw new Error(safeErrorMessage(error));
+  }
+};

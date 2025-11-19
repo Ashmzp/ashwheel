@@ -1,6 +1,8 @@
 import { supabase } from '@/lib/customSupabaseClient';
 import { v4 as uuidv4 } from 'uuid';
 import { getFinancialYear } from '@/utils/financialYearUtils';
+import { validateSession } from '@/utils/security/inputValidator';
+import { safeErrorMessage, logError } from '@/utils/security/errorHandler';
 
 const getCurrentUserId = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -9,7 +11,9 @@ const getCurrentUserId = async () => {
 };
 
 export const saveSettings = async (settings) => {
-  const userId = settings.user_id || await getCurrentUserId();
+  try {
+    await validateSession();
+    const userId = settings.user_id || await getCurrentUserId();
   const settingsData = {
       user_id: userId,
       company_name: settings.companyName,
@@ -37,10 +41,14 @@ export const saveSettings = async (settings) => {
       updated_at: new Date().toISOString()
   };
 
-  const { error } = await supabase.from('settings').upsert(settingsData, { onConflict: 'user_id' });
-  if (error) {
-    console.error('Error saving settings:', error);
-    throw error;
+    const { error } = await supabase.from('settings').upsert(settingsData, { onConflict: 'user_id' });
+    if (error) {
+      logError(error, 'saveSettings');
+      throw new Error(safeErrorMessage(error));
+    }
+  } catch (error) {
+    logError(error, 'saveSettings');
+    throw new Error(safeErrorMessage(error));
   }
 };
 
@@ -54,11 +62,13 @@ const defaultCustomerFields = {
 };
 
 export const getSettings = async () => {
-    const userId = await getCurrentUserId();
-    if (!userId) {
-        console.warn("getSettings called without a user.");
-        return null;
-    }
+    try {
+      await validateSession();
+      const userId = await getCurrentUserId();
+      if (!userId) {
+          console.warn("getSettings called without a user.");
+          return null;
+      }
     const { data, error } = await supabase
         .from('settings')
         .select('*')
@@ -148,12 +158,12 @@ export const getSettings = async () => {
         };
     }
     
-    if (error) {
-        console.error("Error fetching settings:", error);
-        throw error;
-    }
+      if (error) {
+        logError(error, 'getSettings');
+        throw new Error(safeErrorMessage(error));
+      }
 
-    return data ? {
+      return data ? {
         ...data,
         companyName: data.company_name,
         gstNo: data.gst_no,
@@ -180,7 +190,11 @@ export const getSettings = async () => {
         customFields: data.custom_fields,
         enable_extra_charges: data.enable_extra_charges,
         extra_charges_mandatory_for_unregistered: data.extra_charges_mandatory_for_unregistered,
-    } : { ...defaults, user_id: userId };
+      } : { ...defaults, user_id: userId };
+    } catch (error) {
+      logError(error, 'getSettings');
+      throw new Error(safeErrorMessage(error));
+    }
 };
 
 export const getNextInvoiceNo = async (invoiceType, date) => {
@@ -210,7 +224,9 @@ export const getNextInvoiceNo = async (invoiceType, date) => {
 };
 
 export const incrementInvoiceCounter = async (invoiceType, date) => {
-    const userId = await getCurrentUserId();
+    try {
+      await validateSession();
+      const userId = await getCurrentUserId();
     const settings = await getSettings();
     const fy = getFinancialYear(date);
 
@@ -226,8 +242,12 @@ export const incrementInvoiceCounter = async (invoiceType, date) => {
         .update({ fy_counters })
         .eq('user_id', userId);
 
-    if (error) {
-        console.error('Error incrementing invoice counter:', error);
-        throw error;
+      if (error) {
+        logError(error, 'incrementInvoiceCounter');
+        throw new Error(safeErrorMessage(error));
+      }
+    } catch (error) {
+      logError(error, 'incrementInvoiceCounter');
+      throw new Error(safeErrorMessage(error));
     }
 };

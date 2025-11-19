@@ -2,6 +2,8 @@ import React, { useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/NewSupabaseAuthContext';
 import AppRoutes from '@/AppRoutes';
+import ErrorBoundary from '@/components/ErrorBoundary';
+import OfflineIndicator from '@/components/OfflineIndicator';
 
 import Sidebar from '@/components/Layout/Sidebar';
 import Header from '@/components/Layout/Header';
@@ -37,14 +39,17 @@ function App() {
   const isPublic = !user || isAuthRoute;
 
   return (
-    <>
+    <ErrorBoundary>
       {/* Public Routes Layout */}
       {isPublic ? (
         <div className="flex flex-col min-h-screen">
           <PublicHeader />
-          <div className="flex-1">{mainContent}</div>
+          <div className="flex-1">
+            <ErrorBoundary>{mainContent}</ErrorBoundary>
+          </div>
           <Footer />
           <PwaInstallPrompt />
+          <OfflineIndicator />
         </div>
       ) : (
         // Private App Layout
@@ -57,14 +62,15 @@ function App() {
             <div className="flex flex-col flex-1 overflow-hidden">
               <Header />
               <main className="flex-1 overflow-y-auto">
-                {mainContent}
+                <ErrorBoundary>{mainContent}</ErrorBoundary>
               </main>
             </div>
           </div>
           <PwaInstallPrompt />
+          <OfflineIndicator />
         </>
       )}
-    </>
+    </ErrorBoundary>
   );
 }
 

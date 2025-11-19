@@ -27,50 +27,62 @@ export const NewAuthProvider = ({ children }) => {
   const navigate = useNavigate();
 
   const clearSessionData = useCallback(() => {
-    setUser(null);
-    setSession(null);
-    
     try {
-        const deviceId = localStorage.getItem('device_id');
-        localStorage.clear();
-        if (deviceId) {
-            localStorage.setItem('device_id', deviceId);
-        }
-        sessionStorage.clear();
+      setUser(null);
+      setSession(null);
+      
+      const deviceId = localStorage.getItem('device_id');
+      localStorage.clear();
+      if (deviceId) {
+        localStorage.setItem('device_id', deviceId);
+      }
+      sessionStorage.clear();
     } catch (e) {
-        console.error("Error clearing local/session storage", e);
+      console.error("Error clearing local/session storage", e);
+      // Continue execution even if storage clear fails
     }
   }, []);
 
   const signOut = useCallback(async (isAutoLogout = false) => {
-    setLoading(true);
-    const deviceId = getDeviceId();
-    const currentUserId = session?.user?.id;
+    try {
+      setLoading(true);
+      const deviceId = getDeviceId();
+      const currentUserId = session?.user?.id;
 
-    if (currentUserId) {
-        await supabase.from('active_sessions').delete().match({ user_id: currentUserId, session_id: deviceId });
-    }
-    
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error("Error signing out:", error);
-      if (!isAutoLogout) {
-        toast({ title: "Logout Failed", description: error.message, variant: "destructive" });
+      if (currentUserId) {
+        try {
+          await supabase.from('active_sessions').delete().match({ user_id: currentUserId, session_id: deviceId });
+        } catch (err) {
+          console.error("Error deleting active session:", err);
+        }
       }
-    }
-    
-    clearSessionData();
-    setLoading(false);
+      
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("Error signing out:", error);
+        if (!isAutoLogout) {
+          toast({ title: "Logout Failed", description: error.message, variant: "destructive" });
+        }
+      }
+      
+      clearSessionData();
 
-    if (isAutoLogout) {
+      if (isAutoLogout) {
         toast({
-            title: "Session Expired",
-            description: "You have been logged out due to inactivity.",
-            variant: "destructive",
-            duration: 5000,
+          title: "Session Expired",
+          description: "You have been logged out due to inactivity.",
+          variant: "destructive",
+          duration: 5000,
         });
+      }
+      navigate('/login');
+    } catch (error) {
+      console.error("Unexpected error in signOut:", error);
+      clearSessionData();
+      navigate('/login');
+    } finally {
+      setLoading(false);
     }
-    navigate('/login');
   }, [navigate, toast, session, clearSessionData]);
 
   useAutoLogout(user, signOut);
@@ -161,25 +173,57 @@ export const NewAuthProvider = ({ children }) => {
 
 
   const signUp = useCallback(async (email, password) => {
-    const { data, error } = await supabase.auth.signUp({ 
-      email, 
-      password,
-      options: {
-        emailRedirectTo: window.location.origin + '/dashboard'
+    try {
+      if (!email || !password) {
+        const error = { message: "Email and password are required" };
+        toast({
+          variant: "destructive",
+          title: "Sign up Failed",
+          description: error.message,
+        });
+        return { data: null, error };
       }
-    });
-    if (error) {
+
+      const { data, error } = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: {
+          emailRedirectTo: window.location.origin + '/dashboard'
+        }
+      });
+      
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Sign up Failed",
+          description: error.message || "Something went wrong",
+        });
+      }
+      return { data, error };
+    } catch (error) {
+      console.error("Unexpected error in signUp:", error);
       toast({
         variant: "destructive",
         title: "Sign up Failed",
-        description: error.message || "Something went wrong",
+        description: "An unexpected error occurred",
       });
+      return { data: null, error };
     }
-    return { data, error };
   }, [toast]);
 
   const signIn = useCallback(async (email, password) => {
-    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+    try {
+      if (!email || !password) {
+        const error = { message: "Email and password are required" };
+        toast({
+          variant: "destructive",
+          title: "Sign in Failed",
+          description: error.message,
+        });
+        return { data: null, error };
+      }
+
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
 
     if (signInError) {
       toast({
@@ -273,7 +317,16 @@ export const NewAuthProvider = ({ children }) => {
         });
     }
 
-    return { data: signInData, error: null };
+      return { data: signInData, error: null };
+    } catch (error) {
+      console.error("Unexpected error in signIn:", error);
+      toast({
+        variant: "destructive",
+        title: "Sign in Failed",
+        description: "An unexpected error occurred",
+      });
+      return { data: null, error };
+    }
   }, [toast, signOut]);
 
   const value = useMemo(() => ({

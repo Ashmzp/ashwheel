@@ -1,5 +1,7 @@
 import { supabase } from '@/lib/customSupabaseClient';
 import { getCurrentUserId } from '@/utils/db/index';
+import { sanitizeSearchTerm, validateSession } from '@/utils/security/inputValidator';
+import { safeErrorMessage, logError } from '@/utils/security/errorHandler';
 
 export const getNextJobCardInvoiceNo = async (invoiceDate) => {
   const userId = await getCurrentUserId();
@@ -36,17 +38,20 @@ export const getJobCardById = async (id) => {
 };
 
 export const getJobCards = async ({ searchTerm = '', dateRange = {} }) => {
-  const userId = await getCurrentUserId();
-  if (!userId) return { data: [], count: 0 };
+  try {
+    await validateSession();
+    const userId = await getCurrentUserId();
+    if (!userId) return { data: [], count: 0 };
+    const sanitizedSearch = sanitizeSearchTerm(searchTerm);
 
-  let query = supabase
-    .from('job_cards')
-    .select('*', { count: 'exact' })
-    .eq('user_id', userId);
+    let query = supabase
+      .from('job_cards')
+      .select('*', { count: 'exact' })
+      .eq('user_id', userId);
 
-  if (searchTerm) {
-    query = query.or(`customer_name.ilike.%${searchTerm}%,invoice_no.ilike.%${searchTerm}%,reg_no.ilike.%${searchTerm}%`);
-  }
+    if (sanitizedSearch) {
+      query = query.or(`customer_name.ilike.%${sanitizedSearch}%,invoice_no.ilike.%${sanitizedSearch}%,reg_no.ilike.%${sanitizedSearch}%`);
+    }
   
   if (dateRange.start) {
     query = query.gte('invoice_date', dateRange.start);
@@ -55,21 +60,27 @@ export const getJobCards = async ({ searchTerm = '', dateRange = {} }) => {
     query = query.lte('invoice_date', dateRange.end);
   }
 
-  const { data, error, count } = await query
-    .order('invoice_date', { ascending: false })
-    .order('created_at', { ascending: false });
-    
-  if (error) {
-    console.error('Error fetching job cards:', error);
-    throw error;
-  }
+    const { data, error, count } = await query
+      .order('invoice_date', { ascending: false })
+      .order('created_at', { ascending: false });
+      
+    if (error) {
+      logError(error, 'getJobCards');
+      throw new Error(safeErrorMessage(error));
+    }
 
-  return { data, count };
+    return { data, count };
+  } catch (error) {
+    logError(error, 'getJobCards');
+    throw new Error(safeErrorMessage(error));
+  }
 };
 
 export const saveJobCard = async (jobCard, isNew, originalJobCard) => {
-  const userId = await getCurrentUserId();
-  if (!userId) throw new Error("User not authenticated.");
+  try {
+    await validateSession();
+    const userId = await getCurrentUserId();
+    if (!userId) throw new Error("User not authenticated.");
 
   // Only include valid database columns
   const validColumns = [
@@ -172,12 +183,18 @@ export const saveJobCard = async (jobCard, isNew, originalJobCard) => {
     }
   }
 
-  return savedJobCard;
+    return savedJobCard;
+  } catch (error) {
+    logError(error, 'saveJobCard');
+    throw new Error(safeErrorMessage(error));
+  }
 };
 
 export const deleteJobCard = async (jobCard) => {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) throw new Error('Not authenticated');
+  try {
+    await validateSession();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('Not authenticated');
 
   const itemsToRestore = (jobCard.parts_items || []).map(item => ({
     part_no: item.part_no,
@@ -191,10 +208,14 @@ export const deleteJobCard = async (jobCard) => {
       }),
   });
 
-  if (error) {
-      console.error('Error invoking delete-job-card function:', error);
-      throw new Error(error.details || error.message || 'Failed to delete job card.');
-  }
+    if (error) {
+      logError(error, 'deleteJobCard');
+      throw new Error(safeErrorMessage(error));
+    }
 
-  return data;
+    return data;
+  } catch (error) {
+    logError(error, 'deleteJobCard');
+    throw new Error(safeErrorMessage(error));
+  }
 };

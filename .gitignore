@@ -56,3 +56,8 @@ ICON_GENERATION.md
 deploy-windows.bat
 vps-*.sh
 setup-git.sh
+
+# Documentation files (keep local only)
+*.md
+!README.md
+!COOLIFY_SETUP.md

@@ -1,5 +1,8 @@
 import { supabase } from '@/lib/customSupabaseClient';
 import { v4 as uuidv4 } from 'uuid';
+import { sanitizeQueryParams, validatePageSize } from '../security/inputValidator';
+import { handleAsyncError, logError } from '../security/errorHandler';
+import { validateSession } from '../security/authValidator';
 
 const getCurrentUserId = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -8,40 +11,51 @@ const getCurrentUserId = async () => {
 };
 
 export const getBookings = async ({ page = 1, pageSize = 10, searchTerm = '', startDate, endDate }) => {
-    const userId = await getCurrentUserId();
-    const from = (page - 1) * pageSize;
-    const to = from + pageSize - 1;
+    try {
+        await validateSession();
+        const userId = await getCurrentUserId();
+        
+        const sanitized = sanitizeQueryParams({ searchTerm, startDate, endDate, page, pageSize });
+        const validPageSize = validatePageSize(sanitized.pageSize || pageSize);
+        const validPage = Math.max(1, sanitized.page || page);
+        
+        const from = (validPage - 1) * validPageSize;
+        const to = from + validPageSize - 1;
 
-    let query = supabase
-        .from('bookings')
-        .select('*', { count: 'exact' })
-        .eq('user_id', userId)
-        .order('booking_date', { ascending: false })
-        .order('created_at', { ascending: false });
+        let query = supabase
+            .from('bookings')
+            .select('*', { count: 'exact' })
+            .eq('user_id', userId)
+            .order('booking_date', { ascending: false })
+            .order('created_at', { ascending: false });
 
-    if (pageSize !== 10000) {
-        query = query.range(from, to);
-    }
-
-    if (searchTerm) {
-        query = query.or(`customer_name.ilike.%${searchTerm}%,mobile_no.ilike.%${searchTerm}%,model_name.ilike.%${searchTerm}%,receipt_no.ilike.%${searchTerm}%,status.ilike.%${searchTerm}%`);
-    } else {
-        if (startDate) {
-            query = query.gte('booking_date', startDate);
+        if (validPageSize <= 500) {
+            query = query.range(from, to);
         }
-        if (endDate) {
-            query = query.lte('booking_date', endDate);
+
+        if (sanitized.searchTerm) {
+            query = query.or(`customer_name.ilike.%${sanitized.searchTerm}%,mobile_no.ilike.%${sanitized.searchTerm}%,model_name.ilike.%${sanitized.searchTerm}%,receipt_no.ilike.%${sanitized.searchTerm}%,status.ilike.%${sanitized.searchTerm}%`);
+        } else {
+            if (sanitized.startDate) {
+                query = query.gte('booking_date', sanitized.startDate);
+            }
+            if (sanitized.endDate) {
+                query = query.lte('booking_date', sanitized.endDate);
+            }
         }
-    }
 
-    const { data, error, count } = await query;
+        const { data, error, count } = await query;
 
-    if (error) {
-        console.error('Error fetching bookings:', error);
+        if (error) {
+            logError(error, { function: 'getBookings', userId });
+            throw new Error('Failed to fetch bookings');
+        }
+
+        return { data: data || [], count: count || 0 };
+    } catch (error) {
+        logError(error, { function: 'getBookings' });
         throw error;
     }
-
-    return { data, count };
 };
 
 export const getBookingById = async (id) => {

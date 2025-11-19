@@ -1,4 +1,6 @@
 import { supabase } from '@/lib/customSupabaseClient';
+import { sanitizeSearchTerm, validateSession, validatePageSize } from '@/utils/security/inputValidator';
+import { safeErrorMessage, logError } from '@/utils/security/errorHandler';
 
 const getCurrentUserId = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -7,10 +9,12 @@ const getCurrentUserId = async () => {
 };
 
 export const addStock = async (stockItems) => {
-  if (!stockItems || stockItems.length === 0) {
-    return { data: [], error: null };
-  }
-  const userId = await getCurrentUserId();
+  try {
+    if (!stockItems || stockItems.length === 0) {
+      return { data: [], error: null };
+    }
+    await validateSession();
+    const userId = await getCurrentUserId();
   const itemsToSave = stockItems.map(s => ({
       user_id: userId,
       model_name: s.model_name || s.modelName,
@@ -24,42 +28,53 @@ export const addStock = async (stockItems) => {
       category: s.category || null,
       created_at: s.created_at || new Date().toISOString(),
   }));
-  const { data, error } = await supabase.from('stock').insert(itemsToSave).select();
-  if (error) {
-      console.error('Error adding stock:', error);
-      throw error;
+    const { data, error } = await supabase.from('stock').insert(itemsToSave).select();
+    if (error) {
+      logError(error, 'addStock');
+      throw new Error(safeErrorMessage(error));
+    }
+    return { data, error };
+  } catch (error) {
+    logError(error, 'addStock');
+    throw new Error(safeErrorMessage(error));
   }
-  return { data, error };
 };
 
-export const getStock = async ({ page = 1, pageSize = 9999, searchTerm = '' } = {}) => {
-  const userId = await getCurrentUserId();
-  const from = (page - 1) * pageSize;
-  const to = from + pageSize - 1;
+export const getStock = async ({ page = 1, pageSize = 500, searchTerm = '' } = {}) => {
+  try {
+    await validateSession();
+    const userId = await getCurrentUserId();
+    const validPageSize = validatePageSize(pageSize);
+    const from = (page - 1) * validPageSize;
+    const to = from + validPageSize - 1;
+    const sanitizedSearch = sanitizeSearchTerm(searchTerm);
 
-  let query = supabase
-    .from('stock')
-    .select('*', { count: 'exact' })
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false })
-    .range(from, to);
+    let query = supabase
+      .from('stock')
+      .select('*', { count: 'exact' })
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .range(from, to);
 
-  if (searchTerm) {
-    const searchParts = searchTerm.split(',').map(part => part.trim().toLowerCase());
-    if (searchParts.length === 2 && searchParts[0] && searchParts[1]) {
-        query = query.ilike('model_name', `%${searchParts[0]}%`).ilike('colour', `%${searchParts[1]}%`);
-    } else {
-        const lowerSearch = searchTerm.toLowerCase();
-        query = query.or(`model_name.ilike.%${lowerSearch}%,chassis_no.ilike.%${lowerSearch}%,engine_no.ilike.%${lowerSearch}%,colour.ilike.%${lowerSearch}%,category.ilike.%${lowerSearch}%`);
+    if (sanitizedSearch) {
+      const searchParts = sanitizedSearch.split(',').map(part => part.trim());
+      if (searchParts.length === 2 && searchParts[0] && searchParts[1]) {
+          query = query.ilike('model_name', `%${searchParts[0]}%`).ilike('colour', `%${searchParts[1]}%`);
+      } else {
+          query = query.or(`model_name.ilike.%${sanitizedSearch}%,chassis_no.ilike.%${sanitizedSearch}%,engine_no.ilike.%${sanitizedSearch}%,colour.ilike.%${sanitizedSearch}%,category.ilike.%${sanitizedSearch}%`);
+      }
     }
-  }
 
-  const { data, error, count } = await query;
-  if (error) {
-    console.error('Error getting stock:', error);
-    throw error;
+    const { data, error, count } = await query;
+    if (error) {
+      logError(error, 'getStock');
+      throw new Error(safeErrorMessage(error));
+    }
+    return { data, count };
+  } catch (error) {
+    logError(error, 'getStock');
+    throw new Error(safeErrorMessage(error));
   }
-  return { data, count };
 };
 
 
@@ -128,33 +143,46 @@ export const getAllStock = async () => {
 
 
 export const searchStock = async (searchTerm) => {
-  const userId = await getCurrentUserId();
-  const { data, error } = await supabase
-    .from('stock')
-    .select('*')
-    .eq('user_id', userId)
-    .or(`chassis_no.ilike.%${searchTerm}%,engine_no.ilike.%${searchTerm}%,model_name.ilike.%${searchTerm}%`);
+  try {
+    await validateSession();
+    const userId = await getCurrentUserId();
+    const sanitizedSearch = sanitizeSearchTerm(searchTerm);
+    const { data, error } = await supabase
+      .from('stock')
+      .select('*')
+      .eq('user_id', userId)
+      .or(`chassis_no.ilike.%${sanitizedSearch}%,engine_no.ilike.%${sanitizedSearch}%,model_name.ilike.%${sanitizedSearch}%`);
 
-  if (error) {
-    console.error('Error searching stock:', error);
-    throw error;
+    if (error) {
+      logError(error, 'searchStock');
+      throw new Error(safeErrorMessage(error));
+    }
+    return data;
+  } catch (error) {
+    logError(error, 'searchStock');
+    throw new Error(safeErrorMessage(error));
   }
-  return data;
 };
 
 export const deleteStockByChassis = async (chassisNos) => {
-  if (!chassisNos || chassisNos.length === 0) {
-      return {error: null};
-  }
-  const userId = await getCurrentUserId();
-  const { error } = await supabase.from('stock')
-    .delete()
-    .eq('user_id', userId)
-    .in('chassis_no', chassisNos);
+  try {
+    if (!chassisNos || chassisNos.length === 0) {
+        return {error: null};
+    }
+    await validateSession();
+    const userId = await getCurrentUserId();
+    const { error } = await supabase.from('stock')
+      .delete()
+      .eq('user_id', userId)
+      .in('chassis_no', chassisNos);
 
-  if (error) {
-    console.error('Error deleting stock by chassis numbers:', error);
-    throw error;
+    if (error) {
+      logError(error, 'deleteStockByChassis');
+      throw new Error(safeErrorMessage(error));
+    }
+    return { error };
+  } catch (error) {
+    logError(error, 'deleteStockByChassis');
+    throw new Error(safeErrorMessage(error));
   }
-  return { error };
 };

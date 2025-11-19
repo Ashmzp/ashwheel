@@ -1,6 +1,8 @@
 import { supabase } from '@/lib/customSupabaseClient';
 import { v4 as uuidv4 } from 'uuid';
 import { format } from 'date-fns';
+import { sanitizeSearchTerm, validateSession, validatePageSize } from '@/utils/security/inputValidator';
+import { safeErrorMessage, logError } from '@/utils/security/errorHandler';
 
 const getCurrentUserId = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -9,32 +11,42 @@ const getCurrentUserId = async () => {
 };
 
 export const saveJournalEntry = async (entryData) => {
-    const userId = await getCurrentUserId();
+    try {
+      await validateSession();
+      const userId = await getCurrentUserId();
     const payload = {
         ...entryData,
         user_id: userId,
         id: entryData.id || uuidv4(),
     };
-    const { data, error } = await supabase.from('journal_entries').upsert(payload).select().single();
-    if (error) {
-        console.error('Error saving journal entry:', error);
-        throw error;
+      const { data, error } = await supabase.from('journal_entries').upsert(payload).select().single();
+      if (error) {
+        logError(error, 'saveJournalEntry');
+        throw new Error(safeErrorMessage(error));
+      }
+      return data;
+    } catch (error) {
+      logError(error, 'saveJournalEntry');
+      throw new Error(safeErrorMessage(error));
     }
-    return data;
 };
 
 export const getJournalEntries = async ({ page = 1, pageSize = 100, searchTerm = '', startDate, endDate }) => {
-    const userId = await getCurrentUserId();
-    const from = (page - 1) * pageSize;
-    const to = from + pageSize - 1;
+    try {
+      await validateSession();
+      const userId = await getCurrentUserId();
+      const validPageSize = validatePageSize(pageSize);
+      const from = (page - 1) * validPageSize;
+      const to = from + validPageSize - 1;
+      const sanitizedSearch = sanitizeSearchTerm(searchTerm);
 
-    let query = supabase
-        .from('journal_entries')
-        .select('*', { count: 'exact' })
-        .eq('user_id', userId)
-        .order('entry_date', { ascending: false })
-        .order('created_at', { ascending: false })
-        .range(from, to);
+      let query = supabase
+          .from('journal_entries')
+          .select('*', { count: 'exact' })
+          .eq('user_id', userId)
+          .order('entry_date', { ascending: false })
+          .order('created_at', { ascending: false })
+          .range(from, to);
 
     if (startDate) {
         query = query.gte('entry_date', format(new Date(startDate), 'yyyy-MM-dd'));
@@ -43,16 +55,20 @@ export const getJournalEntries = async ({ page = 1, pageSize = 100, searchTerm =
         query = query.lte('entry_date', format(new Date(endDate), 'yyyy-MM-dd'));
     }
 
-    if (searchTerm) {
-        query = query.or(`party_name.ilike.%${searchTerm}%,particulars.ilike.%${searchTerm}%,chassis_no.ilike.%${searchTerm}%`);
-    }
+      if (sanitizedSearch) {
+          query = query.or(`party_name.ilike.%${sanitizedSearch}%,particulars.ilike.%${sanitizedSearch}%,chassis_no.ilike.%${sanitizedSearch}%`);
+      }
 
-    const { data, error, count } = await query;
-    if (error) {
-        console.error('Error fetching journal entries:', error);
-        throw error;
+      const { data, error, count } = await query;
+      if (error) {
+        logError(error, 'getJournalEntries');
+        throw new Error(safeErrorMessage(error));
+      }
+      return { data, count };
+    } catch (error) {
+      logError(error, 'getJournalEntries');
+      throw new Error(safeErrorMessage(error));
     }
-    return { data, count };
 };
 
 export const getJournalEntriesForCustomer = async (customerId) => {
@@ -72,23 +88,32 @@ export const getJournalEntriesForCustomer = async (customerId) => {
 };
 
 export const deleteJournalEntry = async (id) => {
-    const { error } = await supabase.from('journal_entries').delete().eq('id', id);
-    if (error) {
-        console.error('Error deleting journal entry:', error);
-        throw error;
+    try {
+      await validateSession();
+      const { error } = await supabase.from('journal_entries').delete().eq('id', id);
+      if (error) {
+        logError(error, 'deleteJournalEntry');
+        throw new Error(safeErrorMessage(error));
+      }
+      return { error: null };
+    } catch (error) {
+      logError(error, 'deleteJournalEntry');
+      throw new Error(safeErrorMessage(error));
     }
-    return { error: null };
 };
 
 export const searchChassisForJournal = async (searchTerm) => {
-    const userId = await getCurrentUserId();
-    
-    const { data: invoiceData, error: invoiceError } = await supabase
-        .from('vehicle_invoices')
-        .select('invoice_no, vehicle_invoice_items(chassis_no, engine_no, model_name, colour, price)')
-        .eq('user_id', userId)
-        .or(`invoice_no.ilike.%${searchTerm}%,vehicle_invoice_items.chassis_no.ilike.%${searchTerm}%,vehicle_invoice_items.engine_no.ilike.%${searchTerm}%`)
-        .limit(5);
+    try {
+      await validateSession();
+      const userId = await getCurrentUserId();
+      const sanitizedSearch = sanitizeSearchTerm(searchTerm);
+      
+      const { data: invoiceData, error: invoiceError } = await supabase
+          .from('vehicle_invoices')
+          .select('invoice_no, vehicle_invoice_items(chassis_no, engine_no, model_name, colour, price)')
+          .eq('user_id', userId)
+          .or(`invoice_no.ilike.%${sanitizedSearch}%,vehicle_invoice_items.chassis_no.ilike.%${sanitizedSearch}%,vehicle_invoice_items.engine_no.ilike.%${sanitizedSearch}%`)
+          .limit(5);
 
     if (invoiceError) console.error("Error searching invoice items:", invoiceError);
 
@@ -99,20 +124,24 @@ export const searchChassisForJournal = async (searchTerm) => {
         }))
     );
 
-    const { data: stockData, error: stockError } = await supabase
-        .from('stock')
-        .select('chassis_no, engine_no, model_name, colour, price')
-        .eq('user_id', userId)
-        .or(`chassis_no.ilike.%${searchTerm}%,engine_no.ilike.%${searchTerm}%`)
-        .limit(5);
+      const { data: stockData, error: stockError } = await supabase
+          .from('stock')
+          .select('chassis_no, engine_no, model_name, colour, price')
+          .eq('user_id', userId)
+          .or(`chassis_no.ilike.%${sanitizedSearch}%,engine_no.ilike.%${sanitizedSearch}%`)
+          .limit(5);
 
-    if (stockError) console.error("Error searching stock:", stockError);
+      if (stockError) logError(stockError, 'searchChassisForJournal');
 
-    const combined = [...formattedInvoiceData, ...(stockData || [])];
-    
-    const uniqueResults = Array.from(new Map(combined.map(item => [item.chassis_no, item])).values());
-    
-    return uniqueResults;
+      const combined = [...formattedInvoiceData, ...(stockData || [])];
+      
+      const uniqueResults = Array.from(new Map(combined.map(item => [item.chassis_no, item])).values());
+      
+      return uniqueResults;
+    } catch (error) {
+      logError(error, 'searchChassisForJournal');
+      throw new Error(safeErrorMessage(error));
+    }
 };
 
 export const getPartyLedger = async (customerId, startDate, endDate) => {
