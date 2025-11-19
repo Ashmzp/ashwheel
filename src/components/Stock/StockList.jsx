@@ -29,8 +29,8 @@ const StockList = () => {
 
   const { data: stockData, isLoading } = useQuery({
     queryKey: ['allStockForFiltering'],
-    queryFn: () => fetchStockFromDb({ page: 1, pageSize: 100000 }), // Fetch all for filtering
-    staleTime: 30 * 60 * 1000, // 30 minutes
+    queryFn: () => fetchStockFromDb({ page: 1, pageSize: 500 }),
+    staleTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,

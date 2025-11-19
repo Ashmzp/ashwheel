@@ -65,15 +65,18 @@ const MISReport = () => {
       }
 
       const fetchData = async (startDate, endDate) => {
-        const { data, error } = await supabase.rpc('get_vehicle_invoices_report_v4', {
-          p_start_date: format(startDate, 'yyyy-MM-dd'),
-          p_end_date: format(endDate, 'yyyy-MM-dd'),
-          p_search_term: '',
-          p_page_size: 99999,
-          p_page_number: 1
-        });
+        const { data, error } = await supabase
+          .from('vehicle_invoices')
+          .select('*, vehicle_invoice_items(*)')
+          .eq('user_id', user.id)
+          .gte('invoice_date', format(startDate, 'yyyy-MM-dd'))
+          .lte('invoice_date', format(endDate, 'yyyy-MM-dd'))
+          .order('invoice_date', { ascending: false });
         if (error) throw error;
-        return data?.[0]?.invoices_data || [];
+        return (data || []).map(inv => ({
+          ...inv,
+          items: inv.vehicle_invoice_items || []
+        }));
       };
 
       const currentData = await fetchData(currentRange.start, currentRange.end);
