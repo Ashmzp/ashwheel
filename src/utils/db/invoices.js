@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/customSupabaseClient';
-import { sanitizeSearchTerm, validateSession } from '@/utils/security/inputValidator';
+import { sanitizeSearchTerm } from '@/utils/security/inputValidator';
+import { validateSession } from '@/utils/security/authValidator';
 import { safeErrorMessage, logError } from '@/utils/security/errorHandler';
 
 const getCurrentUserId = async () => {

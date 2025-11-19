@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/customSupabaseClient';
 import { getCurrentUserId } from '@/utils/db/index';
-import { sanitizeSearchTerm, validateSession } from '@/utils/security/inputValidator';
+import { sanitizeSearchTerm } from '@/utils/security/inputValidator';
+import { validateSession } from '@/utils/security/authValidator';
 import { safeErrorMessage, logError } from '@/utils/security/errorHandler';
 
 export const getNextJobCardInvoiceNo = async (invoiceDate) => {

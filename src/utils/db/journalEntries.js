@@ -1,7 +1,8 @@
 import { supabase } from '@/lib/customSupabaseClient';
 import { v4 as uuidv4 } from 'uuid';
 import { format } from 'date-fns';
-import { sanitizeSearchTerm, validateSession, validatePageSize } from '@/utils/security/inputValidator';
+import { sanitizeSearchTerm, validatePageSize } from '@/utils/security/inputValidator';
+import { validateSession } from '@/utils/security/authValidator';
 import { safeErrorMessage, logError } from '@/utils/security/errorHandler';
 
 const getCurrentUserId = async () => {

@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/customSupabaseClient';
 import { v4 as uuidv4 } from 'uuid';
 import { getFinancialYear } from '@/utils/financialYearUtils';
-import { validateSession } from '@/utils/security/inputValidator';
+import { validateSession } from '@/utils/security/authValidator';
 import { safeErrorMessage, logError } from '@/utils/security/errorHandler';
 
 const getCurrentUserId = async () => {
