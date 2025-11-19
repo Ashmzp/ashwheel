@@ -45,17 +45,13 @@ export const getStock = async ({ page = 1, pageSize = 500, searchTerm = '' } = {
   try {
     await validateSession();
     const userId = await getCurrentUserId();
-    const validPageSize = validatePageSize(pageSize);
-    const from = (page - 1) * validPageSize;
-    const to = from + validPageSize - 1;
     const sanitizedSearch = sanitizeSearchTerm(searchTerm);
 
     let query = supabase
       .from('stock')
       .select('*', { count: 'exact' })
       .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .range(from, to);
+      .order('created_at', { ascending: false });
 
     if (sanitizedSearch) {
       const searchParts = sanitizedSearch.split(',').map(part => part.trim());
