@@ -1,8 +1,8 @@
 /* eslint-disable no-restricted-globals */
 
-const CACHE_NAME = 'ashwheel-cache-v2';
+const CACHE_NAME = 'ashwheel-cache-v3';
 const OFFLINE_URL = '/offline.html';
-const ALLOWED_ORIGINS = ['https://ashwheel.cloud', 'http://localhost:5173', 'https://supabase.ashwheel.cloud'];
+const ALLOWED_ORIGINS = ['https://ashwheel.cloud', 'http://localhost:5173', 'http://localhost:3000', 'https://supabase.ashwheel.cloud', 'http://127.0.0.1:54321'];
 const ALLOWED_PROTOCOLS = ['http:', 'https:'];
 
 const urlsToCache = [
@@ -10,8 +10,8 @@ const urlsToCache = [
   '/index.html',
   '/manifest.json',
   '/favicon.ico',
-  '/images/icon-192x192.png',
-  '/images/icon-512x512.png',
+  '/images/icon-192x192.svg',
+  '/images/icon-512x512.svg',
   '/images/placeholder.jpg',
   OFFLINE_URL
 ];
@@ -37,8 +37,8 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('Opened cache');
-        return cache.addAll(urlsToCache);
+        // console.log('Opened cache');
+        return cache.addAll(urlsToCache).catch(() => {});
       })
   );
 });
@@ -51,7 +51,7 @@ self.addEventListener('activate', event => {
       return Promise.all(
         cacheNames.map(cacheName => {
           if (cacheWhitelist.indexOf(cacheName) === -1) {
-            console.log('Deleting old cache:', cacheName);
+            // console.log('Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
@@ -64,10 +64,10 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   // Validate request URL and method
   if (!isValidRequest(event.request.url)) {
-    console.warn('Blocked request to invalid origin:', event.request.url);
+    // console.warn('Blocked request to invalid origin:', event.request.url);
     return;
   }
-  
+
   // Only cache GET requests
   if (event.request.method !== 'GET') {
     event.respondWith(fetch(event.request));

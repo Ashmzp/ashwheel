@@ -1,63 +1,69 @@
 import React from 'react';
-    import ReactDOM from 'react-dom/client';
-    import { BrowserRouter } from 'react-router-dom';
-    import App from '@/App';
-    import '@/index.css';
-    import 'react-date-range/dist/styles.css';
-    import 'react-date-range/dist/theme/default.css';
-    import { Toaster } from "@/components/ui/toaster";
-    import { NewAuthProvider } from '@/contexts/NewSupabaseAuthContext';
-    import { HelmetProvider } from 'react-helmet-async';
-    import { GlobalWorkerOptions } from 'pdfjs-dist/build/pdf';
-    import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import App from '@/App';
+import '@/index.css';
+import 'react-date-range/dist/styles.css';
+import 'react-date-range/dist/theme/default.css';
+import { Toaster } from "@/components/ui/toaster";
+import { NewAuthProvider } from '@/contexts/NewSupabaseAuthContext';
+import { HelmetProvider } from 'react-helmet-async';
+import { GlobalWorkerOptions } from 'pdfjs-dist/build/pdf';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').catch(() => {});
-      });
-    }
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js?v=' + new Date().getTime()).catch(() => {});
+  });
+}
 
-    const pdfjsWorker = new URL(
-      'pdfjs-dist/build/pdf.worker.min.js',
-      import.meta.url,
-    );
+const pdfjsWorker = new URL(
+  'pdfjs-dist/build/pdf.worker.min.js',
+  import.meta.url,
+);
 
-    try {
-      GlobalWorkerOptions.workerSrc = pdfjsWorker.toString();
-    } catch (error) {
-      GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${GlobalWorkerOptions.version}/pdf.worker.min.js`;
-    }
+try {
+  GlobalWorkerOptions.workerSrc = pdfjsWorker.toString();
+} catch (error) {
+  GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${GlobalWorkerOptions.version}/pdf.worker.min.js`;
+}
 
 
-    const queryClient = new QueryClient({
-      defaultOptions: {
-        queries: {
-          refetchOnWindowFocus: false,
-          refetchOnReconnect: false,
-          refetchOnMount: false,
-          refetchInterval: false,
-          refetchIntervalInBackground: false,
-          retry: 0,
-          staleTime: Infinity, // Never consider data stale
-          gcTime: 1000 * 60 * 60 * 24, // 24 hours cache retention
-          networkMode: 'online',
-        },
-        mutations: {
-          retry: 1,
-          networkMode: 'online',
-        },
-      },
-    });
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      refetchOnMount: false,
+      refetchInterval: false,
+      refetchIntervalInBackground: false,
+      retry: false,
+      staleTime: Infinity,
+      gcTime: Infinity,
+      networkMode: 'online',
+    },
+    mutations: {
+      retry: false,
+      networkMode: 'online',
+    },
+  },
+});
 
-    ReactDOM.createRoot(document.getElementById('root')).render(
-      <HelmetProvider>
-        <BrowserRouter future={{ v7_startTransition: true }}>
-          <QueryClientProvider client={queryClient}>
-            <NewAuthProvider>
-              <App />
-              <Toaster />
-            </NewAuthProvider>
-          </QueryClientProvider>
-        </BrowserRouter>
-      </HelmetProvider>
-    );
+if (typeof window !== 'undefined') {
+  window.addEventListener('visibilitychange', (e) => {
+    e.stopImmediatePropagation();
+  }, true);
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <HelmetProvider>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <QueryClientProvider client={queryClient}>
+        <NewAuthProvider>
+          <App />
+          <Toaster />
+        </NewAuthProvider>
+      </QueryClientProvider>
+    </BrowserRouter>
+  </HelmetProvider>
+);

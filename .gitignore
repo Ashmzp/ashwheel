@@ -61,3 +61,4 @@ setup-git.sh
 *.md
 !README.md
 !COOLIFY_SETUP.md
+!DEVELOPMENT_WORKFLOW.md

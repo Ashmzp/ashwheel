@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, Share } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/contexts/NewSupabaseAuthContext';
 
 const PwaInstallPrompt = () => {
+  const { user } = useAuth();
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [isVisible, setIsVisible] = useState(false);
   const { toast } = useToast();
@@ -12,7 +14,7 @@ const PwaInstallPrompt = () => {
     const userAgent = window.navigator.userAgent.toLowerCase();
     return /iphone|ipad|ipod/.test(userAgent);
   };
-  
+
   const isInStandaloneMode = () => ('standalone' in window.navigator) && (window.navigator.standalone);
 
   useEffect(() => {
@@ -25,11 +27,9 @@ const PwaInstallPrompt = () => {
     };
 
     if (isIos() && !isInStandaloneMode()) {
-        // For iOS, we just show the button which will trigger a toast.
-        setIsVisible(true);
+      setIsVisible(true);
     } else {
-        // For other OS, we listen for the prompt event.
-        window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     }
 
     return () => {
@@ -47,8 +47,8 @@ const PwaInstallPrompt = () => {
           <div className="flex flex-col gap-2">
             <span>To install, tap the Share button in Safari.</span>
             <div className="flex items-center gap-1">
-                <Share className="h-4 w-4" />
-                <span>Then tap 'Add to Home Screen'.</span>
+              <Share className="h-4 w-4" />
+              <span>Then tap 'Add to Home Screen'.</span>
             </div>
           </div>
         ),
@@ -70,13 +70,15 @@ const PwaInstallPrompt = () => {
     deferredPrompt.userChoice.then((choiceResult) => {
       if (choiceResult.outcome === 'accepted') {
         toast({ title: 'App Installed!', description: 'Ashwheel is now available on your device.' });
-      } else {
-        toast({ title: 'Install Canceled', description: 'You can install the app later from the browser menu.', variant: 'secondary' });
       }
       setDeferredPrompt(null);
       setIsVisible(false);
-    });
+    }).catch(() => {});
   };
+
+  if (user) {
+    return null;
+  }
 
   if (!isVisible) {
     return null;

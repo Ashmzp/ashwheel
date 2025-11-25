@@ -5,8 +5,18 @@
   "private": true,
   "scripts": {
     "dev": "vite --host :: --port 3000",
+    "dev:local": "vite --mode local --host :: --port 3000",
     "build": "vite build",
-    "preview": "vite preview --host :: --port 3000"
+    "build:prod": "vite build --mode production",
+    "preview": "vite preview --host :: --port 3000",
+    "db:start": "supabase start",
+    "db:stop": "supabase stop",
+    "db:status": "supabase status",
+    "db:reset": "supabase db reset",
+    "db:migrate": "supabase db diff -f",
+    "db:push": "supabase db push",
+    "db:import-data": "powershell -ExecutionPolicy Bypass -File scripts/import-data.ps1",
+    "setup:local": "node scripts/setup-local-db.js"
   },
   "dependencies": {
     "@emailjs/browser": "^4.3.3",

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import '@/styles/responsive.css';
 import { Helmet } from 'react-helmet';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -13,68 +13,128 @@ import { saveCustomer, deleteCustomer as deleteCustomerFromDB, getCustomers } fr
 import { useAuth } from '@/contexts/NewSupabaseAuthContext';
 import { v4 as uuidv4 } from 'uuid';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { PaginationControls } from '@/components/ui/pagination';
-import { useRealtimeData } from '@/hooks/useRealtimeData';
+import PaginationControls from '@/components/ui/pagination-controls';
 import { exportToExcel } from '@/utils/excel';
-import { formatDate } from '@/utils/dateUtils';
-import useCustomerStore from '@/stores/customerStore';
+import { usePermissions } from '@/hooks/usePermissions';
+import { useUserData } from '@/hooks/useUserData';
+
+const PAGE_SIZE = 20;
+
+const formatDate = (dateString) => {
+  if (!dateString) return 'N/A';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-IN');
+};
+
+const getCurrentMonthDates = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const startDate = `${year}-${month}-01`;
+  const lastDay = new Date(year, now.getMonth() + 1, 0).getDate();
+  const endDate = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
+  return { startDate, endDate };
+};
 
 const CustomersPage = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const { userData } = useUserData(user);
+  const { can: canAccess } = usePermissions(userData);
+
+  // Restore state from sessionStorage on mount
+  const [searchTerm, setSearchTerm] = useState(() => 
+    sessionStorage.getItem('customers_searchTerm') || ''
+  );
+  const [filters, setFilters] = useState(() => {
+    const saved = sessionStorage.getItem('customers_filters');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // If dates are empty, set current month
+      if (!parsed.startDate || !parsed.endDate) {
+        const { startDate, endDate } = getCurrentMonthDates();
+        return { ...parsed, startDate, endDate };
+      }
+      return parsed;
+    }
+    const { startDate, endDate } = getCurrentMonthDates();
+    return { type: 'all', startDate, endDate };
+  });
+  const [currentPage, setCurrentPage] = useState(() => {
+    const saved = sessionStorage.getItem('customers_currentPage');
+    return saved ? parseInt(saved) : 1;
+  });
+
+  const [customers, setCustomers] = useState([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filters, setFilters] = useState({
-      type: 'all',
-      startDate: '',
-      endDate: ''
-  });
-  const [currentPage, setCurrentPage] = useState(1);
-  const { toast } = useToast();
-  const { canAccess } = useAuth();
-  const PAGE_SIZE = 20;
-  const { resetForm } = useCustomerStore();
 
+  // Save state to sessionStorage whenever it changes
+  useEffect(() => {
+    sessionStorage.setItem('customers_searchTerm', searchTerm);
+  }, [searchTerm]);
 
-  const filterQuery = useMemo(() => (query) => {
-    if (searchTerm) {
-      query = query.or(`customer_name.ilike.%${searchTerm}%,mobile1.ilike.%${searchTerm}%,mobile2.ilike.%${searchTerm}%`);
+  useEffect(() => {
+    sessionStorage.setItem('customers_filters', JSON.stringify(filters));
+  }, [filters]);
+
+  useEffect(() => {
+    sessionStorage.setItem('customers_currentPage', currentPage.toString());
+  }, [currentPage]);
+
+  // Fetch customers
+  const fetchCustomers = useCallback(async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      const { data, totalPages: pages } = await getCustomers({
+        page: currentPage,
+        pageSize: PAGE_SIZE,
+        searchTerm,
+        filters
+      });
+      setCustomers(data || []);
+      setTotalPages(pages || 1);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to load customers',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
     }
-    if (filters.type) {
-      if (filters.type === 'registered') query = query.not('gst', 'is', null);
-      else if (filters.type === 'non-registered') query = query.is('gst', null);
+  }, [user, currentPage, searchTerm, JSON.stringify(filters)]);
+
+  useEffect(() => {
+    if (user) {
+      fetchCustomers();
     }
-    if (filters.startDate) query = query.gte('created_at', filters.startDate);
-    if (filters.endDate) query = query.lte('created_at', filters.endDate);
-    return query;
-  }, [searchTerm, filters]);
+  }, [user, currentPage, searchTerm, filters.type, filters.startDate, filters.endDate]);
 
-  const { data: customers, loading, count, refetch } = useRealtimeData('customers', {
-    page: currentPage,
-    pageSize: PAGE_SIZE,
-    filter: filterQuery,
-  });
 
-  const totalPages = Math.ceil(count / PAGE_SIZE);
 
   const handleSaveCustomer = async (customerData) => {
+    const isUpdating = !!editingCustomer;
     try {
-      const isUpdating = !!editingCustomer;
       if (!customerData.id) {
-          customerData.id = uuidv4();
+        customerData.id = uuidv4();
       }
 
       await saveCustomer(customerData);
-      
+
       toast({
         title: 'Success!',
         description: `Customer has been ${isUpdating ? 'updated' : 'saved'}.`
       });
-      
+
       setIsFormOpen(false);
       setEditingCustomer(null);
-      resetForm();
+      fetchCustomers();
     } catch (error) {
-      console.error("Failed to save customer:", error);
       toast({
         title: "Error",
         description: `Failed to save customer. ${error.message}`,
@@ -82,20 +142,21 @@ const CustomersPage = () => {
       });
     }
   };
-  
+
   const handleEdit = (customer) => {
     setEditingCustomer(customer);
     setIsFormOpen(true);
   };
 
   const handleDelete = async (customerId) => {
-    if(window.confirm("Are you sure you want to delete this customer?")){
+    if (window.confirm("Are you sure you want to delete this customer?")) {
       try {
         await deleteCustomerFromDB(customerId);
         toast({
           title: "Customer Deleted",
           description: "The customer has been removed from the list.",
         });
+        fetchCustomers();
       } catch (error) {
         console.error("Failed to delete customer:", error);
         toast({
@@ -110,24 +171,23 @@ const CustomersPage = () => {
   const handleCancelForm = () => {
     setIsFormOpen(false);
     setEditingCustomer(null);
-    resetForm();
   };
 
   const handleExport = async () => {
     try {
       toast({ title: 'Exporting...', description: 'Fetching all matching customers for export.' });
-      
-      const { data: allCustomers } = await getCustomers({ 
-        pageSize: 10000, 
+
+      const { data: allCustomers } = await getCustomers({
+        pageSize: 10000,
         searchTerm,
         filters
       });
-  
+
       if (!allCustomers || allCustomers.length === 0) {
         toast({ title: 'No Data', description: 'No customers found for the current filters.', variant: 'destructive' });
         return;
       }
-  
+
       const exportData = allCustomers.map(c => ({
         'Customer Name': c.customer_name,
         'Guardian Name': c.guardian_name || 'N/A',
@@ -138,7 +198,7 @@ const CustomersPage = () => {
         'Type': c.gst ? 'Registered' : 'Non-Registered',
         'Date Added': formatDate(c.created_at),
       }));
-  
+
       exportToExcel(exportData, 'customers_report');
       toast({ title: 'Export Successful!', description: `${allCustomers.length} customers exported.` });
     } catch (error) {
@@ -148,17 +208,15 @@ const CustomersPage = () => {
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
-    // Force refetch when page changes
-    setTimeout(() => refetch(true), 100);
   };
 
   if (isFormOpen || editingCustomer) {
     return (
       <div className="container-responsive py-3 md:py-4">
-        <CustomerForm 
-          customer={editingCustomer} 
-          onSave={handleSaveCustomer} 
-          onCancel={handleCancelForm} 
+        <CustomerForm
+          customer={editingCustomer}
+          onSave={handleSaveCustomer}
+          onCancel={handleCancelForm}
         />
       </div>
     );
@@ -188,27 +246,51 @@ const CustomersPage = () => {
               <div className="flex-responsive">
                 <div className="search-bar">
                   <Search className="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="Search by name or mobile..." 
+                  <Input
+                    placeholder="Search by name or mobile..."
                     className="input-compact pl-8"
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setCurrentPage(1);
+                    }}
                   />
                 </div>
                 <div className="filter-controls">
-                    <Select value={filters.type} onValueChange={(value) => setFilters(prev => ({...prev, type: value}))}>
-                        <SelectTrigger className="btn-compact w-full sm:w-auto">
-                            <SelectValue placeholder="Filter by type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Types</SelectItem>
-                            <SelectItem value="registered">Registered</SelectItem>
-                            <SelectItem value="non-registered">Non-Registered</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <Input type="date" className="input-compact w-full sm:w-auto" value={filters.startDate} onChange={(e) => setFilters(prev => ({...prev, startDate: e.target.value}))} />
-                    <Input type="date" className="input-compact w-full sm:w-auto" value={filters.endDate} onChange={(e) => setFilters(prev => ({...prev, endDate: e.target.value}))} />
-                  <Button variant="outline" onClick={handleExport} className="btn-compact"><FileDown className="mr-1 h-3.5 w-3.5" /> Export</Button>
+                  <Select value={filters.type} onValueChange={(value) => {
+                    setFilters(prev => ({ ...prev, type: value }));
+                    setCurrentPage(1);
+                  }}>
+                    <SelectTrigger className="btn-compact w-full sm:w-auto">
+                      <SelectValue placeholder="Filter by type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Types</SelectItem>
+                      <SelectItem value="registered">Registered</SelectItem>
+                      <SelectItem value="non-registered">Non-Registered</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input 
+                    type="date" 
+                    className="input-compact w-full sm:w-auto" 
+                    value={filters.startDate} 
+                    onChange={(e) => {
+                      setFilters(prev => ({ ...prev, startDate: e.target.value }));
+                      setCurrentPage(1);
+                    }} 
+                  />
+                  <Input 
+                    type="date" 
+                    className="input-compact w-full sm:w-auto" 
+                    value={filters.endDate} 
+                    onChange={(e) => {
+                      setFilters(prev => ({ ...prev, endDate: e.target.value }));
+                      setCurrentPage(1);
+                    }} 
+                  />
+                  <Button variant="outline" onClick={handleExport} className="btn-compact">
+                    <FileDown className="mr-1 h-3.5 w-3.5" /> Export
+                  </Button>
                 </div>
               </div>
             </CardHeader>
@@ -228,10 +310,12 @@ const CustomersPage = () => {
                   <TableBody>
                     <AnimatePresence>
                       {loading ? (
-                        <TableRow><TableCell colSpan="6" className="text-center py-10">Loading customers...</TableCell></TableRow>
+                        <TableRow>
+                          <TableCell colSpan="6" className="text-center py-10">Loading customers...</TableCell>
+                        </TableRow>
                       ) : customers.length > 0 ? customers.map((customer) => (
-                        <motion.tr 
-                          key={customer.id} 
+                        <motion.tr
+                          key={customer.id}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
@@ -247,17 +331,13 @@ const CustomersPage = () => {
                             </span>
                           </TableCell>
                           <TableCell className="text-right">
-                            <div className="action-buttons">
-                              {canAccess('customers', 'write') && (
-                                <Button variant="ghost" onClick={() => handleEdit(customer)}>
-                                  <Edit />
-                                </Button>
-                              )}
-                              {canAccess('customers', 'delete') && (
-                                <Button variant="ghost" className="text-destructive" onClick={() => handleDelete(customer.id)}>
-                                  <Trash2 />
-                                </Button>
-                              )}
+                            <div className="flex gap-2 justify-end">
+                              <Button variant="ghost" size="sm" onClick={() => handleEdit(customer)}>
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleDelete(customer.id)}>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
                             </div>
                           </TableCell>
                         </motion.tr>

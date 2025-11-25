@@ -14,3 +14,25 @@
 .action-buttons { @apply flex gap-0.5; }
 .action-buttons button { @apply h-7 w-7 p-0; }
 .action-buttons svg { @apply h-3 w-3; }
+
+/* Filter controls alignment */
+.filter-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .filter-controls {
+    gap: 0.75rem;
+  }
+}
+
+/* Ensure consistent input heights in filter controls */
+.filter-controls .input-compact,
+.filter-controls .btn-compact,
+.filter-controls [role="combobox"] {
+  height: 2.25rem;
+  min-height: 2.25rem;
+}

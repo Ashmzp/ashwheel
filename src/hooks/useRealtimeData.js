@@ -56,46 +56,24 @@ export const useRealtimeData = (tableName, options = {}) => {
     } finally {
       setLoading(false);
     }
-  }, [user, tableName, select, order, ascending, page, pageSize, filter]);
+  }, [user?.id, tableName, select, order, ascending, page, pageSize]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  useEffect(() => {
-    if (!user) return;
-
-    // Disable realtime for production to avoid WebSocket issues
-    if (import.meta.env.PROD) return;
-
-    const channel = supabase
-      .channel(`public:${tableName}:${user.id}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: tableName, filter: `user_id=eq.${user.id}` },
-        (payload) => {
-          // Only update if we're on page 1 to avoid pagination conflicts
-          if (page === 1) {
-            if (payload.eventType === 'INSERT') {
-              setData((prevData) => [payload.new, ...prevData].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
-              setCount((prevCount) => prevCount + 1);
-            } else if (payload.eventType === 'UPDATE') {
-              setData((prevData) =>
-                prevData.map((item) => (item.id === payload.new.id ? payload.new : item))
-              );
-            } else if (payload.eventType === 'DELETE') {
-              setData((prevData) => prevData.filter((item) => item.id !== payload.old.id));
-              setCount((prevCount) => prevCount - 1);
-            }
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [tableName, user, page]);
+  // REALTIME SUBSCRIPTIONS COMPLETELY DISABLED
+  // Reason: WebSocket connections fail in normal browsers (Chrome, Firefox, Edge) 
+  // causing repeated connection attempts that create module refresh/blink visual disruptions
+  // Error: "WebSocket is closed before the connection is established"
+  //
+  // This ONLY worked in Antigravity browser, not in normal browsers
+  // To see live updates, users can manually refresh the page or use the refetch function
+  //
+  // If you need to re-enable realtime in the future, ensure:
+  // 1. Supabase local instance is running properly
+  // 2. WebSocket connections are stable
+  // 3. Proper error handling and retry logic is in place
 
   return { data, loading, error, count, refetch: fetchData };
 };
