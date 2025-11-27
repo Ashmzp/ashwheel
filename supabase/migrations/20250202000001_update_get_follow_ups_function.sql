@@ -1,8 +1,11 @@
 -- Update get_follow_ups_v3 function to include leakage column
 -- This ensures leakage data is returned when fetching follow-ups
 
--- Drop existing function if exists
+-- Drop ALL existing versions of the function
 DROP FUNCTION IF EXISTS public.get_follow_ups_v3(text, text, text);
+DROP FUNCTION IF EXISTS public.get_follow_ups_v3(date, date, text);
+DROP FUNCTION IF EXISTS public.get_follow_ups_v3(p_start_date text, p_end_date text, p_search_term text);
+DROP FUNCTION IF EXISTS public.get_follow_ups_v3(p_start_date date, p_end_date date, p_search_term text);
 
 -- Recreate function with leakage column
 CREATE OR REPLACE FUNCTION public.get_follow_ups_v3(
