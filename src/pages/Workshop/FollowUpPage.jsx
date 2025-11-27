@@ -152,8 +152,8 @@ const FollowUpPage = () => {
     };
 
     const stats = useMemo(() => {
-        const leakage = followUps.filter(f => !!f.leakage).length;
-        const nonLeakage = followUps.filter(f => !f.leakage);
+        const leakage = followUps.filter(f => f.leakage && f.leakage.trim() !== '').length;
+        const nonLeakage = followUps.filter(f => !f.leakage || f.leakage.trim() === '');
         const done = nonLeakage.filter(f => !!f.followed_up_by).length;
         const pending = nonLeakage.filter(f => !f.followed_up_by).length;
         return { done, pending, leakage, total: nonLeakage.length };
@@ -161,12 +161,12 @@ const FollowUpPage = () => {
     
     const tabsData = useMemo(() => {
         const today = format(startOfToday(), 'yyyy-MM-dd');
-        const nonLeakage = followUps.filter(f => !f.leakage);
+        const nonLeakage = followUps.filter(f => !f.leakage && (!f.leakage || f.leakage.trim() === ''));
         return {
             all: nonLeakage.filter(f => f.next_due_date <= today),
             pending: nonLeakage.filter(f => !f.followed_up_by && f.next_due_date <= today),
             done: nonLeakage.filter(f => !!f.followed_up_by && f.next_due_date <= today),
-            leakage: followUps.filter(f => !!f.leakage),
+            leakage: followUps.filter(f => f.leakage && f.leakage.trim() !== ''),
         };
     }, [followUps]);
 

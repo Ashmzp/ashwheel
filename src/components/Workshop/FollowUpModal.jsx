@@ -166,14 +166,14 @@ const FollowUpModal = ({ isOpen, onOpenChange, followUpData, onSave, staffList }
 
     return (
         <Dialog open={isOpen} onOpenChange={handleClose}>
-            <DialogContent>
+            <DialogContent className="max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Take Follow-up for {followUpData.customer_name}</DialogTitle>
                     <DialogDescription>
                         Vehicle: {followUpData.model_name} ({followUpData.chassis_no})
                     </DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4 py-4">
+                <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto pr-2">
                     <div>
                         <Label htmlFor="remark">New Remark</Label>
                         <Textarea id="remark" value={formData.remark} onChange={(e) => setFormField('remark', e.target.value)} placeholder="Enter new follow-up details..." />
