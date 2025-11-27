@@ -109,7 +109,8 @@ const FollowUpPage = () => {
             const { data, error } = await supabase.rpc('get_follow_ups_latest', {
                 p_start_date: queryParams.dateRange.start,
                 p_end_date: queryParams.dateRange.end,
-                p_search_term: queryParams.searchTerm
+                p_search_term: queryParams.searchTerm || '',
+                p_customer_type: queryParams.customerType || 'all'
             });
 
             if (error) {
@@ -181,11 +182,12 @@ const FollowUpPage = () => {
     };
 
     const handleExport = () => {
-        if (paginatedFollowUps.length === 0) {
+        if (followUps.length === 0) {
             toast({ title: "No data", description: "No data to export in the current view.", variant: "destructive" });
             return;
         }
-        const dataToExport = paginatedFollowUps.map(f => ({
+        const dataToExport = followUps.map(f => ({
+            "Source Type": f.source_type,
             "Source Date": formatDate(f.source_date),
             "Customer Name": f.customer_name,
             "Mobile 1": f.mobile1,
@@ -197,8 +199,10 @@ const FollowUpPage = () => {
             "Job Type": f.job_type,
             "Mechanic": f.mechanic_name,
             "Next Due Date": formatDate(f.next_due_date),
-            "Last Remark": f.remark,
-            "Followed By": f.followed_up_by,
+            "Appointment Date Time": f.appointment_datetime ? formatDate(f.appointment_datetime) : '',
+            "Last Remark": f.remark || '',
+            "Followed By": f.followed_up_by || '',
+            "Leakage": f.leakage || '',
         }));
         exportToExcel(dataToExport, `follow-ups-${activeTab}-${format(new Date(), 'yyyy-MM-dd')}`);
     };
@@ -218,7 +222,7 @@ const FollowUpPage = () => {
             <div className="container mx-auto p-4 space-y-6">
                 <div className="flex justify-between items-center">
                     <h1 className="page-title">Follow-Up List</h1>
-                    <Button onClick={handleExport} variant="outline" disabled={isLoading || paginatedFollowUps.length === 0}>
+                    <Button onClick={handleExport} variant="outline" disabled={isLoading || followUps.length === 0}>
                         <Download className="mr-2 h-4 w-4" /> Export Current Page
                     </Button>
                 </div>
