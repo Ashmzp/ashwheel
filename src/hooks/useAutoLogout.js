@@ -1,7 +1,7 @@
 import { useEffect, useCallback, useRef } from 'react';
 
 const useAutoLogout = (user, signOut) => {
-  const inactivityTime = 15 * 60 * 1000; // 15 minutes
+  const inactivityTime = 30 * 60 * 1000; // 30 minutes
   const timeoutId = useRef(null);
 
   const logoutUser = useCallback(() => {
