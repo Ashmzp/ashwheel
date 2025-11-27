@@ -32,9 +32,9 @@ export const validateNumber = (value, min = 0, max = Number.MAX_SAFE_INTEGER) =>
 };
 
 export const validatePageSize = (size) => {
-  const validSizes = [10, 20, 50, 100, 500];
   const num = Number(size);
-  if (!validSizes.includes(num)) return 20;
+  if (isNaN(num) || num < 1) return 20;
+  if (num > 10000) return 10000;
   return num;
 };
 

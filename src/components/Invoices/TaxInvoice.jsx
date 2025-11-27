@@ -7,10 +7,31 @@ const TaxInvoice = forwardRef(({ invoice, customer, items, settings }, ref) => {
     return <div ref={ref} className="p-8 text-red-500">Printing data is missing or invalid. Please try again.</div>;
   }
 
-  const totalTaxableValue = items.reduce((sum, item) => sum + (item.taxable_value || 0), 0);
-  const totalCgst = items.reduce((sum, item) => sum + (item.cgst_amount || 0), 0);
-  const totalSgst = items.reduce((sum, item) => sum + (item.sgst_amount || 0), 0);
-  const totalIgst = items.reduce((sum, item) => sum + (item.igst_amount || 0), 0);
+  const calculateItemTax = (item) => {
+    const price = parseFloat(item.price || 0);
+    const gstRate = parseFloat(item.gst || 0);
+    const taxableValue = price / (1 + gstRate / 100);
+    const totalTax = price - taxableValue;
+    const isInterState = customer.state !== settings.state;
+    
+    return {
+      taxableValue,
+      cgst: isInterState ? 0 : totalTax / 2,
+      sgst: isInterState ? 0 : totalTax / 2,
+      igst: isInterState ? totalTax : 0,
+      totalTax
+    };
+  };
+
+  const itemsWithTax = items.map(item => ({
+    ...item,
+    ...calculateItemTax(item)
+  }));
+
+  const totalTaxableValue = itemsWithTax.reduce((sum, item) => sum + item.taxableValue, 0);
+  const totalCgst = itemsWithTax.reduce((sum, item) => sum + item.cgst, 0);
+  const totalSgst = itemsWithTax.reduce((sum, item) => sum + item.sgst, 0);
+  const totalIgst = itemsWithTax.reduce((sum, item) => sum + item.igst, 0);
   const totalGst = totalCgst + totalSgst + totalIgst;
   
   const regCharge = parseFloat(invoice.extra_charges?.Registration || invoice.registration_amount || 0);

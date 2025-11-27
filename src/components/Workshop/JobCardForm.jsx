@@ -17,7 +17,7 @@ const JobCardForm = ({ onSave, onCancel, jobCard, isEditing, isSaving, isLoading
   const { toast } = useToast();
   const formData = useWorkshopStore(state => state);
   const { setFormData, addItem, removeItem, updateItem, resetForm } = useWorkshopStore();
-  
+
   const [errors, setErrors] = useState({});
   const { settings, loading: settingsLoading } = useSettingsStore();
   const workshopSettings = settings.workshop_settings || {};
@@ -26,41 +26,61 @@ const JobCardForm = ({ onSave, onCancel, jobCard, isEditing, isSaving, isLoading
     const { id, value } = e.target;
     setFormData({ [id]: value });
   };
-  
-  const initializeForm = useCallback(async () => {
-    const nextDueDateDays = parseInt(workshopSettings?.next_due_date_days, 10) || 90;
-    if (isEditing) {
-      if (jobCard) {
-        setFormData(jobCard);
-        if (!jobCard.next_due_date) {
-          setFormData({ next_due_date: addDaysToDate(new Date(jobCard.invoice_date), nextDueDateDays) });
-        }
-      }
-    } else {
-      if (!formData.invoice_no) {
+
+  useEffect(() => {
+    const initializeForm = async () => {
+      const nextDueDateDays = parseInt(workshopSettings?.next_due_date_days, 10) || 90;
+
+      if (isEditing && jobCard) {
+        console.log('Loading job card data:', jobCard);
+        // Reset first, then set the data immediately
+        resetForm();
+        setFormData({
+          id: jobCard.id,
+          invoice_no: jobCard.invoice_no,
+          invoice_date: jobCard.invoice_date,
+          customer_id: jobCard.customer_id,
+          customer_name: jobCard.customer_name || '',
+          customer_mobile: jobCard.customer_mobile || '',
+          customer_address: jobCard.customer_address || '',
+          customer_state: jobCard.customer_state || '',
+          manual_jc_no: jobCard.manual_jc_no || '',
+          jc_no: jobCard.jc_no || '',
+          kms: jobCard.kms || '',
+          reg_no: jobCard.reg_no || '',
+          frame_no: jobCard.frame_no || '',
+          model: jobCard.model || '',
+          job_type: jobCard.job_type || 'Paid Service',
+          mechanic: jobCard.mechanic || '',
+          next_due_date: jobCard.next_due_date || addDaysToDate(new Date(jobCard.invoice_date), nextDueDateDays),
+          parts_items: Array.isArray(jobCard.parts_items) ? jobCard.parts_items : [],
+          labour_items: Array.isArray(jobCard.labour_items) ? jobCard.labour_items : [],
+          denied_items: Array.isArray(jobCard.denied_items) ? jobCard.denied_items : [],
+          total_amount: jobCard.total_amount || 0,
+          status: jobCard.status || 'pending'
+        });
+        console.log('Job card data loaded successfully');
+      } else if (!isEditing) {
         try {
           const nextInvoiceNo = await getNextJobCardInvoiceNo(new Date());
+          resetForm();
           setFormData({
             invoice_no: nextInvoiceNo,
             invoice_date: getCurrentDate(),
-            next_due_date: addDaysToDate(new Date(), nextDueDateDays),
+            next_due_date: addDaysToDate(new Date(), nextDueDateDays)
           });
         } catch (error) {
           toast({ title: 'Error', description: `Failed to get next invoice number: ${error.message}`, variant: 'destructive' });
         }
-      } else if (!formData.next_due_date) {
-         setFormData({
-            next_due_date: addDaysToDate(new Date(), nextDueDateDays),
-          });
       }
-    }
-  }, [isEditing, jobCard, setFormData, toast, workshopSettings, formData.invoice_no, formData.next_due_date]);
+    };
 
-  useEffect(() => {
-    if(!settingsLoading && workshopSettings){
+    if (!settingsLoading && !isLoading) {
       initializeForm();
     }
-  }, [initializeForm, settingsLoading, workshopSettings]);
+  }, [jobCard, isEditing, settingsLoading, isLoading]);
+
+
 
   const validateForm = () => {
     const newErrors = {};
@@ -97,11 +117,11 @@ const JobCardForm = ({ onSave, onCancel, jobCard, isEditing, isSaving, isLoading
       toast({ title: 'Validation Error', description: 'Please fill all required fields.', variant: 'destructive' });
       return;
     }
-    
+
     const dataToSave = { ...formData, id: isEditing ? jobCard.id : uuidv4() };
     await onSave(dataToSave, !isEditing);
   };
-  
+
   const handleCancelClick = () => {
     setErrors({});
     onCancel();
@@ -115,7 +135,7 @@ const JobCardForm = ({ onSave, onCancel, jobCard, isEditing, isSaving, isLoading
   const handleItemChange = (type, id, field, value) => {
     updateItem(type, id, field, value);
   };
-  
+
   const handleItemsUpdate = (type, updatedItems) => {
     setFormData({ [`${type}_items`]: updatedItems });
   };
@@ -126,29 +146,36 @@ const JobCardForm = ({ onSave, onCancel, jobCard, isEditing, isSaving, isLoading
   };
 
   if (settingsLoading || (isEditing && isLoading)) {
-    return <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div></div>;
+    return (
+      <div className="flex flex-col justify-center items-center h-64 gap-4">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
+        <p className="text-sm text-muted-foreground">Loading job card data...</p>
+      </div>
+    );
   }
+
+  console.log('Rendering form with data:', { isEditing, jobCard, formData: { invoice_no: formData.invoice_no, customer_name: formData.customer_name, parts_items: formData.parts_items?.length } });
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-7xl mx-auto">
       <form onSubmit={handleSubmit} className="space-y-8">
-        <CustomerVehicleDetails 
-          formData={formData} 
-          setFormData={setFormData} 
-          errors={errors} 
-          workshopSettings={workshopSettings} 
+        <CustomerVehicleDetails
+          formData={formData}
+          setFormData={setFormData}
+          errors={errors}
+          workshopSettings={workshopSettings}
         />
-        <JobItems 
-          formData={formData} 
-          onAddItem={handleAddItem} 
-          onItemChange={handleItemChange} 
+        <JobItems
+          formData={formData}
+          onAddItem={handleAddItem}
+          onItemChange={handleItemChange}
           onItemsUpdate={handleItemsUpdate}
-          onRemoveItem={handleRemoveItem} 
-          workshopSettings={workshopSettings} 
-          errors={errors} 
+          onRemoveItem={handleRemoveItem}
+          workshopSettings={workshopSettings}
+          errors={errors}
         />
         {errors.items && <p className="text-red-500 text-center">{errors.items}</p>}
-        
+
         {workshopSettings.show_job_details && (
           <JobSummary formData={formData} setFormData={setFormData} />
         )}

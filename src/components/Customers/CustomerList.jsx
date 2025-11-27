@@ -12,6 +12,7 @@ import {
   UserCheck,
   UserX
 } from 'lucide-react';
+import { PaginationControls } from '@/components/ui/pagination';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,22 +30,31 @@ const CustomerList = ({ onAddCustomer, onEditCustomer }) => {
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [showFilters, setShowFilters] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [stats, setStats] = useState({
     total: 0,
     registered: 0,
     nonRegistered: 0
   });
+  const PAGE_SIZE = 20;
 
   useEffect(() => {
     loadCustomers();
   }, []);
 
   useEffect(() => {
-    loadCustomers();
+    setCurrentPage(1);
   }, [debouncedSearchTerm, dateRange]);
 
+  useEffect(() => {
+    loadCustomers();
+  }, [currentPage, debouncedSearchTerm, dateRange]);
+
   const loadCustomers = async () => {
-    const { data: customerData } = await getCustomers({ 
+    const { data: customerData, count } = await getCustomers({ 
+      page: currentPage,
+      pageSize: PAGE_SIZE,
       searchTerm: debouncedSearchTerm,
       filters: {
         startDate: dateRange.start,
@@ -52,18 +62,15 @@ const CustomerList = ({ onAddCustomer, onEditCustomer }) => {
       }
     });
     setCustomers(customerData || []);
+    setFilteredCustomers(customerData || []);
+    setTotalPages(Math.ceil((count || 0) / PAGE_SIZE));
     
     const registered = (customerData || []).filter(c => c.gst).length;
     setStats({
-      total: (customerData || []).length,
+      total: count || 0,
       registered,
       nonRegistered: (customerData || []).length - registered
     });
-  };
-
-  const filterCustomers = () => {
-    // Since we're now filtering at database level, just set customers as filtered
-    setFilteredCustomers(customers);
   };
 
   const handleDeleteCustomer = async (customerId) => {
@@ -86,9 +93,19 @@ const CustomerList = ({ onAddCustomer, onEditCustomer }) => {
     }
   };
 
-  const handleExportToExcel = () => {
+  const handleExportToExcel = async () => {
     try {
-      const exportData = filteredCustomers.map(customer => ({
+      const { data: allCustomers } = await getCustomers({ 
+        page: 1, 
+        pageSize: 10000, 
+        searchTerm: '', 
+        filters: {
+          startDate: dateRange.start,
+          endDate: dateRange.end
+        }
+      });
+      
+      const exportData = (allCustomers || []).map(customer => ({
         'Customer Name': customer.customer_name,
         'Guardian': customer.guardian_name || '',
         'Mobile Number': customer.mobile1,
@@ -106,7 +123,7 @@ const CustomerList = ({ onAddCustomer, onEditCustomer }) => {
       
       toast({
         title: "Success",
-        description: "Customer data exported successfully!"
+        description: `${exportData.length} customers exported successfully!`
       });
     } catch (error) {
       toast({
@@ -186,7 +203,7 @@ const CustomerList = ({ onAddCustomer, onEditCustomer }) => {
               <Button
                 onClick={handleExportToExcel}
                 className="export-button flex items-center justify-center gap-2 h-10 px-4"
-                disabled={filteredCustomers.length === 0}
+                disabled={customers.length === 0}
               >
                 <Download className="w-4 h-4" />
                 <span className="hidden sm:inline">Export</span>
@@ -323,6 +340,15 @@ const CustomerList = ({ onAddCustomer, onEditCustomer }) => {
                   : 'Start by adding your first customer'
                 }
               </p>
+            </div>
+          )}
+          {totalPages > 1 && (
+            <div className="mt-4">
+              <PaginationControls
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
             </div>
           )}
         </CardContent>

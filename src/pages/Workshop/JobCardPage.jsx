@@ -38,12 +38,20 @@ const JobCardPage = () => {
   const { data: selectedJobCard, isFetching: isFetchingSelected } = useQuery({
     queryKey: ['jobCard', selectedJobCardId],
     queryFn: async () => {
-        if (!selectedJobCardId) return null;
-        const { data, error } = await supabase.from('job_cards').select('*').eq('id', selectedJobCardId).single();
-        if (error) throw new Error(error.message);
-        return data;
+      if (!selectedJobCardId) return null;
+      console.log('Fetching job card:', selectedJobCardId);
+      const { data, error } = await supabase.from('job_cards').select('*').eq('id', selectedJobCardId).single();
+      if (error) {
+        console.error('Error fetching job card:', error);
+        throw new Error(error.message);
+      }
+      console.log('Job card fetched:', data);
+      return data;
     },
     enabled: !!selectedJobCardId && activeTab === 'form',
+    staleTime: 0,
+    cacheTime: 0,
+    refetchOnMount: 'always',
   });
 
   const isEditing = !!selectedJobCardId;
@@ -60,7 +68,7 @@ const JobCardPage = () => {
 
   useEffect(() => {
     if (!user?.id) return;
-    
+
     const channel = supabase
       .channel('workshop_inventory_realtime_channel')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'workshop_inventory', filter: `user_id=eq.${user.id}` },
@@ -107,14 +115,14 @@ const JobCardPage = () => {
 
   const deleteJobCardMutation = useMutation({
     mutationFn: async (jobCardId) => {
-       const jobCardToDelete = jobCards.find(jc => jc.id === jobCardId);
-      if (!jobCardToDelete) throw new Error("Job card not found.");
+      // Database trigger will automatically restore inventory on delete
+      const { error: deleteError } = await supabase
+        .from('job_cards')
+        .delete()
+        .eq('id', jobCardId)
+        .eq('user_id', user.id);
 
-      const { error } = await supabase.functions.invoke('delete-job-card', {
-          body: JSON.stringify({ jobCardId: jobCardToDelete.id, itemsToRestore: jobCardToDelete.parts_items }),
-      });
-
-      if (error) throw error;
+      if (deleteError) throw new Error(`Failed to delete job card: ${deleteError.message}`);
       return jobCardId;
     },
     onSuccess: () => {
@@ -126,11 +134,11 @@ const JobCardPage = () => {
       });
     },
     onError: (error) => {
-        toast({
-            title: "Error",
-            description: `Failed to delete Job Card: ${error.message}`,
-            variant: "destructive",
-        });
+      toast({
+        title: "Error",
+        description: `Failed to delete Job Card: ${error.message}`,
+        variant: "destructive",
+      });
     },
   });
 
@@ -139,6 +147,9 @@ const JobCardPage = () => {
   };
 
   const handleEdit = (jobCard) => {
+    console.log('Edit clicked for job card:', jobCard);
+    resetWorkshopForm();
+    queryClient.invalidateQueries({ queryKey: ['jobCard', jobCard.id] });
     setSelectedJobCardId(jobCard.id);
     setActiveTab('form');
   };
@@ -174,25 +185,25 @@ const JobCardPage = () => {
             <TabsTrigger value="list">List</TabsTrigger>
             <TabsTrigger value="form">Form</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="list" className="mt-0">
-            <JobCardList 
-              jobCards={jobCards} 
-              onEdit={handleEdit} 
-              onDelete={handleDelete} 
-              isLoading={isLoadingJobCards} 
+            <JobCardList
+              jobCards={jobCards}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              isLoading={isLoadingJobCards}
               dateRange={dateRange}
               setDateRange={setDateRange}
             />
           </TabsContent>
           <TabsContent value="form" className="mt-0">
             {isFormVisible && (
-              <JobCardForm 
+              <JobCardForm
                 key={selectedJobCardId || 'new'}
-                jobCard={selectedJobCard} 
-                isEditing={isEditing} 
-                onSave={handleSave} 
-                onCancel={handleFormClose} 
+                jobCard={selectedJobCard}
+                isEditing={isEditing}
+                onSave={handleSave}
+                onCancel={handleFormClose}
                 isSaving={saveJobCardMutation.isPending}
                 isLoading={isFetchingSelected}
               />

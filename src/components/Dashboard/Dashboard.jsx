@@ -98,7 +98,7 @@ const Dashboard = () => {
       if (error) throw error;
       return data[0] || { totalpurchaseqty: 0, registeredsaleqty: 0, nonregisteredsaleqty: 0, totalsaleqty: 0, totalcustomers: 0 };
     },
-    enabled: false,
+    enabled: !!user?.id,
     ...DEFAULT_QUERY_CONFIG,
   });
 
@@ -113,7 +113,7 @@ const Dashboard = () => {
       if (error) throw error;
       return data || [];
     },
-    enabled: false,
+    enabled: !!user?.id,
     ...DEFAULT_QUERY_CONFIG,
   });
 
@@ -128,7 +128,7 @@ const Dashboard = () => {
       if (error) throw error;
       return count || 0;
     },
-    enabled: false,
+    enabled: !!user?.id,
     ...DEFAULT_QUERY_CONFIG,
   });
 
@@ -147,7 +147,7 @@ const Dashboard = () => {
       if (error) throw error;
       return count || 0;
     },
-    enabled: false,
+    enabled: !!user?.id,
     ...DEFAULT_QUERY_CONFIG,
   });
 

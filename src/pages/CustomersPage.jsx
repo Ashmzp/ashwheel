@@ -18,7 +18,7 @@ import { exportToExcel } from '@/utils/excel';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useUserData } from '@/hooks/useUserData';
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 50;
 
 const formatDate = (dateString) => {
   if (!dateString) return 'N/A';
@@ -43,7 +43,7 @@ const CustomersPage = () => {
   const { can: canAccess } = usePermissions(userData);
 
   // Restore state from sessionStorage on mount
-  const [searchTerm, setSearchTerm] = useState(() => 
+  const [searchTerm, setSearchTerm] = useState(() =>
     sessionStorage.getItem('customers_searchTerm') || ''
   );
   const [filters, setFilters] = useState(() => {
@@ -87,7 +87,7 @@ const CustomersPage = () => {
   // Fetch customers
   const fetchCustomers = useCallback(async () => {
     if (!user) return;
-    
+
     setLoading(true);
     try {
       const { data, totalPages: pages } = await getCustomers({
@@ -233,7 +233,7 @@ const CustomersPage = () => {
           <div className="page-header">
             <h1 className="page-title">Customer Management</h1>
             {canAccess('customers', 'write') && (
-              <Button onClick={() => setIsFormOpen(true)} className="btn-compact">
+              <Button onClick={() => { setEditingCustomer(null); setIsFormOpen(true); }} className="btn-compact">
                 <PlusCircle className="mr-1 h-3.5 w-3.5" /> Add New Customer
               </Button>
             )}
@@ -270,23 +270,23 @@ const CustomersPage = () => {
                       <SelectItem value="non-registered">Non-Registered</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Input 
-                    type="date" 
-                    className="input-compact w-full sm:w-auto" 
-                    value={filters.startDate} 
+                  <Input
+                    type="date"
+                    className="input-compact w-full sm:w-auto"
+                    value={filters.startDate}
                     onChange={(e) => {
                       setFilters(prev => ({ ...prev, startDate: e.target.value }));
                       setCurrentPage(1);
-                    }} 
+                    }}
                   />
-                  <Input 
-                    type="date" 
-                    className="input-compact w-full sm:w-auto" 
-                    value={filters.endDate} 
+                  <Input
+                    type="date"
+                    className="input-compact w-full sm:w-auto"
+                    value={filters.endDate}
                     onChange={(e) => {
                       setFilters(prev => ({ ...prev, endDate: e.target.value }));
                       setCurrentPage(1);
-                    }} 
+                    }}
                   />
                   <Button variant="outline" onClick={handleExport} className="btn-compact">
                     <FileDown className="mr-1 h-3.5 w-3.5" /> Export

@@ -31,7 +31,7 @@ const useWorkshopStore = create((set) => ({
   setActiveTab: (tab) => set({ activeTab: tab }),
   setSelectedJobCardId: (id) => set({ selectedJobCardId: id }),
   setFormData: (data) => set((state) => ({ ...state, ...data })),
-  resetForm: (initialData = {}) => set({ ...getInitialState(), ...initialData, activeTab: 'form' }),
+  resetForm: (initialData = {}) => set((state) => ({ ...getInitialState(), ...initialData, activeTab: state.activeTab, selectedJobCardId: state.selectedJobCardId })),
   setItems: (type, items) => set({ [`${type}_items`]: items }),
   addItem: (type, item) => set((state) => ({ [`${type}_items`]: [...state[`${type}_items`], { uom: '', ...item }] })),
   removeItem: (type, id) => set((state) => ({ [`${type}_items`]: state[`${type}_items`].filter(i => i.id !== id) })),

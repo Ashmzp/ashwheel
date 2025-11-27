@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useToast } from '@/components/ui/use-toast';
 import { exportToExcel } from '@/utils/excel';
 import { formatDate, isDateInRange } from '@/utils/dateUtils';
-import { getPurchases } from '@/utils/storage';
+import { getPurchases } from '@/utils/db/purchases';
 
 const PurchaseList = ({ onAddPurchase, onEditPurchase, onDeletePurchase }) => {
   const [purchases, setPurchases] = useState([]);
@@ -55,26 +55,39 @@ const PurchaseList = ({ onAddPurchase, onEditPurchase, onDeletePurchase }) => {
     }
   };
 
-  const handleExport = () => {
-    const dataToExport = filteredPurchases.flatMap(p => 
-      (p.items || []).map(item => ({
-        'Party Name': p.party_name,
-        'Invoice Date': formatDate(p.invoice_date),
-        'Invoice Number': p.invoice_no,
-        'Model Name': item.modelName,
-        'Chassis Number': item.chassisNo,
-        'Engine Number': item.engineNo,
-        'Colour': item.colour,
-        'HSN Code': item.hsn,
-        'GST %': item.gst,
-        'Price': item.price,
-      }))
-    );
-    if(dataToExport.length > 0) {
-      exportToExcel(dataToExport, 'purchases_report');
-      toast({ title: "Success", description: "Data exported to Excel." });
-    } else {
-      toast({ title: "Info", description: "No data to export." });
+  const handleExport = async () => {
+    try {
+      const { data: allPurchases } = await getPurchases({ 
+        page: 1, 
+        pageSize: 500, 
+        searchTerm: '', 
+        startDate: dateRange.start, 
+        endDate: dateRange.end 
+      });
+      
+      const dataToExport = (allPurchases || []).flatMap(p => 
+        (p.items || []).map(item => ({
+          'Party Name': p.party_name,
+          'Invoice Date': formatDate(p.invoice_date),
+          'Invoice Number': p.invoice_no,
+          'Model Name': item.modelName,
+          'Chassis Number': item.chassisNo,
+          'Engine Number': item.engineNo,
+          'Colour': item.colour,
+          'HSN Code': item.hsn,
+          'GST %': item.gst,
+          'Price': item.price,
+        }))
+      );
+      
+      if(dataToExport.length > 0) {
+        exportToExcel(dataToExport, 'purchases_report');
+        toast({ title: "Success", description: "Data exported to Excel." });
+      } else {
+        toast({ title: "Info", description: "No data to export." });
+      }
+    } catch (error) {
+      toast({ title: "Error", description: `Export failed: ${error.message}`, variant: "destructive" });
     }
   };
 

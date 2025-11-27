@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -58,13 +58,15 @@ const JobSummary = ({ formData, setFormData }) => {
     });
 
     const grandTotal = subTotal + totalCgst + totalSgst + totalIgst;
-    
-    if (formData.total_amount !== grandTotal) {
-        setFormData({ total_amount: grandTotal });
-    }
 
     return { partsTotal, labourTotal, subTotal, cgst: totalCgst, sgst: totalSgst, igst: totalIgst, grandTotal };
-  }, [formData.parts_items, formData.labour_items, isInterState, formData.total_amount, setFormData]);
+  }, [formData.parts_items, formData.labour_items, isInterState]);
+
+  useEffect(() => {
+    if (formData.total_amount !== grandTotal) {
+      setFormData({ total_amount: grandTotal });
+    }
+  }, [grandTotal, formData.total_amount, setFormData]);
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-3 gap-8">

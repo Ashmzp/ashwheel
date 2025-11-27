@@ -170,16 +170,29 @@ export const saveJobCard = async (jobCard, isNew, originalJobCard) => {
   // Apply inventory changes
   for (const [partNo, qtyChange] of inventoryChanges.entries()) {
     if (qtyChange !== 0) {
-      const { error: invError } = await supabase
+      const { data: currentInv, error: fetchError } = await supabase
         .from('workshop_inventory')
-        .update({ 
-          quantity: supabase.raw(`quantity + ${qtyChange}`)
-        })
+        .select('quantity')
         .eq('part_no', partNo)
-        .eq('user_id', userId);
+        .eq('user_id', userId)
+        .maybeSingle();
       
-      if (invError) {
-        console.error(`Failed to update inventory for part ${partNo}:`, invError);
+      if (fetchError) {
+        console.error(`Failed to fetch inventory for part ${partNo}:`, fetchError);
+        continue;
+      }
+      
+      if (currentInv) {
+        const newQty = parseFloat(currentInv.quantity || 0) + qtyChange;
+        const { error: invError } = await supabase
+          .from('workshop_inventory')
+          .update({ quantity: newQty, last_updated: new Date().toISOString() })
+          .eq('part_no', partNo)
+          .eq('user_id', userId);
+        
+        if (invError) {
+          console.error(`Failed to update inventory for part ${partNo}:`, invError);
+        }
       }
     }
   }
@@ -194,27 +207,22 @@ export const saveJobCard = async (jobCard, isNew, originalJobCard) => {
 export const deleteJobCard = async (jobCard) => {
   try {
     await validateSession();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new Error('Not authenticated');
+    const userId = await getCurrentUserId();
+    if (!userId) throw new Error('Not authenticated');
 
-  const itemsToRestore = (jobCard.parts_items || []).map(item => ({
-    part_no: item.part_no,
-    quantity_change: Number(item.qty) || 0
-  })).filter(item => item.quantity_change > 0);
-
-  const { data, error } = await supabase.functions.invoke('delete-job-card', {
-      body: JSON.stringify({ 
-          jobCardId: jobCard.id,
-          itemsToRestore: itemsToRestore
-      }),
-  });
+    // Delete job card - trigger will automatically restore inventory
+    const { error } = await supabase
+      .from('job_cards')
+      .delete()
+      .eq('id', jobCard.id)
+      .eq('user_id', userId);
 
     if (error) {
       logError(error, 'deleteJobCard');
       throw new Error(safeErrorMessage(error));
     }
 
-    return data;
+    return { success: true };
   } catch (error) {
     logError(error, 'deleteJobCard');
     throw new Error(safeErrorMessage(error));
