@@ -13,7 +13,19 @@ const ProtectedRoute = ({ children, module, action = 'read', adminOnly = false }
   useEffect(() => {
     if (!loading && !loadingUserData && user && !toastShownRef.current) {
       const hasAccess = adminOnly ? userData?.role === 'admin' : canAccess(module, action);
+
       if (!hasAccess) {
+        console.log('Access Denied Debug:', {
+          module,
+          action,
+          adminOnly,
+          userEmail: user?.email,
+          userRole: userData?.role,
+          userDataExists: !!userData,
+          loading,
+          loadingUserData
+        });
+
         toast({
           title: "Access Denied",
           description: "You do not have permission to access this page.",

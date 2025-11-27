@@ -44,13 +44,13 @@ BEGIN
         COALESCE(jc.customer_name, vi.customer_name) as customer_name,
         COALESCE(c.mobile1, '') as mobile1,
         COALESCE(c.mobile2, '') as mobile2,
-        COALESCE(jc.model, vi.model_name) as model_name,
-        COALESCE(jc.frame_no, vi.chassis_no) as chassis_no,
-        COALESCE(jc.reg_no, vi.reg_no) as reg_no,
+        COALESCE(jc.model, vii.model_name, '') as model_name,
+        COALESCE(jc.frame_no, vii.chassis_no, '') as chassis_no,
+        COALESCE(jc.reg_no, '') as reg_no,
         COALESCE(jc.kms, '') as kms_reading,
         COALESCE(jc.job_type, '') as job_type,
         COALESCE(jc.mechanic, '') as mechanic_name,
-        COALESCE(wf.next_follow_up_date, jc.next_due_date, vi.next_due_date) as next_due_date,
+        COALESCE(wf.next_follow_up_date, jc.next_due_date) as next_due_date,
         wf.id as follow_up_id,
         wf.remark,
         wf.appointment_datetime,
@@ -59,6 +59,7 @@ BEGIN
     FROM workshop_follow_ups wf
     LEFT JOIN job_cards jc ON wf.job_card_id = jc.id
     LEFT JOIN vehicle_invoices vi ON wf.vehicle_invoice_id = vi.id
+    LEFT JOIN vehicle_invoice_items vii ON vi.id = vii.invoice_id
     LEFT JOIN customers c ON COALESCE(jc.customer_id, vi.customer_id) = c.id
     WHERE wf.user_id = auth.uid()
         AND COALESCE(jc.invoice_date, vi.invoice_date) BETWEEN p_start_date::date AND p_end_date::date

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import '@/styles/responsive.css';
 import { Helmet } from 'react-helmet-async';
 import { format, startOfToday } from 'date-fns';
@@ -11,11 +11,12 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { formatDate } from '@/utils/dateUtils';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Download, Loader2, PhoneCall, CheckCircle2, PhoneOutgoing, Search } from 'lucide-react';
+import { Download, Loader2, PhoneCall, CheckCircle2, PhoneOutgoing, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import FollowUpModal from '@/components/Workshop/FollowUpModal';
 import { exportToExcel } from '@/utils/excel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const FollowUpItem = ({ item, onTakeFollowUp }) => {
     const isDone = !!item.followed_up_by;
@@ -38,7 +39,7 @@ const FollowUpItem = ({ item, onTakeFollowUp }) => {
                         )}
                         {item.mobile2 && (
                             <a href={`tel:${item.mobile2}`} className="text-muted-foreground hover:underline flex items-center gap-1">
-                               <PhoneOutgoing size={14} /> {item.mobile2}
+                                <PhoneOutgoing size={14} /> {item.mobile2}
                             </a>
                         )}
                     </div>
@@ -73,55 +74,90 @@ const FollowUpItem = ({ item, onTakeFollowUp }) => {
     );
 };
 
-const StatCard = ({ title, value, icon, color }) => (
-    <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{title}</CardTitle>
-            {icon}
-        </CardHeader>
-        <CardContent className="card-compact">
-            <div className={`text-2xl font-bold ${color}`}>{value}</div>
-        </CardContent>
-    </Card>
-);
-
 const FollowUpPage = () => {
     const todayStr = format(startOfToday(), 'yyyy-MM-dd');
+
+    // Input State (Controlled by UI)
     const [dateRange, setDateRange] = useLocalStorage('followUpDateRange', { start: todayStr, end: todayStr });
     const [searchTerm, setSearchTerm] = useLocalStorage('followUpSearchTerm', '');
+    const [customerType, setCustomerType] = useLocalStorage('followUpCustomerType', 'non-registered');
+
+    // Query State (Used for fetching)
+    const [queryParams, setQueryParams] = useState(null);
     const [activeTab, setActiveTab] = useLocalStorage('followUpActiveTab', 'all');
-    
-    const debouncedSearchTerm = useDebounce(searchTerm, 300);
+    const [currentPage, setCurrentPage] = useState(1);
+
+    const pageSize = 100;
     const queryClient = useQueryClient();
     const { settings } = useSettingsStore();
+    const { toast } = useToast();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedFollowUp, setSelectedFollowUp] = useState(null);
 
     const followUpByList = useMemo(() => settings.workshop_settings?.follow_up_by_list || [], [settings]);
-    
-    const queryKey = ['followUps', dateRange, debouncedSearchTerm];
 
-    const { data: followUps = [], isLoading, isPlaceholderData } = useQuery({
+    // Query Key depends on queryParams, not input state
+    const queryKey = ['followUps', queryParams, activeTab, currentPage];
+
+    const { data, isLoading, isPlaceholderData, refetch } = useQuery({
         queryKey,
         queryFn: async () => {
-            console.log('Fetching follow-ups:', dateRange, debouncedSearchTerm);
-            const { data, error } = await supabase.rpc('get_follow_ups_v3', {
-                p_start_date: dateRange.start,
-                p_end_date: dateRange.end,
-                p_search_term: debouncedSearchTerm,
+            if (!queryParams) return { data: [], count: 0 };
+
+            console.log('Fetching follow-ups:', queryParams);
+            const { data, error } = await supabase.rpc('get_follow_ups_latest', {
+                p_start_date: queryParams.dateRange.start,
+                p_end_date: queryParams.dateRange.end,
+                p_search_term: queryParams.searchTerm
             });
+
             if (error) {
                 console.error('RPC Error:', error);
+                toast({ title: "Error fetching data", description: error.message, variant: "destructive" });
                 throw error;
             }
-            console.log('Follow-ups data:', data);
-            return data || [];
+
+            return { data: data || [], count: data?.length || 0 };
         },
-        enabled: !!dateRange.start && !!dateRange.end,
+        enabled: !!queryParams, // Only fetch if queryParams are set (i.e., Search clicked)
         keepPreviousData: true,
         staleTime: 1000 * 60 * 5,
     });
+
+    const allFollowUps = data?.data || [];
+    
+    const stats = useMemo(() => {
+        const leakage = allFollowUps.filter(f => f.leakage && f.leakage.trim() !== '').length;
+        const nonLeakage = allFollowUps.filter(f => !f.leakage || f.leakage.trim() === '');
+        const done = nonLeakage.filter(f => !!f.followed_up_by).length;
+        const pending = nonLeakage.filter(f => !f.followed_up_by).length;
+        return { done, pending, leakage, total: nonLeakage.length };
+    }, [allFollowUps]);
+    
+    const tabsData = useMemo(() => {
+        const nonLeakage = allFollowUps.filter(f => !f.leakage || f.leakage.trim() === '');
+        return {
+            all: nonLeakage,
+            pending: nonLeakage.filter(f => !f.followed_up_by),
+            done: nonLeakage.filter(f => !!f.followed_up_by),
+            leakage: allFollowUps.filter(f => f.leakage && f.leakage.trim() !== ''),
+        };
+    }, [allFollowUps]);
+    
+    const followUps = tabsData[activeTab] || [];
+    const totalCount = followUps.length;
+    const totalPages = Math.ceil(totalCount / pageSize);
+    const paginatedFollowUps = followUps.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+    const handleSearch = () => {
+        setCurrentPage(1);
+        setQueryParams({
+            dateRange,
+            searchTerm,
+            customerType
+        });
+    };
 
     const handleTakeFollowUp = (item) => {
         setSelectedFollowUp(item);
@@ -131,14 +167,15 @@ const FollowUpPage = () => {
     const handleModalSave = () => {
         setIsModalOpen(false);
         queryClient.invalidateQueries({ queryKey: ['followUps'] });
+        refetch();
     };
 
     const handleExport = () => {
-        if (tabsData[activeTab].length === 0) {
-            alert("No data to export in the current view.");
+        if (paginatedFollowUps.length === 0) {
+            toast({ title: "No data", description: "No data to export in the current view.", variant: "destructive" });
             return;
         }
-        const dataToExport = tabsData[activeTab].map(f => ({
+        const dataToExport = paginatedFollowUps.map(f => ({
             "Source Date": formatDate(f.source_date),
             "Customer Name": f.customer_name,
             "Mobile 1": f.mobile1,
@@ -156,24 +193,11 @@ const FollowUpPage = () => {
         exportToExcel(dataToExport, `follow-ups-${activeTab}-${format(new Date(), 'yyyy-MM-dd')}`);
     };
 
-    const stats = useMemo(() => {
-        const leakage = followUps.filter(f => f.leakage && f.leakage.trim() !== '').length;
-        const nonLeakage = followUps.filter(f => !f.leakage || f.leakage.trim() === '');
-        const done = nonLeakage.filter(f => !!f.followed_up_by).length;
-        const pending = nonLeakage.filter(f => !f.followed_up_by).length;
-        return { done, pending, leakage, total: nonLeakage.length };
-    }, [followUps]);
-    
-    const tabsData = useMemo(() => {
-        const today = format(startOfToday(), 'yyyy-MM-dd');
-        const nonLeakage = followUps.filter(f => !f.leakage && (!f.leakage || f.leakage.trim() === ''));
-        return {
-            all: nonLeakage.filter(f => f.next_due_date <= today),
-            pending: nonLeakage.filter(f => !f.followed_up_by && f.next_due_date <= today),
-            done: nonLeakage.filter(f => !!f.followed_up_by && f.next_due_date <= today),
-            leakage: followUps.filter(f => f.leakage && f.leakage.trim() !== ''),
-        };
-    }, [followUps]);
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+        }
+    };
 
     return (
         <>
@@ -184,66 +208,124 @@ const FollowUpPage = () => {
             <div className="container mx-auto p-4 space-y-6">
                 <div className="flex justify-between items-center">
                     <h1 className="page-title">Follow-Up List</h1>
-                    <Button onClick={handleExport} variant="outline" disabled={isLoading}><Download className="mr-2 h-4 w-4" /> Export to Excel</Button>
+                    <Button onClick={handleExport} variant="outline" disabled={isLoading || paginatedFollowUps.length === 0}>
+                        <Download className="mr-2 h-4 w-4" /> Export Current Page
+                    </Button>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-4">
-                    <StatCard title="Total Follow-ups" value={stats.total} icon={<PhoneCall className="h-4 w-4 text-muted-foreground" />} color="text-blue-500" />
-                    <StatCard title="Pending Follow-ups" value={stats.pending} icon={<PhoneCall className="h-4 w-4 text-muted-foreground" />} color="text-orange-500" />
-                    <StatCard title="Done Follow-ups" value={stats.done} icon={<CheckCircle2 className="h-4 w-4 text-muted-foreground" />} color="text-green-500" />
-                    <StatCard title="Leakage" value={stats.leakage} icon={<PhoneCall className="h-4 w-4 text-muted-foreground" />} color="text-red-500" />
-                </div>
-
+                {/* Search and Filters */}
                 <Card>
-                    <CardContent className="p-4 flex flex-col md:flex-row gap-4 justify-between items-center">
-                         <div className="relative w-full md:w-auto md:flex-grow">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input
-                                placeholder="Search Customer, Mobile, Chassis, Reg No..."
-                                className="pl-10 max-w-md"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                        </div>
-                        <div className="flex gap-2 flex-wrap justify-center items-center">
-                            <Input type="date" value={dateRange.start} onChange={e => setDateRange(prev => ({...prev, start: e.target.value}))} />
-                            <span>to</span>
-                            <Input type="date" value={dateRange.end} onChange={e => setDateRange(prev => ({...prev, end: e.target.value}))} />
+                    <CardContent className="p-4 flex flex-col gap-4">
+                        <div className="flex flex-col md:flex-row gap-4 items-end">
+                            <div className="flex-1 w-full">
+                                <label className="text-sm font-medium mb-1 block">Search</label>
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        placeholder="Search Customer, Mobile, Chassis, Reg No..."
+                                        className="pl-10"
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="w-full md:w-48">
+                                <label className="text-sm font-medium mb-1 block">Customer Type</label>
+                                <Select value={customerType} onValueChange={setCustomerType}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select Type" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Customers</SelectItem>
+                                        <SelectItem value="registered">Registered</SelectItem>
+                                        <SelectItem value="non-registered">Non-Registered</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="w-full md:w-auto flex gap-2 items-end">
+                                <div>
+                                    <label className="text-sm font-medium mb-1 block">From</label>
+                                    <Input type="date" value={dateRange.start} onChange={e => setDateRange(prev => ({ ...prev, start: e.target.value }))} />
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium mb-1 block">To</label>
+                                    <Input type="date" value={dateRange.end} onChange={e => setDateRange(prev => ({ ...prev, end: e.target.value }))} />
+                                </div>
+                            </div>
+
+                            <Button onClick={handleSearch} className="w-full md:w-auto">
+                                <Search className="mr-2 h-4 w-4" /> Search
+                            </Button>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); setCurrentPage(1); }}>
                     <TabsList className="grid w-full grid-cols-4">
                         <TabsTrigger value="all">All ({stats.total})</TabsTrigger>
                         <TabsTrigger value="pending">Pending ({stats.pending})</TabsTrigger>
                         <TabsTrigger value="done">Done ({stats.done})</TabsTrigger>
                         <TabsTrigger value="leakage">Leakage ({stats.leakage})</TabsTrigger>
                     </TabsList>
-                    
-                    {(isLoading || isPlaceholderData) && (
-                        <div className="flex justify-center items-center h-64">
-                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        </div>
-                    )}
-                    
-                    {!isLoading && !isPlaceholderData && ['all', 'pending', 'done', 'leakage'].map(tabValue => (
-                        <TabsContent key={tabValue} value={tabValue}>
+
+                    <div className="mt-4">
+                        {(isLoading || isPlaceholderData) && (
+                            <div className="flex justify-center items-center h-64">
+                                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                            </div>
+                        )}
+
+                        {!isLoading && !isPlaceholderData && (
                             <div>
-                                {tabsData[tabValue].length > 0 ? (
-                                    tabsData[tabValue].map((item) => (
-                                        <FollowUpItem key={`${item.source_id}-${item.follow_up_id || 'new'}`} item={item} onTakeFollowUp={handleTakeFollowUp} />
-                                    ))
+                                {paginatedFollowUps.length > 0 ? (
+                                    <>
+                                        <div className="mb-4 text-sm text-muted-foreground">
+                                            Showing {paginatedFollowUps.length} of {totalCount} results
+                                        </div>
+                                        {paginatedFollowUps.map((item) => (
+                                            <FollowUpItem key={`${item.source_id}-${item.follow_up_id || 'new'}`} item={item} onTakeFollowUp={handleTakeFollowUp} />
+                                        ))}
+
+                                        {/* Pagination Controls */}
+                                        {totalPages > 1 && (
+                                            <div className="flex items-center justify-center space-x-2 py-4">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => handlePageChange(currentPage - 1)}
+                                                    disabled={currentPage <= 1}
+                                                >
+                                                    <ChevronLeft className="h-4 w-4" />
+                                                    Previous
+                                                </Button>
+                                                <div className="text-sm font-medium">
+                                                    Page {currentPage} of {totalPages}
+                                                </div>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => handlePageChange(currentPage + 1)}
+                                                    disabled={currentPage >= totalPages}
+                                                >
+                                                    Next
+                                                    <ChevronRight className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </>
                                 ) : (
                                     <Card>
                                         <CardContent className="p-16 text-center text-muted-foreground">
-                                            No follow-ups found in this category.
+                                            {!queryParams ? "Select filters and click Search to view data." : "No follow-ups found."}
                                         </CardContent>
                                     </Card>
                                 )}
                             </div>
-                        </TabsContent>
-                    ))}
+                        )}
+                    </div>
                 </Tabs>
             </div>
             {isModalOpen && (
