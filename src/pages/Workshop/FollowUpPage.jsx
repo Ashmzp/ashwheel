@@ -80,10 +80,10 @@ const FollowUpPage = () => {
     // Input State (Controlled by UI)
     const [dateRange, setDateRange] = useLocalStorage('followUpDateRange', { start: todayStr, end: todayStr });
     const [searchTerm, setSearchTerm] = useLocalStorage('followUpSearchTerm', '');
-    const [customerType, setCustomerType] = useLocalStorage('followUpCustomerType', 'non-registered');
+    const [customerType, setCustomerType] = useLocalStorage('followUpCustomerType', 'all');
 
-    // Query State (Used for fetching)
-    const [queryParams, setQueryParams] = useState(null);
+    // Query State (Used for fetching) - Initialize with default values
+    const [queryParams, setQueryParams] = useState({ dateRange: { start: todayStr, end: todayStr }, searchTerm: '', customerType: 'all' });
     const [activeTab, setActiveTab] = useLocalStorage('followUpActiveTab', 'all');
     const [currentPage, setCurrentPage] = useState(1);
 
@@ -118,6 +118,8 @@ const FollowUpPage = () => {
                 throw error;
             }
 
+            console.log('Raw data from DB:', data);
+            console.log('Data length:', data?.length);
             return { data: data || [], count: data?.length || 0 };
         },
         enabled: !!queryParams, // Only fetch if queryParams are set (i.e., Search clicked)
@@ -126,6 +128,9 @@ const FollowUpPage = () => {
     });
 
     const allFollowUps = data?.data || [];
+    
+    console.log('All follow-ups:', allFollowUps);
+    console.log('All follow-ups length:', allFollowUps.length);
     
     const stats = useMemo(() => {
         const leakage = allFollowUps.filter(f => f.leakage && f.leakage.trim() !== '').length;
@@ -137,15 +142,20 @@ const FollowUpPage = () => {
     
     const tabsData = useMemo(() => {
         const nonLeakage = allFollowUps.filter(f => !f.leakage || f.leakage.trim() === '');
-        return {
+        const result = {
             all: nonLeakage,
             pending: nonLeakage.filter(f => !f.followed_up_by),
             done: nonLeakage.filter(f => !!f.followed_up_by),
             leakage: allFollowUps.filter(f => f.leakage && f.leakage.trim() !== ''),
         };
-    }, [allFollowUps]);
+        console.log('Tabs data:', result);
+        console.log('Active tab:', activeTab);
+        console.log('Current tab data:', result[activeTab]);
+        return result;
+    }, [allFollowUps, activeTab]);
     
     const followUps = tabsData[activeTab] || [];
+    console.log('Final followUps for display:', followUps);
     const totalCount = followUps.length;
     const totalPages = Math.ceil(totalCount / pageSize);
     const paginatedFollowUps = followUps.slice((currentPage - 1) * pageSize, currentPage * pageSize);
