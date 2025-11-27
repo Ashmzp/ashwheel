@@ -98,12 +98,14 @@ const FollowUpModal = ({ isOpen, onOpenChange, followUpData, onSave, staffList }
 
     useEffect(() => {
         if (followUpData) {
+            console.log('Loading follow-up data:', followUpData);
             setFormField('remark', followUpData.remark || '');
             setFormField('lastServiceDate', '');
             setFormField('nextFollowUpDate', followUpData.next_follow_up_date ? format(new Date(followUpData.next_follow_up_date), 'yyyy-MM-dd') : '');
             setFormField('appointmentDateTime', followUpData.appointment_datetime ? formatDateTimeForInput(new Date(followUpData.appointment_datetime)) : '');
             setFormField('followedBy', followUpData.followed_up_by || '');
             setFormField('leakage', followUpData.leakage || '');
+            console.log('Leakage loaded:', followUpData.leakage);
         }
     }, [followUpData, setFormField]);
 
@@ -121,7 +123,10 @@ const FollowUpModal = ({ isOpen, onOpenChange, followUpData, onSave, staffList }
     }
 
     const handleSubmit = async () => {
-        if (!formData.remark && !formData.nextFollowUpDate && !formData.appointmentDateTime && !formData.followedBy && !formData.leakage) {
+        const hasLeakage = formData.leakage && formData.leakage.trim() !== '';
+        const hasOtherData = formData.remark || formData.nextFollowUpDate || formData.appointmentDateTime || formData.followedBy;
+        
+        if (!hasLeakage && !hasOtherData) {
             toast({ title: 'No Changes', description: 'Please enter at least one value to save.', variant: 'default' });
             return;
         }
@@ -130,11 +135,11 @@ const FollowUpModal = ({ isOpen, onOpenChange, followUpData, onSave, staffList }
         try {
             const payload = {
                 user_id: user.id,
-                remark: formData.remark,
+                remark: formData.remark || null,
                 next_follow_up_date: formData.nextFollowUpDate || null,
                 appointment_datetime: formData.appointmentDateTime || null,
-                followed_up_by: formData.followedBy,
-                leakage: formData.leakage || null,
+                followed_up_by: formData.followedBy || null,
+                leakage: formData.leakage && formData.leakage.trim() !== '' ? formData.leakage : null,
             };
             
             if(followUpData.source_type === 'Job Card') {
