@@ -62,10 +62,11 @@ const FollowUpItem = ({ item, onTakeFollowUp }) => {
                     </Button>
                 </div>
             </CardContent>
-            {(item.remark || item.followed_up_by) && (
+            {(item.remark || item.followed_up_by || item.leakage) && (
                 <div className="border-t bg-muted/50 px-4 py-2 text-sm">
                     <p><span className="font-semibold">Last Remark:</span> {item.remark || 'N/A'}</p>
                     <p><span className="font-semibold">Followed By:</span> {item.followed_up_by || 'N/A'}</p>
+                    {item.leakage && <p className="text-red-600"><span className="font-semibold">Leakage:</span> {item.leakage}</p>}
                 </div>
             )}
         </Card>
@@ -151,16 +152,23 @@ const FollowUpPage = () => {
     };
 
     const stats = useMemo(() => {
-        const done = followUps.filter(f => !!f.followed_up_by).length;
-        const pending = followUps.length - done;
-        return { done, pending, total: followUps.length };
+        const leakage = followUps.filter(f => !!f.leakage).length;
+        const nonLeakage = followUps.filter(f => !f.leakage);
+        const done = nonLeakage.filter(f => !!f.followed_up_by).length;
+        const pending = nonLeakage.filter(f => !f.followed_up_by).length;
+        return { done, pending, leakage, total: nonLeakage.length };
     }, [followUps]);
     
-    const tabsData = useMemo(() => ({
-        all: followUps,
-        pending: followUps.filter(f => !f.followed_up_by),
-        done: followUps.filter(f => !!f.followed_up_by),
-    }), [followUps]);
+    const tabsData = useMemo(() => {
+        const today = format(startOfToday(), 'yyyy-MM-dd');
+        const nonLeakage = followUps.filter(f => !f.leakage);
+        return {
+            all: nonLeakage.filter(f => f.next_due_date <= today),
+            pending: nonLeakage.filter(f => !f.followed_up_by && f.next_due_date <= today),
+            done: nonLeakage.filter(f => !!f.followed_up_by && f.next_due_date <= today),
+            leakage: followUps.filter(f => !!f.leakage),
+        };
+    }, [followUps]);
 
     return (
         <>
@@ -174,10 +182,11 @@ const FollowUpPage = () => {
                     <Button onClick={handleExport} variant="outline" disabled={isLoading}><Download className="mr-2 h-4 w-4" /> Export to Excel</Button>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-3">
+                <div className="grid gap-4 md:grid-cols-4">
                     <StatCard title="Total Follow-ups" value={stats.total} icon={<PhoneCall className="h-4 w-4 text-muted-foreground" />} color="text-blue-500" />
                     <StatCard title="Pending Follow-ups" value={stats.pending} icon={<PhoneCall className="h-4 w-4 text-muted-foreground" />} color="text-orange-500" />
                     <StatCard title="Done Follow-ups" value={stats.done} icon={<CheckCircle2 className="h-4 w-4 text-muted-foreground" />} color="text-green-500" />
+                    <StatCard title="Leakage" value={stats.leakage} icon={<PhoneCall className="h-4 w-4 text-muted-foreground" />} color="text-red-500" />
                 </div>
 
                 <Card>
@@ -200,10 +209,11 @@ const FollowUpPage = () => {
                 </Card>
 
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
-                    <TabsList className="grid w-full grid-cols-3">
+                    <TabsList className="grid w-full grid-cols-4">
                         <TabsTrigger value="all">All ({stats.total})</TabsTrigger>
                         <TabsTrigger value="pending">Pending ({stats.pending})</TabsTrigger>
                         <TabsTrigger value="done">Done ({stats.done})</TabsTrigger>
+                        <TabsTrigger value="leakage">Leakage ({stats.leakage})</TabsTrigger>
                     </TabsList>
                     
                     {(isLoading || isPlaceholderData) && (
@@ -212,7 +222,7 @@ const FollowUpPage = () => {
                         </div>
                     )}
                     
-                    {!isLoading && !isPlaceholderData && ['all', 'pending', 'done'].map(tabValue => (
+                    {!isLoading && !isPlaceholderData && ['all', 'pending', 'done', 'leakage'].map(tabValue => (
                         <TabsContent key={tabValue} value={tabValue}>
                             <div>
                                 {tabsData[tabValue].length > 0 ? (

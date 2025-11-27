@@ -6,6 +6,7 @@ const initialState = {
   nextFollowUpDate: '',
   appointmentDateTime: '',
   followedBy: '',
+  leakage: '',
 };
 
 const useFollowUpStore = create((set) => ({
