@@ -105,17 +105,22 @@ const FollowUpPage = () => {
     const { data: followUps = [], isLoading, isPlaceholderData } = useQuery({
         queryKey,
         queryFn: async () => {
+            console.log('Fetching follow-ups:', dateRange, debouncedSearchTerm);
             const { data, error } = await supabase.rpc('get_follow_ups_v3', {
                 p_start_date: dateRange.start,
                 p_end_date: dateRange.end,
                 p_search_term: debouncedSearchTerm,
             });
-            if (error) throw error;
+            if (error) {
+                console.error('RPC Error:', error);
+                throw error;
+            }
+            console.log('Follow-ups data:', data);
             return data || [];
         },
         enabled: !!dateRange.start && !!dateRange.end,
         keepPreviousData: true,
-        staleTime: 1000 * 60 * 5, // 5 minutes
+        staleTime: 1000 * 60 * 5,
     });
 
     const handleTakeFollowUp = (item) => {
