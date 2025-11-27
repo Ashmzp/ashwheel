@@ -2,6 +2,7 @@ import { create } from 'zustand';
 
 const initialState = {
   remark: '',
+  lastServiceDate: '',
   nextFollowUpDate: '',
   appointmentDateTime: '',
   followedBy: '',

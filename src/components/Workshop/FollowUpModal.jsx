@@ -7,11 +7,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useAuth } from '@/contexts/NewSupabaseAuthContext';
-import { formatDateTimeForInput } from '@/utils/dateUtils';
+import { formatDateTimeForInput, addDaysToDate } from '@/utils/dateUtils';
 import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import useFollowUpStore from '@/stores/followUpStore';
+import { useSettingsStore } from '@/stores/settingsStore';
 
 const StaffSearchInput = ({ value, onChange, suggestions }) => {
     const [inputValue, setInputValue] = useState(value);
@@ -92,15 +93,26 @@ const FollowUpModal = ({ isOpen, onOpenChange, followUpData, onSave, staffList }
     const [isSaving, setIsSaving] = useState(false);
     const { toast } = useToast();
     const { user } = useAuth();
+    const { settings } = useSettingsStore();
+    const workshopSettings = settings.workshop_settings || {};
 
     useEffect(() => {
         if (followUpData) {
             setFormField('remark', followUpData.remark || '');
+            setFormField('lastServiceDate', '');
             setFormField('nextFollowUpDate', followUpData.next_follow_up_date ? format(new Date(followUpData.next_follow_up_date), 'yyyy-MM-dd') : '');
             setFormField('appointmentDateTime', followUpData.appointment_datetime ? formatDateTimeForInput(new Date(followUpData.appointment_datetime)) : '');
             setFormField('followedBy', followUpData.followed_up_by || '');
         }
     }, [followUpData, setFormField]);
+
+    useEffect(() => {
+        if (formData.lastServiceDate && workshopSettings.follow_up_after_service_days) {
+            const days = parseInt(workshopSettings.follow_up_after_service_days, 10);
+            const nextDate = addDaysToDate(new Date(formData.lastServiceDate), days);
+            setFormField('nextFollowUpDate', format(new Date(nextDate), 'yyyy-MM-dd'));
+        }
+    }, [formData.lastServiceDate, workshopSettings.follow_up_after_service_days, setFormField]);
     
     const handleClose = () => {
         resetForm();
@@ -163,6 +175,15 @@ const FollowUpModal = ({ isOpen, onOpenChange, followUpData, onSave, staffList }
                     <div>
                         <Label htmlFor="remark">New Remark</Label>
                         <Textarea id="remark" value={formData.remark} onChange={(e) => setFormField('remark', e.target.value)} placeholder="Enter new follow-up details..." />
+                    </div>
+                    <div>
+                        <Label htmlFor="last_service_date">Last Service Date</Label>
+                        <Input type="date" id="last_service_date" value={formData.lastServiceDate} onChange={(e) => setFormField('lastServiceDate', e.target.value)} />
+                        {workshopSettings.follow_up_after_service_days && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Next follow-up will be auto-calculated ({workshopSettings.follow_up_after_service_days} days after service)
+                            </p>
+                        )}
                     </div>
                     <div>
                         <Label htmlFor="next_follow_up_date">Next Follow-up Date</Label>

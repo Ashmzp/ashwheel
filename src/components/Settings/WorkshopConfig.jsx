@@ -352,6 +352,19 @@ const WorkshopConfig = () => {
                       Automatically create a follow-up for non-registered vehicle invoices after this many days.
                   </p>
               </div>
+              <div className="space-y-2">
+                  <Label htmlFor="follow_up_after_service_days">Follow-up After Service (Days)</Label>
+                  <Input 
+                      type="number" 
+                      id="follow_up_after_service_days" 
+                      value={workshopSettings.follow_up_after_service_days || ''} 
+                      onChange={handleInputChange} 
+                      placeholder="e.g., 90"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                      Auto-calculate next follow-up date from last service date.
+                  </p>
+              </div>
               <div className="space-y-4">
                 <Label>Manage "Followed By" Staff List</Label>
                  <div className="space-y-2">
