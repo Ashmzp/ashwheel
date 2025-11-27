@@ -124,9 +124,17 @@ const FollowUpModal = ({ isOpen, onOpenChange, followUpData, onSave, staffList }
 
     const handleSubmit = async () => {
         const hasLeakage = formData.leakage && formData.leakage.trim() !== '';
-        const hasOtherData = formData.remark || formData.nextFollowUpDate || formData.appointmentDateTime || formData.followedBy;
+        const hasRemark = formData.remark && formData.remark.trim() !== '';
         
-        if (!hasLeakage && !hasOtherData) {
+        // If leakage is filled, no other field is mandatory
+        if (hasLeakage) {
+            // Leakage alone is sufficient
+        } else if (hasRemark && !formData.nextFollowUpDate) {
+            // If remark is filled, next follow-up date is mandatory
+            toast({ title: 'Validation Error', description: 'Next Follow-up Date is required when Remark is entered.', variant: 'destructive' });
+            return;
+        } else if (!hasRemark && !formData.nextFollowUpDate && !formData.appointmentDateTime && !formData.followedBy) {
+            // At least one field must be filled
             toast({ title: 'No Changes', description: 'Please enter at least one value to save.', variant: 'default' });
             return;
         }
