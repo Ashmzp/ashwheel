@@ -18,9 +18,9 @@ const HistorySection = ({ title, data, columns, onRowDoubleClick }) => {
                 <TableBody>
                     {data.map((row, idx) => (
                         <TableRow key={row.id || idx} onDoubleClick={() => onRowDoubleClick(row)} className="cursor-pointer hover:bg-muted/50">
-                            {columns.map(col => (
-                                <TableCell key={col.key}>
-                                    {col.key.includes('date') && row[col.key] ? formatDate(row[col.key]) : row[col.key]}
+                            {columns.map((col, colIdx) => (
+                                <TableCell key={col.key || colIdx}>
+                                    {col.key && col.key.includes('date') && row[col.key] ? formatDate(row[col.key]) : (row[col.key] || '-')}
                                 </TableCell>
                             ))}
                         </TableRow>

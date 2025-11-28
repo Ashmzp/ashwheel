@@ -158,7 +158,24 @@ const FollowUpPage = () => {
         return result;
     }, [allFollowUps, activeTab]);
     
-    const followUps = tabsData[activeTab] || [];
+    const followUps = useMemo(() => {
+        let filtered = tabsData[activeTab] || [];
+        
+        // Client-side search filter for better partial matching
+        if (searchTerm && searchTerm.trim() !== '') {
+            const term = searchTerm.toLowerCase().trim();
+            filtered = filtered.filter(f => 
+                (f.customer_name && f.customer_name.toLowerCase().includes(term)) ||
+                (f.mobile1 && f.mobile1.includes(term)) ||
+                (f.mobile2 && f.mobile2.includes(term)) ||
+                (f.chassis_no && f.chassis_no.toLowerCase().includes(term)) ||
+                (f.reg_no && f.reg_no.toLowerCase().includes(term))
+            );
+        }
+        
+        return filtered;
+    }, [tabsData, activeTab, searchTerm]);
+    
     console.log('Final followUps for display:', followUps);
     const totalCount = followUps.length;
     const totalPages = Math.ceil(totalCount / pageSize);
@@ -281,12 +298,120 @@ const FollowUpPage = () => {
                 </Card>
 
                 <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); setCurrentPage(1); }}>
-                    <TabsList className="grid w-full grid-cols-4">
+                    <TabsList className="grid w-full grid-cols-5">
                         <TabsTrigger value="all">All ({stats.total})</TabsTrigger>
                         <TabsTrigger value="pending">Pending ({stats.pending})</TabsTrigger>
                         <TabsTrigger value="done">Done ({stats.done})</TabsTrigger>
                         <TabsTrigger value="leakage">Leakage ({stats.leakage})</TabsTrigger>
+                        <TabsTrigger value="report">Report</TabsTrigger>
                     </TabsList>
+
+                    <TabsContent value="report" className="mt-4">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Follow-Up Report</CardTitle>
+                                <p className="text-sm text-muted-foreground mt-1">
+                                    Date Range: {formatDate(queryParams?.dateRange?.start || dateRange.start)} to {formatDate(queryParams?.dateRange?.end || dateRange.end)}
+                                </p>
+                            </CardHeader>
+                            <CardContent>
+                                {!queryParams ? (
+                                    <div className="text-center py-8 text-muted-foreground">
+                                        Please select date range and click Search to view report
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                                            <Card className="bg-blue-50 border-blue-200">
+                                                <CardContent className="p-6">
+                                                    <p className="text-sm text-muted-foreground mb-2">Total Follow-ups</p>
+                                                    <p className="text-4xl font-bold text-blue-600">{stats.total + stats.leakage}</p>
+                                                    <p className="text-xs text-muted-foreground mt-1">Required in this period</p>
+                                                </CardContent>
+                                            </Card>
+                                            <Card className="bg-green-50 border-green-200">
+                                                <CardContent className="p-6">
+                                                    <p className="text-sm text-muted-foreground mb-2">Done</p>
+                                                    <p className="text-4xl font-bold text-green-600">{stats.done}</p>
+                                                    <p className="text-xs text-muted-foreground mt-1">
+                                                        {stats.total > 0 ? Math.round((stats.done / stats.total) * 100) : 0}% completed
+                                                    </p>
+                                                </CardContent>
+                                            </Card>
+                                            <Card className="bg-yellow-50 border-yellow-200">
+                                                <CardContent className="p-6">
+                                                    <p className="text-sm text-muted-foreground mb-2">Pending</p>
+                                                    <p className="text-4xl font-bold text-yellow-600">{stats.pending}</p>
+                                                    <p className="text-xs text-muted-foreground mt-1">
+                                                        {stats.total > 0 ? Math.round((stats.pending / stats.total) * 100) : 0}% remaining
+                                                    </p>
+                                                </CardContent>
+                                            </Card>
+                                            <Card className="bg-red-50 border-red-200">
+                                                <CardContent className="p-6">
+                                                    <p className="text-sm text-muted-foreground mb-2">Leakage</p>
+                                                    <p className="text-4xl font-bold text-red-600">{stats.leakage}</p>
+                                                    <p className="text-xs text-muted-foreground mt-1">Lost customers</p>
+                                                </CardContent>
+                                            </Card>
+                                        </div>
+                                        
+                                        <div className="flex gap-4 mb-6">
+                                            <Button onClick={handleExport} disabled={allFollowUps.length === 0}>
+                                                <Download className="mr-2 h-4 w-4" /> Export Full Report
+                                            </Button>
+                                        </div>
+
+                                        {/* Complete Data Table */}
+                                        <div className="border rounded-lg overflow-hidden">
+                                            <div className="overflow-x-auto">
+                                                <table className="w-full text-sm">
+                                                    <thead className="bg-muted">
+                                                        <tr>
+                                                            <th className="px-4 py-3 text-left font-medium">Source</th>
+                                                            <th className="px-4 py-3 text-left font-medium">Customer</th>
+                                                            <th className="px-4 py-3 text-left font-medium">Mobile</th>
+                                                            <th className="px-4 py-3 text-left font-medium">Vehicle</th>
+                                                            <th className="px-4 py-3 text-left font-medium">Chassis No</th>
+                                                            <th className="px-4 py-3 text-left font-medium">Next Due</th>
+                                                            <th className="px-4 py-3 text-left font-medium">Status</th>
+                                                            <th className="px-4 py-3 text-left font-medium">Remark</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {allFollowUps.map((item, idx) => (
+                                                            <tr key={item.id || idx} className="border-t hover:bg-muted/50">
+                                                                <td className="px-4 py-3">
+                                                                    <span className={`text-xs font-semibold ${item.source_type === 'Job Card' ? 'text-blue-600' : 'text-purple-600'}`}>
+                                                                        {item.source_type}
+                                                                    </span>
+                                                                </td>
+                                                                <td className="px-4 py-3 font-medium">{item.customer_name}</td>
+                                                                <td className="px-4 py-3">{item.mobile1}</td>
+                                                                <td className="px-4 py-3">{item.model_name}</td>
+                                                                <td className="px-4 py-3">{item.chassis_no}</td>
+                                                                <td className="px-4 py-3">{formatDate(item.next_due_date)}</td>
+                                                                <td className="px-4 py-3">
+                                                                    {item.leakage ? (
+                                                                        <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-700">Leakage</span>
+                                                                    ) : item.followed_up_by ? (
+                                                                        <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-700">Done</span>
+                                                                    ) : (
+                                                                        <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700">Pending</span>
+                                                                    )}
+                                                                </td>
+                                                                <td className="px-4 py-3 text-xs text-muted-foreground">{item.remark || '-'}</td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
 
                     <div className="mt-4">
                         {(isLoading || isPlaceholderData) && (

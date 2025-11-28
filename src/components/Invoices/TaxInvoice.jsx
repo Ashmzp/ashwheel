@@ -37,10 +37,11 @@ const TaxInvoice = forwardRef(({ invoice, customer, items, settings }, ref) => {
   const regCharge = parseFloat(invoice.extra_charges?.Registration || invoice.registration_amount || 0);
   const insCharge = parseFloat(invoice.extra_charges?.Insurance || invoice.insurance_amount || 0);
   const accCharge = parseFloat(invoice.extra_charges?.Accessories || invoice.accessories_amount || 0);
-  const otherCharges = regCharge + insCharge + accCharge;
+  
+  const extraChargesTotal = Object.values(invoice.extra_charges || {}).reduce((sum, charge) => sum + parseFloat(charge || 0), 0);
   
   const subTotal = items.reduce((sum, item) => sum + parseFloat(item.price || 0), 0);
-  const grandTotal = invoice.total_amount;
+  const grandTotal = subTotal + extraChargesTotal;
   const billTotal = Math.round(grandTotal);
   const roundOff = billTotal - grandTotal;
 
@@ -54,6 +55,16 @@ const TaxInvoice = forwardRef(({ invoice, customer, items, settings }, ref) => {
   return (
     <div ref={ref} className="p-2 bg-white text-black text-[10px] font-sans leading-tight">
       <style>{`
+        @page {
+          size: A4;
+          margin: 20mm 18mm 20mm 15mm;
+        }
+        @media print {
+          body {
+            margin: 0;
+            padding: 0;
+          }
+        }
         .invoice-box {
           border: 1px solid black;
         }
@@ -259,9 +270,12 @@ const TaxInvoice = forwardRef(({ invoice, customer, items, settings }, ref) => {
               </td>
               <td className="w-1/3">
                 <div className="flex justify-between"><span>Sub Total</span><span>{subTotal.toFixed(2)}</span></div>
-                {regCharge > 0 && <div className="flex justify-between"><span>Registration</span><span>{regCharge.toFixed(2)}</span></div>}
-                {insCharge > 0 && <div className="flex justify-between"><span>Insurance</span><span>{insCharge.toFixed(2)}</span></div>}
-                {accCharge > 0 && <div className="flex justify-between"><span>Accessories</span><span>{accCharge.toFixed(2)}</span></div>}
+                {Object.entries(invoice.extra_charges || {}).map(([name, value]) => {
+                  const amount = parseFloat(value || 0);
+                  return amount > 0 ? (
+                    <div key={name} className="flex justify-between"><span>{name}</span><span>{amount.toFixed(2)}</span></div>
+                  ) : null;
+                })}
                 <div className="flex justify-between"><span>Round Off</span><span>{roundOff.toFixed(2)}</span></div>
                 <div className="flex justify-between font-bold text-sm border-y border-black my-1 py-1"><span>Bill Total</span><span>{billTotal.toFixed(2)}</span></div>
               </td>

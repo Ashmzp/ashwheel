@@ -114,7 +114,24 @@ const JobCardPDF = ({ jobCard }) => {
   const showTitle = settings.workshop_settings?.show_service_labour_invoice_title !== false;
 
   return (
-    <div id="pdf-content" className="p-6 bg-white text-black font-sans leading-normal">
+    <>
+      <style>{`
+        @page {
+          size: A4;
+          margin: 20mm 18mm 20mm 15mm;
+        }
+        @media print {
+          #pdf-content {
+            margin: 0;
+            padding: 0;
+          }
+          body {
+            margin: 0;
+            padding: 0;
+          }
+        }
+      `}</style>
+      <div id="pdf-content" className="p-6 bg-white text-black font-sans leading-normal">
       <header className="text-center mb-4">
         <p className="font-bold text-sm">TAX INVOICE</p>
         {showTitle && <h1 className="text-xl font-bold">Service Labour Invoice</h1>}
@@ -339,6 +356,7 @@ const JobCardPDF = ({ jobCard }) => {
         </div>
       </footer>
     </div>
+    </>
   );
 };
 

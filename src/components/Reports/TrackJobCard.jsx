@@ -38,10 +38,43 @@ const TrackJobCard = () => {
                             <CardTitle>Job Card for Chassis: {item.frame_no} / Reg: {item.reg_no}</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2">
-                            <HistorySection title="Job Cards" data={item.job_cards} columns={['invoice_no', 'invoice_date', 'customer_name', 'job_type']} />
-                            <HistorySection title="Workshop Purchases" data={item.workshop_purchases} columns={['invoice_no', 'invoice_date', 'party_name']} />
-                            <HistorySection title="Workshop Purchase Returns" data={item.wp_returns} columns={['return_invoice_no', 'return_date', 'party_name']} />
-                            <HistorySection title="Workshop Sales Returns" data={item.ws_returns} columns={['return_invoice_no', 'return_date', 'customer_name']} />
+                            <HistorySection 
+                                title="Job Cards" 
+                                data={item.job_cards} 
+                                columns={[
+                                    { key: 'invoice_no', header: 'Invoice No' },
+                                    { key: 'invoice_date', header: 'Date' },
+                                    { key: 'customer_name', header: 'Customer' },
+                                    { key: 'job_type', header: 'Job Type' }
+                                ]} 
+                            />
+                            <HistorySection 
+                                title="Workshop Purchases" 
+                                data={item.workshop_purchases} 
+                                columns={[
+                                    { key: 'invoice_no', header: 'Invoice No' },
+                                    { key: 'invoice_date', header: 'Date' },
+                                    { key: 'party_name', header: 'Party' }
+                                ]} 
+                            />
+                            <HistorySection 
+                                title="Workshop Purchase Returns" 
+                                data={item.wp_returns} 
+                                columns={[
+                                    { key: 'return_invoice_no', header: 'Return No' },
+                                    { key: 'return_date', header: 'Date' },
+                                    { key: 'party_name', header: 'Party' }
+                                ]} 
+                            />
+                            <HistorySection 
+                                title="Workshop Sales Returns" 
+                                data={item.ws_returns} 
+                                columns={[
+                                    { key: 'return_invoice_no', header: 'Return No' },
+                                    { key: 'return_date', header: 'Date' },
+                                    { key: 'customer_name', header: 'Customer' }
+                                ]} 
+                            />
                         </CardContent>
                     </Card>
                 ))}

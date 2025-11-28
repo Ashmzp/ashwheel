@@ -11,10 +11,10 @@ const ProtectedRoute = ({ children, module, action = 'read', adminOnly = false }
   const toastShownRef = useRef(false);
 
   useEffect(() => {
-    if (!loading && !loadingUserData && user && !toastShownRef.current) {
+    if (!loading && !loadingUserData && user) {
       const hasAccess = adminOnly ? userData?.role === 'admin' : canAccess(module, action);
 
-      if (!hasAccess) {
+      if (!hasAccess && !toastShownRef.current) {
         console.log('Access Denied Debug:', {
           module,
           action,
