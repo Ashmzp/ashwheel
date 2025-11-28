@@ -92,6 +92,82 @@ const PartSearchDialog = ({ onSelectPart }) => {
     );
 };
 
+const LabourSearchDialog = ({ onSelectLabour }) => {
+    const [labourItems, setLabourItems] = useState([]);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [loading, setLoading] = useState(true);
+    const { settings } = useSettingsStore();
+
+    useEffect(() => {
+        const fetchLabourItems = async () => {
+            setLoading(true);
+            const items = settings?.workshop_settings?.labour_items || [];
+            setLabourItems(items);
+            setLoading(false);
+        };
+        fetchLabourItems();
+    }, [settings]);
+
+    const filteredLabourItems = useMemo(() => {
+        if (!searchTerm) return labourItems;
+        const term = searchTerm.toLowerCase();
+        return labourItems.filter((item) => item.name?.toLowerCase().includes(term));
+    }, [searchTerm, labourItems]);
+
+    return (
+        <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
+            <DialogHeader>
+                <DialogTitle>Search and Add Labour</DialogTitle>
+            </DialogHeader>
+            <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                    placeholder="Search by Item Name"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                />
+            </div>
+            <div className="flex-grow overflow-auto border rounded-md">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Item Name</TableHead>
+                            <TableHead>HSN Code</TableHead>
+                            <TableHead>Rate</TableHead>
+                            <TableHead>GST %</TableHead>
+                            <TableHead>Action</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {loading ? (
+                            <TableRow>
+                                <TableCell colSpan={5} className="text-center">Loading...</TableCell>
+                            </TableRow>
+                        ) : filteredLabourItems.length > 0 ? (
+                            filteredLabourItems.map((item) => (
+                                <TableRow key={item.id}>
+                                    <TableCell>{item.name}</TableCell>
+                                    <TableCell>{item.hsn_code}</TableCell>
+                                    <TableCell>₹{item.rate}</TableCell>
+                                    <TableCell>{item.gst}%</TableCell>
+                                    <TableCell>
+                                        <Button size="sm" onClick={() => onSelectLabour(item)}>Add</Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        ) : (
+                            <TableRow>
+                                <TableCell colSpan={5} className="text-center">No labour items found.</TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </div>
+        </DialogContent>
+    );
+};
+
 
 const defaultPartColumns = [
     { id: 'part_no', label: 'Part No.', visible: true },
@@ -196,6 +272,7 @@ const JobItemsSection = ({ items, type, onAddItem, onItemChange, onItemsUpdate, 
   const partColumns = workshopSettings.part_columns || defaultPartColumns;
   const columns = type === 'parts' ? partColumns : defaultPartColumns.filter(c => c.id !== 'part_no' && c.id !== 'uom');
   const [isPartSearchOpen, setIsPartSearchOpen] = useState(false);
+  const [isLabourSearchOpen, setIsLabourSearchOpen] = useState(false);
 
   const isColumnVisible = (id) => columns.find(c => c.id === id)?.visible;
 
@@ -218,6 +295,20 @@ const JobItemsSection = ({ items, type, onAddItem, onItemChange, onItemsUpdate, 
     };
     onAddItem(type, newItem);
     setIsPartSearchOpen(false);
+  };
+
+  const handleSelectLabour = (labour) => {
+    const newItem = {
+        id: uuidv4(),
+        item_name: labour.name,
+        hsn_code: labour.hsn_code,
+        qty: 1,
+        rate: labour.rate,
+        gst_rate: labour.gst,
+        discount: 0,
+    };
+    onAddItem(type, newItem);
+    setIsLabourSearchOpen(false);
   };
 
   return (
@@ -264,9 +355,16 @@ const JobItemsSection = ({ items, type, onAddItem, onItemChange, onItemsUpdate, 
                 <PartSearchDialog onSelectPart={handleSelectPart} />
             </Dialog>
         ) : (
-          <Button type="button" onClick={() => onAddItem(type)} variant="outline">
-            <PlusCircle className="mr-2 h-4 w-4" /> Add Labour
-          </Button>
+          <>
+            <Dialog open={isLabourSearchOpen} onOpenChange={setIsLabourSearchOpen}>
+                <DialogTrigger asChild>
+                    <Button type="button">
+                        <Search className="mr-2 h-4 w-4" /> Add Labour
+                    </Button>
+                </DialogTrigger>
+                <LabourSearchDialog onSelectLabour={handleSelectLabour} />
+            </Dialog>
+          </>
         )}
       </div>
     </div>
