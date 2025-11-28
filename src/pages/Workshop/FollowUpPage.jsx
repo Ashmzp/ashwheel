@@ -113,8 +113,11 @@ const FollowUpPage = () => {
                 p_customer_type: queryParams.customerType || 'all'
             });
 
+            console.log('RPC Response - Data:', data);
+            console.log('RPC Response - Error:', error);
+
             if (error) {
-                console.error('RPC Error:', error);
+                console.error('RPC Error Details:', JSON.stringify(error, null, 2));
                 toast({ title: "Error fetching data", description: error.message, variant: "destructive" });
                 throw error;
             }
