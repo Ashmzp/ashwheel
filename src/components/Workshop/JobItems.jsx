@@ -96,22 +96,21 @@ const LabourSearchDialog = ({ onSelectLabour }) => {
     const [labourItems, setLabourItems] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(true);
-    const { settings } = useSettingsStore();
 
     useEffect(() => {
         const fetchLabourItems = async () => {
             setLoading(true);
-            const items = settings?.workshop_settings?.labour_items || [];
-            setLabourItems(items);
+            const { data } = await supabase.from('workshop_labour_items').select('*');
+            setLabourItems(data || []);
             setLoading(false);
         };
         fetchLabourItems();
-    }, [settings]);
+    }, []);
 
     const filteredLabourItems = useMemo(() => {
         if (!searchTerm) return labourItems;
         const term = searchTerm.toLowerCase();
-        return labourItems.filter((item) => item.name?.toLowerCase().includes(term));
+        return labourItems.filter((item) => item.item_name?.toLowerCase().includes(term));
     }, [searchTerm, labourItems]);
 
     return (
@@ -136,29 +135,25 @@ const LabourSearchDialog = ({ onSelectLabour }) => {
                             <TableHead>HSN Code</TableHead>
                             <TableHead>Rate</TableHead>
                             <TableHead>GST %</TableHead>
-                            <TableHead>Action</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {loading ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center">Loading...</TableCell>
+                                <TableCell colSpan={4} className="text-center">Loading...</TableCell>
                             </TableRow>
                         ) : filteredLabourItems.length > 0 ? (
                             filteredLabourItems.map((item) => (
-                                <TableRow key={item.id}>
-                                    <TableCell>{item.name}</TableCell>
+                                <TableRow key={item.id} onClick={() => onSelectLabour(item)} className="cursor-pointer hover:bg-accent">
+                                    <TableCell>{item.item_name}</TableCell>
                                     <TableCell>{item.hsn_code}</TableCell>
                                     <TableCell>₹{item.rate}</TableCell>
-                                    <TableCell>{item.gst}%</TableCell>
-                                    <TableCell>
-                                        <Button size="sm" onClick={() => onSelectLabour(item)}>Add</Button>
-                                    </TableCell>
+                                    <TableCell>{item.gst_rate}%</TableCell>
                                 </TableRow>
                             ))
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center">No labour items found.</TableCell>
+                                <TableCell colSpan={4} className="text-center">No labour items found.</TableCell>
                             </TableRow>
                         )}
                     </TableBody>
@@ -300,11 +295,11 @@ const JobItemsSection = ({ items, type, onAddItem, onItemChange, onItemsUpdate, 
   const handleSelectLabour = (labour) => {
     const newItem = {
         id: uuidv4(),
-        item_name: labour.name,
+        item_name: labour.item_name,
         hsn_code: labour.hsn_code,
         qty: 1,
         rate: labour.rate,
-        gst_rate: labour.gst,
+        gst_rate: labour.gst_rate,
         discount: 0,
     };
     onAddItem(type, newItem);
