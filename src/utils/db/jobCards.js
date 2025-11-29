@@ -120,6 +120,21 @@ export const saveJobCard = async (jobCard, isNew, originalJobCard) => {
     return rpcData;
   }
 
+  // Check if job card was actually created despite RPC error (serialization issue)
+  if (rpcError && jobCardData.id) {
+    const { data: existingCard, error: fetchError } = await supabase
+      .from('job_cards')
+      .select('*')
+      .eq('id', jobCardData.id)
+      .eq('user_id', userId)
+      .maybeSingle();
+    
+    if (!fetchError && existingCard) {
+      // Job card was created successfully, RPC error was just serialization issue
+      return existingCard;
+    }
+  }
+
   // Fallback to direct insert/update if RPC fails
   logError(rpcError, 'saveJobCard:rpcFallback');
 
