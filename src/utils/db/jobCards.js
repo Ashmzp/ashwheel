@@ -5,6 +5,7 @@ import { validateSession } from '@/utils/security/authValidator';
 import { safeErrorMessage, logError } from '@/utils/security/errorHandler';
 
 export const getNextJobCardInvoiceNo = async (invoiceDate) => {
+  await validateSession();
   const userId = await getCurrentUserId();
   if (!userId) throw new Error("User not authenticated.");
 
@@ -14,8 +15,8 @@ export const getNextJobCardInvoiceNo = async (invoiceDate) => {
   });
 
   if (error) {
-    console.error('Error fetching next job card invoice number:', error);
-    throw new Error(error.message || 'Could not generate next invoice number.');
+    logError(error, 'getNextJobCardInvoiceNo');
+    throw new Error(safeErrorMessage(error));
   }
 
   return data;
@@ -24,10 +25,14 @@ export const getNextJobCardInvoiceNo = async (invoiceDate) => {
 export const getJobCardById = async (id) => {
   if (!id) return null;
 
+  const userId = await getCurrentUserId();
+  if (!userId) return null;
+
   const { data, error } = await supabase
     .from('job_cards')
     .select('*')
     .eq('id', id)
+    .eq('user_id', userId)
     .single();
 
   if (error) {
@@ -116,7 +121,16 @@ export const saveJobCard = async (jobCard, isNew, originalJobCard) => {
   }
 
   // Fallback to direct insert/update if RPC fails
-  console.warn('RPC function failed, using direct insert and manual inventory update:', rpcError);
+  logError(rpcError, 'saveJobCard:rpcFallback');
+
+  // Get settings for stock validation
+  const { data: settingsData } = await supabase
+    .from('settings')
+    .select('workshop_settings')
+    .eq('user_id', userId)
+    .single();
+  
+  const preventNegativeStock = settingsData?.workshop_settings?.prevent_negative_stock || false;
   
   let savedJobCard;
   if (isNew) {
@@ -127,8 +141,8 @@ export const saveJobCard = async (jobCard, isNew, originalJobCard) => {
       .single();
     
     if (error) {
-      console.error('Error inserting job card:', error);
-      throw new Error(error.message || 'Failed to create job card.');
+      logError(error, 'saveJobCard:insert');
+      throw new Error(safeErrorMessage(error));
     }
     savedJobCard = data;
   } else {
@@ -140,8 +154,8 @@ export const saveJobCard = async (jobCard, isNew, originalJobCard) => {
       .single();
     
     if (error) {
-      console.error('Error updating job card:', error);
-      throw new Error(error.message || 'Failed to update job card.');
+      logError(error, 'saveJobCard:update');
+      throw new Error(safeErrorMessage(error));
     }
     savedJobCard = data;
   }
@@ -167,35 +181,71 @@ export const saveJobCard = async (jobCard, isNew, originalJobCard) => {
     }
   });
 
-  // Apply inventory changes
-  for (const [partNo, qtyChange] of inventoryChanges.entries()) {
-    if (qtyChange !== 0) {
-      const { data: currentInv, error: fetchError } = await supabase
-        .from('workshop_inventory')
-        .select('quantity')
-        .eq('part_no', partNo)
-        .eq('user_id', userId)
-        .maybeSingle();
-      
-      if (fetchError) {
-        console.error(`Failed to fetch inventory for part ${partNo}:`, fetchError);
-        continue;
-      }
-      
-      if (currentInv) {
-        const newQty = parseFloat(currentInv.quantity || 0) + qtyChange;
-        const { error: invError } = await supabase
+  // Validate stock before saving if prevent_negative_stock is enabled
+  if (preventNegativeStock) {
+    for (const [partNo, qtyChange] of inventoryChanges.entries()) {
+      if (qtyChange < 0) {
+        const { data: currentInv, error: fetchError } = await supabase
           .from('workshop_inventory')
-          .update({ quantity: newQty, last_updated: new Date().toISOString() })
+          .select('quantity, part_name')
           .eq('part_no', partNo)
-          .eq('user_id', userId);
+          .eq('user_id', userId)
+          .maybeSingle();
         
-        if (invError) {
-          console.error(`Failed to update inventory for part ${partNo}:`, invError);
+        if (fetchError) {
+          logError(fetchError, `saveJobCard:validateStock:${partNo}`);
+          throw new Error(`Failed to check stock for Part No: ${partNo}`);
+        }
+        
+        if (!currentInv) {
+          throw new Error(`Part No: ${partNo} not found in inventory. Please add it first.`);
+        }
+        
+        const currentStock = parseFloat(currentInv.quantity || 0);
+        const finalStock = currentStock + qtyChange;
+        
+        if (finalStock < 0) {
+          throw new Error(`Insufficient stock for ${currentInv.part_name || 'Unknown Part'} (Part No: ${partNo}). Available: ${currentStock}, Required: ${Math.abs(qtyChange)}`);
         }
       }
     }
   }
+
+  // Apply inventory changes (batch for better performance)
+  const inventoryUpdates = Array.from(inventoryChanges.entries())
+    .filter(([_, qtyChange]) => qtyChange !== 0)
+    .map(async ([partNo, qtyChange]) => {
+      try {
+        const { data: currentInv, error: fetchError } = await supabase
+          .from('workshop_inventory')
+          .select('quantity')
+          .eq('part_no', partNo)
+          .eq('user_id', userId)
+          .maybeSingle();
+        
+        if (fetchError) {
+          logError(fetchError, `saveJobCard:fetchInventory:${partNo}`);
+          return;
+        }
+        
+        if (currentInv) {
+          const newQty = parseFloat(currentInv.quantity || 0) + qtyChange;
+          const { error: invError } = await supabase
+            .from('workshop_inventory')
+            .update({ quantity: newQty, last_updated: new Date().toISOString() })
+            .eq('part_no', partNo)
+            .eq('user_id', userId);
+          
+          if (invError) {
+            logError(invError, `saveJobCard:updateInventory:${partNo}`);
+          }
+        }
+      } catch (err) {
+        logError(err, `saveJobCard:inventoryUpdate:${partNo}`);
+      }
+    });
+
+  await Promise.all(inventoryUpdates);
 
     return savedJobCard;
   } catch (error) {
