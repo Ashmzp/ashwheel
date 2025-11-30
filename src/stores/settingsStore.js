@@ -50,6 +50,8 @@ const DEFAULT_SETTINGS = {
     uom_mandatory: false,
     tax_calculation: 'exclusive', // 'inclusive' or 'exclusive'
     show_service_labour_invoice_title: true,
+    follow_up_after_service_days: 90,
+    follow_up_by_list: [],
     extra_charges: [
         { id: uuidv4(), name: 'Registration' },
         { id: uuidv4(), name: 'Insurance' },
