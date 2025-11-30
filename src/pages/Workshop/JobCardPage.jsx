@@ -71,12 +71,19 @@ const JobCardPage = () => {
 
     const channel = supabase
       .channel('workshop_inventory_realtime_channel')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'workshop_inventory', filter: `user_id=eq.${user.id}` },
-        (payload) => {
-          queryClient.invalidateQueries({ queryKey: ['workshopInventory'] });
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'workshop_inventory', 
+        filter: `user_id=eq.${user.id}` 
+      }, (payload) => {
+        queryClient.invalidateQueries({ queryKey: ['workshopInventory'] });
+      })
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('Realtime subscription active');
         }
-      )
-      .subscribe();
+      });
 
     return () => {
       supabase.removeChannel(channel);
