@@ -17,8 +17,13 @@ const PartSearchDialog = ({ onSelectPart }) => {
     useEffect(() => {
         const fetchInventory = async () => {
             setLoading(true);
-            const { data } = await supabase.from('workshop_inventory').select('*');
-            setInventory(data || []);
+            const { data, error } = await supabase.from('workshop_inventory').select('*');
+            if (error) {
+                console.error('Error fetching inventory:', error);
+                setInventory([]);
+            } else {
+                setInventory(data || []);
+            }
             setLoading(false);
         };
         fetchInventory();
@@ -100,8 +105,13 @@ const LabourSearchDialog = ({ onSelectLabour }) => {
     useEffect(() => {
         const fetchLabourItems = async () => {
             setLoading(true);
-            const { data } = await supabase.from('workshop_labour_items').select('*');
-            setLabourItems(data || []);
+            const { data, error } = await supabase.from('workshop_labour_items').select('*');
+            if (error) {
+                console.error('Error fetching labour items:', error);
+                setLabourItems([]);
+            } else {
+                setLabourItems(data || []);
+            }
             setLoading(false);
         };
         fetchLabourItems();
@@ -252,7 +262,7 @@ const ItemTableRow = ({ item, type, onItemChange, onRemoveItem, error, columns }
         </TableCell>
       )}
       {isColumnVisible('amount') && (
-        <TableCell className="text-right">{netAmount.toFixed(2)}</TableCell>
+        <TableCell className="text-right">{isNaN(netAmount) ? '0.00' : netAmount.toFixed(2)}</TableCell>
       )}
       <TableCell>
         <Button variant="ghost" size="icon" onClick={() => onRemoveItem(type, item.id)}>

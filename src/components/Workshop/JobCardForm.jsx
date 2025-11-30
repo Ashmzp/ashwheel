@@ -15,7 +15,30 @@ import { useSettingsStore } from '@/stores/settingsStore';
 
 const JobCardForm = ({ onSave, onCancel, jobCard, isEditing, isSaving, isLoading }) => {
   const { toast } = useToast();
-  const formData = useWorkshopStore(state => state);
+  const formData = useWorkshopStore(state => ({
+    id: state.id,
+    invoice_no: state.invoice_no,
+    invoice_date: state.invoice_date,
+    customer_id: state.customer_id,
+    customer_name: state.customer_name,
+    customer_mobile: state.customer_mobile,
+    customer_address: state.customer_address,
+    customer_state: state.customer_state,
+    manual_jc_no: state.manual_jc_no,
+    jc_no: state.jc_no,
+    kms: state.kms,
+    reg_no: state.reg_no,
+    frame_no: state.frame_no,
+    model: state.model,
+    job_type: state.job_type,
+    mechanic: state.mechanic,
+    next_due_date: state.next_due_date,
+    parts_items: state.parts_items,
+    labour_items: state.labour_items,
+    denied_items: state.denied_items,
+    total_amount: state.total_amount,
+    status: state.status
+  }));
   const { setFormData, addItem, removeItem, updateItem, resetForm } = useWorkshopStore();
 
   const [errors, setErrors] = useState({});
@@ -70,7 +93,7 @@ const JobCardForm = ({ onSave, onCancel, jobCard, isEditing, isSaving, isLoading
             next_due_date: addDaysToDate(new Date(), nextDueDateDays)
           });
         } catch (error) {
-          toast({ title: 'Error', description: `Failed to get next invoice number: ${error.message}`, variant: 'destructive' });
+          toast({ title: 'Error', description: `Failed to get next invoice number: ${error?.message || 'Unknown error'}`, variant: 'destructive' });
         }
       }
     };
@@ -118,7 +141,14 @@ const JobCardForm = ({ onSave, onCancel, jobCard, isEditing, isSaving, isLoading
       return;
     }
 
-    const dataToSave = { ...formData, id: isEditing ? jobCard.id : uuidv4() };
+    const dataToSave = { ...formData };
+    // Filter out parts with 0 quantity
+    if (dataToSave.parts_items) {
+      dataToSave.parts_items = dataToSave.parts_items.filter(item => item.qty > 0);
+    }
+    if (!isEditing) {
+      dataToSave.id = uuidv4();
+    }
     await onSave(dataToSave, !isEditing);
   };
 
@@ -154,7 +184,8 @@ const JobCardForm = ({ onSave, onCancel, jobCard, isEditing, isSaving, isLoading
     );
   }
 
-  console.log('Rendering form with data:', { isEditing, jobCard, formData: { invoice_no: formData.invoice_no, customer_name: formData.customer_name, parts_items: formData.parts_items?.length } });
+  // Debug: Rendering form
+  // console.log('Rendering form with data:', { isEditing, jobCard, formData: { invoice_no: formData.invoice_no, customer_name: formData.customer_name, parts_items: formData.parts_items?.length } });
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-7xl mx-auto">

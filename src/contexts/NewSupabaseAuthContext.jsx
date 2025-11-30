@@ -7,6 +7,7 @@ import { getSettings } from '@/utils/db/settings';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import useAutoLogout from '@/hooks/useAutoLogout';
+import useSessionHeartbeat from '@/hooks/useSessionHeartbeat';
 
 const AuthContext = createContext(undefined);
 
@@ -86,6 +87,7 @@ export const NewAuthProvider = ({ children }) => {
   }, [navigate, toast, session, clearSessionData]);
 
   useAutoLogout(user, signOut);
+  useSessionHeartbeat(user);
 
   const handleSession = useCallback(async (currentSession) => {
     setSession(prev => {
