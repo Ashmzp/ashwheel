@@ -4,6 +4,10 @@
  */
 
 export const safeErrorMessage = (error) => {
+  // Always show database validation errors (like stock errors) to users
+  if (error?.code === 'P0001' || error?.message?.includes('Low stock')) {
+    return error.message;
+  }
   if (process.env.NODE_ENV === 'production') {
     return 'An error occurred. Please try again.';
   }

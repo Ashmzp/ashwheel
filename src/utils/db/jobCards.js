@@ -118,7 +118,8 @@ export const saveJobCard = async (jobCard, isNew, originalJobCard) => {
 
   if (rpcError) {
     logError(rpcError, 'saveJobCard:rpc');
-    throw new Error(safeErrorMessage(rpcError));
+    // Show actual database error message (e.g., stock validation errors)
+    throw new Error(rpcError.message || safeErrorMessage(rpcError));
   }
 
   return rpcData;
