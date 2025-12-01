@@ -9,17 +9,29 @@ export default function useSessionHeartbeat(user) {
     if (!deviceId) return;
 
     const updateHeartbeat = async () => {
-      await supabase
-        .from("active_sessions")
-        .update({
-          last_active: new Date().toISOString(),
-          is_active: true,
-        })
-        .eq("user_id", user.id)
-        .eq("session_id", deviceId);
+      try {
+        const { error } = await supabase
+          .from("active_sessions")
+          .update({
+            last_active: new Date().toISOString(),
+            is_active: true,
+          })
+          .eq("user_id", user.id)
+          .eq("session_id", deviceId);
+
+        if (error) {
+          console.error('Heartbeat update failed:', error);
+        }
+      } catch (err) {
+        console.error('Heartbeat error:', err);
+      }
     };
 
-    const interval = setInterval(updateHeartbeat, 60 * 1000); // every 1 minute
+    // Initial heartbeat
+    updateHeartbeat();
+
+    // Update every minute
+    const interval = setInterval(updateHeartbeat, 60 * 1000);
 
     return () => clearInterval(interval);
   }, [user]);

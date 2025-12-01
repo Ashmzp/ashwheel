@@ -5,19 +5,15 @@ import { useUserData as useUserDataHook } from '@/hooks/useUserData';
 import { usePermissions as usePermissionsHook } from '@/hooks/usePermissions';
 import { getSettings } from '@/utils/db/settings';
 import { useNavigate } from 'react-router-dom';
-import { v4 as uuidv4 } from 'uuid';
+import { getOrCreateDeviceId } from '@/utils/deviceFingerprint';
 import useAutoLogout from '@/hooks/useAutoLogout';
 import useSessionHeartbeat from '@/hooks/useSessionHeartbeat';
+import useBeforeUnload from '@/hooks/useBeforeUnload';
 
 const AuthContext = createContext(undefined);
 
 const getDeviceId = () => {
-  let deviceId = localStorage.getItem('device_id');
-  if (!deviceId) {
-    deviceId = uuidv4();
-    localStorage.setItem('device_id', deviceId);
-  }
-  return deviceId;
+  return getOrCreateDeviceId();
 };
 
 export const NewAuthProvider = ({ children }) => {
@@ -32,15 +28,16 @@ export const NewAuthProvider = ({ children }) => {
       setUser(null);
       setSession(null);
 
+      // Keep device_id for device tracking
       const deviceId = localStorage.getItem('device_id');
       localStorage.clear();
+      sessionStorage.clear();
+      
       if (deviceId) {
         localStorage.setItem('device_id', deviceId);
       }
-      sessionStorage.clear();
     } catch (e) {
-      console.error("Error clearing local/session storage", e);
-      // Continue execution even if storage clear fails
+      console.error("Error clearing storage", e);
     }
   }, []);
 
@@ -48,16 +45,21 @@ export const NewAuthProvider = ({ children }) => {
     try {
       setLoading(true);
       const deviceId = getDeviceId();
-      const currentUserId = session?.user?.id;
+      const currentUserId = session?.user?.id || user?.id;
 
-      if (currentUserId) {
+      // Delete session from DB first
+      if (currentUserId && deviceId) {
         try {
-          await supabase.from('active_sessions').delete().match({ user_id: currentUserId, session_id: deviceId });
+          await supabase
+            .from('active_sessions')
+            .delete()
+            .match({ user_id: currentUserId, session_id: deviceId });
         } catch (err) {
-          console.error("Error deleting active session:", err);
+          console.error("Error deleting session:", err);
         }
       }
 
+      // Sign out from Supabase Auth
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error("Error signing out:", error);
@@ -66,6 +68,7 @@ export const NewAuthProvider = ({ children }) => {
         }
       }
 
+      // Clear all local data
       clearSessionData();
 
       if (isAutoLogout) {
@@ -76,6 +79,7 @@ export const NewAuthProvider = ({ children }) => {
           duration: 5000,
         });
       }
+      
       navigate('/login');
     } catch (error) {
       console.error("Unexpected error in signOut:", error);
@@ -84,10 +88,11 @@ export const NewAuthProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, [navigate, toast, session, clearSessionData]);
+  }, [navigate, toast, session, user, clearSessionData]);
 
   useAutoLogout(user, signOut);
   useSessionHeartbeat(user);
+  useBeforeUnload(user);
 
   const handleSession = useCallback(async (currentSession) => {
     setSession(prev => {

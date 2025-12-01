@@ -10,6 +10,10 @@ import { NewAuthProvider } from '@/contexts/NewSupabaseAuthContext';
 import { HelmetProvider } from 'react-helmet-async';
 import { GlobalWorkerOptions } from 'pdfjs-dist/build/pdf';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { initGlobalErrorHandlers } from '@/utils/globalErrorHandlers';
+
+// Initialize global error handlers to prevent app crashes
+initGlobalErrorHandlers();
 
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {

@@ -9,10 +9,22 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    autoRefreshToken: false, // Disable auto refresh to prevent visibility change issues
+    autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false, // Disable session detection in URL
+    detectSessionInUrl: false,
     flowType: 'pkce',
+    storage: {
+      getItem: (key) => {
+        // Use sessionStorage for session data (clears on browser close)
+        return sessionStorage.getItem(key);
+      },
+      setItem: (key, value) => {
+        sessionStorage.setItem(key, value);
+      },
+      removeItem: (key) => {
+        sessionStorage.removeItem(key);
+      },
+    },
   },
   realtime: {
     params: {

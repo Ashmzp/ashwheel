@@ -14,7 +14,7 @@ export const isValidEmail = (email) => {
 export const isValidPhone = (phone) => {
   if (!phone) return false;
   const cleaned = phone.toString().replace(/\D/g, '');
-  return cleaned.length === 10 || cleaned.length === 11 || cleaned.length === 12;
+  return cleaned.length === 10; // Only 10 digits for Indian numbers
 };
 
 // GST validation
@@ -112,11 +112,13 @@ export const isNumeric = (str) => {
 // Password strength validation
 export const isStrongPassword = (password) => {
   if (!password || typeof password !== 'string') return false;
-  // At least 8 chars, 1 uppercase, 1 lowercase, 1 number
+  // At least 8 chars, max 64, 1 uppercase, 1 lowercase, 1 number, 1 special char
   return password.length >= 8 &&
+         password.length <= 64 &&
          /[A-Z]/.test(password) &&
          /[a-z]/.test(password) &&
-         /[0-9]/.test(password);
+         /[0-9]/.test(password) &&
+         /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
 };
 
 // Sanitize string input

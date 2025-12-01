@@ -45,20 +45,22 @@ Thumbs.db
 *.db
 *.sqlite
 *.log
-!!k3hUy_qhlogs.txt
-generate-icons.js
-ICON_GENERATION.md
 
-# Database dumps
-/dump/
+# Security documentation (keep local only)
+SECURITY_*.md
+URGENT_*.md
+IMPLEMENTATION_*.md
 
-# Deployment scripts (if contain sensitive info)
+# Database dumps (keep local only)
+/dump/*.sql
+!dump/schema.sql
+
+# Deployment scripts
 deploy-windows.bat
 vps-*.sh
 setup-git.sh
 
-# Documentation files (keep local only)
+# Keep only essential docs in repo
 *.md
 !README.md
 !COOLIFY_SETUP.md
-!DEVELOPMENT_WORKFLOW.md

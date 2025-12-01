@@ -9,11 +9,8 @@ import { useToast } from '@/components/ui/use-toast';
 import { Helmet } from 'react-helmet';
 import { Link } from 'react-router-dom';
 
-// Admin credentials from environment variables (secure)
-const adminCredentials = {
-  email: import.meta.env.VITE_ADMIN_EMAIL || "ash.mzp143@gmail.com",
-  password: import.meta.env.VITE_ADMIN_PASSWORD || "Atul@1212"
-};
+// Admin login uses Supabase Auth - no hardcoded credentials
+// Admin users must be created in Supabase dashboard with role='admin'
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
@@ -27,23 +24,29 @@ const AdminLogin = () => {
     e.preventDefault();
     setLoading(true);
 
-    if (email.trim() === adminCredentials.email && password === adminCredentials.password) {
-      const { error } = await signIn(adminCredentials.email, adminCredentials.password);
-      if (error) {
-        toast({
-          variant: "destructive",
-          title: "Admin Login Failed",
-          description: error.message || "Could not sign in the admin user. Please check Supabase credentials.",
-        });
-      } else {
-        toast({ title: "Admin Login Successful!" });
-        navigate('/admin/dashboard');
-      }
+    // Use Supabase Auth directly - no client-side credential checking
+    const { data, error } = await signIn(email, password);
+    
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Admin Login Failed",
+        description: error.message || "Invalid credentials.",
+      });
+      setLoading(false);
+      return;
+    }
+
+    // Check if user has admin role (from database)
+    if (data?.user) {
+      // Role check will be done by useAuth hook via userData
+      toast({ title: "Admin Login Successful!" });
+      navigate('/admin/dashboard');
     } else {
       toast({
         variant: "destructive",
         title: "Login Failed",
-        description: "Invalid admin credentials.",
+        description: "Invalid credentials.",
       });
     }
     setLoading(false);

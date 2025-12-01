@@ -28,6 +28,7 @@ const CustomerForm = ({ customer, onSave, onCancel }) => {
         };
 
         if (customer) {
+            // Edit mode - load customer data
             setFormData({
                 customer_name: customer.customer_name || '',
                 guardian_name: customer.guardian_name || '',
@@ -41,6 +42,8 @@ const CustomerForm = ({ customer, onSave, onCancel }) => {
                 gst: customer.gst || ''
             });
         } else {
+            // Add mode - reset form with defaults only
+            resetForm();
             setFormData({
                 state: defaults.state,
                 district: defaults.district,
@@ -51,7 +54,7 @@ const CustomerForm = ({ customer, onSave, onCancel }) => {
 
     fetchAndSetData();
     
-  }, [customer, setFormData]);
+  }, [customer, setFormData, resetForm]);
 
   const validateForm = () => {
     const newErrors = {};

@@ -13,7 +13,7 @@ export const sanitizeHTML = (html) => {
   
   const div = document.createElement('div');
   div.textContent = html;
-  return div.innerHTML;
+  return div.textContent; // Use textContent instead of innerHTML for security
 };
 
 /**
