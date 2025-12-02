@@ -60,7 +60,8 @@ import { validateSession } from '../security/authValidator';
           logError(error, { function: 'getCustomers', userId });
           throw new Error('Failed to fetch customers');
         }
-        return { data: data || [], count: count || 0 };
+        const totalPages = Math.ceil((count || 0) / validPageSize);
+        return { data: data || [], count: count || 0, totalPages };
       } catch (error) {
         logError(error, { function: 'getCustomers' });
         throw error;
