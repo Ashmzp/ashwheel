@@ -95,18 +95,18 @@ const JobCardList = ({ jobCards = [], onEdit, onDelete, isLoading, dateRange, se
       // Add parts rows
       parts.forEach(part => {
         dataToExport.push({
-          'Invoice No': jc.invoice_no,
-          'Date': formatDate(jc.invoice_date),
+          'Invoice No': '',
+          'Date': '',
           'Customer Name': '',
-          'Reg. No': jc.reg_no,
+          'Reg. No': '',
           'Status': '',
           'Total Amount': '',
           'Manual JC No.': '',
           'Mechanic': '',
-          'Frame No': jc.frame_no,
+          'Frame No': '',
           'Next Due Date': '',
           'Model': '',
-          'Part Name': part.part_name || '',
+          'Part Name': part.name || part.part_name || '',
           'Part No.': part.part_no || '',
           'HSN': part.hsn || '',
           'Qty': part.qty || '',
