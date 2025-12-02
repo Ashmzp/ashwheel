@@ -62,15 +62,21 @@ const JobCardList = ({ jobCards = [], onEdit, onDelete, isLoading, dateRange, se
     const dataToExport = [];
     
     filteredJobCards.forEach(jc => {
-      console.log('Job Card:', jc);
-      console.log('Parts Items:', jc.parts_items);
-      console.log('Labour Items:', jc.labour_items);
+
       
       const parts = Array.isArray(jc.parts_items) ? jc.parts_items : [];
       const labour = Array.isArray(jc.labour_items) ? jc.labour_items : [];
       
-      const partsTotal = parts.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
-      const labourTotal = labour.reduce((sum, l) => sum + (Number(l.amount) || 0), 0);
+      const partsTotal = parts.reduce((sum, p) => {
+        const amount = (Number(p.qty) || 0) * (Number(p.rate) || 0);
+        const gstAmount = amount * (Number(p.gst_rate) || 0) / 100;
+        return sum + amount + gstAmount - (Number(p.discount) || 0);
+      }, 0);
+      const labourTotal = labour.reduce((sum, l) => {
+        const amount = (Number(l.qty) || 0) * (Number(l.rate) || 0);
+        const gstAmount = amount * (Number(l.gst_rate) || 0) / 100;
+        return sum + amount + gstAmount - (Number(l.discount) || 0);
+      }, 0);
       const grandTotal = partsTotal + labourTotal;
       
       // Add header row for each job card
@@ -99,7 +105,10 @@ const JobCardList = ({ jobCards = [], onEdit, onDelete, isLoading, dateRange, se
       
       // Add parts rows
       parts.forEach(part => {
-        console.log('Part:', part);
+        const amount = (Number(part.qty) || 0) * (Number(part.rate) || 0);
+        const gstAmount = amount * (Number(part.gst_rate) || 0) / 100;
+        const totalAmount = amount + gstAmount - (Number(part.discount) || 0);
+        
         dataToExport.push({
           'Invoice No': '',
           'Date': '',
@@ -113,14 +122,14 @@ const JobCardList = ({ jobCards = [], onEdit, onDelete, isLoading, dateRange, se
           'Frame No': '',
           'Next Due Date': '',
           'Model': '',
-          'Part Name': part.name || part.part_name || part.partName || '',
-          'Part No.': part.part_no || part.partNo || '',
-          'HSN': part.hsn || part.HSN || '',
-          'Qty': part.qty || part.quantity || '',
-          'Rate': part.rate || part.price || '',
-          'GST %': part.gst || part.gstRate || '',
-          'Disc': part.discount || part.disc || 0,
-          'Amount': part.amount || part.total || ''
+          'Part Name': part.item_name || '',
+          'Part No.': part.part_no || '',
+          'HSN': part.hsn_code || '',
+          'Qty': part.qty || '',
+          'Rate': part.rate || '',
+          'GST %': part.gst_rate || '',
+          'Disc': part.discount || 0,
+          'Amount': totalAmount.toFixed(2)
         });
       });
       
@@ -152,7 +161,10 @@ const JobCardList = ({ jobCards = [], onEdit, onDelete, isLoading, dateRange, se
       
       // Add labour rows
       labour.forEach(lab => {
-        console.log('Labour:', lab);
+        const amount = (Number(lab.qty) || 0) * (Number(lab.rate) || 0);
+        const gstAmount = amount * (Number(lab.gst_rate) || 0) / 100;
+        const totalAmount = amount + gstAmount - (Number(lab.discount) || 0);
+        
         dataToExport.push({
           'Invoice No': '',
           'Date': '',
@@ -166,14 +178,14 @@ const JobCardList = ({ jobCards = [], onEdit, onDelete, isLoading, dateRange, se
           'Frame No': '',
           'Next Due Date': '',
           'Model': '',
-          'Part Name': `Labour: ${lab.description || lab.name || ''}`,
+          'Part Name': `Labour: ${lab.item_name || ''}`,
           'Part No.': '',
-          'HSN': '',
-          'Qty': '',
-          'Rate': '',
-          'GST %': '',
-          'Disc': '',
-          'Amount': lab.amount || lab.total || ''
+          'HSN': lab.hsn_code || '',
+          'Qty': lab.qty || '',
+          'Rate': lab.rate || '',
+          'GST %': lab.gst_rate || '',
+          'Disc': lab.discount || 0,
+          'Amount': totalAmount.toFixed(2)
         });
       });
       
