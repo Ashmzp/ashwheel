@@ -59,16 +59,166 @@ const JobCardList = ({ jobCards = [], onEdit, onDelete, isLoading, dateRange, se
   });
 
   const handleExport = () => {
-    const dataToExport = filteredJobCards.map(jc => {
-      const exportData = {};
-      visibleColumns.forEach(colId => {
-        if(colId !== 'actions'){
-            const columnDef = allJobCardColumns.find(c => c.id === colId);
-            exportData[columnDef.label] = jc[colId];
-        }
+    const dataToExport = [];
+    
+    filteredJobCards.forEach(jc => {
+      const parts = Array.isArray(jc.parts_items) ? jc.parts_items : [];
+      const labour = Array.isArray(jc.labour_items) ? jc.labour_items : [];
+      
+      const partsTotal = parts.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+      const labourTotal = labour.reduce((sum, l) => sum + (Number(l.amount) || 0), 0);
+      const grandTotal = partsTotal + labourTotal;
+      
+      // Add header row for each job card
+      dataToExport.push({
+        'Invoice No': jc.invoice_no,
+        'Date': formatDate(jc.invoice_date),
+        'Customer Name': jc.customer_name,
+        'Reg. No': jc.reg_no,
+        'Status': jc.status,
+        'Total Amount': grandTotal,
+        'Manual JC No.': jc.manual_jc_no,
+        'Mechanic': jc.mechanic,
+        'Frame No': jc.frame_no,
+        'Next Due Date': formatDate(jc.next_due_date),
+        'Model': jc.model,
+        'Part Name': '',
+        'Part No.': '',
+        'HSN': '',
+        'Qty': '',
+        'Rate': '',
+        'GST %': '',
+        'Disc': '',
+        'Amount': ''
       });
-      return exportData;
+      
+      // Add parts rows
+      parts.forEach(part => {
+        dataToExport.push({
+          'Invoice No': jc.invoice_no,
+          'Date': formatDate(jc.invoice_date),
+          'Customer Name': '',
+          'Reg. No': jc.reg_no,
+          'Status': '',
+          'Total Amount': '',
+          'Manual JC No.': '',
+          'Mechanic': '',
+          'Frame No': jc.frame_no,
+          'Next Due Date': '',
+          'Model': '',
+          'Part Name': part.part_name || '',
+          'Part No.': part.part_no || '',
+          'HSN': part.hsn || '',
+          'Qty': part.qty || '',
+          'Rate': part.rate || '',
+          'GST %': part.gst || '',
+          'Disc': part.discount || 0,
+          'Amount': part.amount || ''
+        });
+      });
+      
+      // Add parts total row
+      if (parts.length > 0) {
+        dataToExport.push({
+          'Invoice No': '',
+          'Date': '',
+          'Customer Name': '',
+          'Reg. No': '',
+          'Status': '',
+          'Total Amount': '',
+          'Manual JC No.': '',
+          'Mechanic': '',
+          'Frame No': '',
+          'Next Due Date': '',
+          'Model': '',
+          'Part Name': 'Total Parts',
+          'Part No.': '',
+          'HSN': '',
+          'Qty': '',
+          'Rate': '',
+          'GST %': '',
+          'Disc': '',
+          'Amount': partsTotal
+        });
+      }
+      
+      // Add labour rows
+      labour.forEach(lab => {
+        dataToExport.push({
+          'Invoice No': '',
+          'Date': '',
+          'Customer Name': '',
+          'Reg. No': '',
+          'Status': '',
+          'Total Amount': '',
+          'Manual JC No.': '',
+          'Mechanic': '',
+          'Frame No': '',
+          'Next Due Date': '',
+          'Model': '',
+          'Part Name': `Labour: ${lab.description || ''}`,
+          'Part No.': '',
+          'HSN': '',
+          'Qty': '',
+          'Rate': '',
+          'GST %': '',
+          'Disc': '',
+          'Amount': lab.amount || ''
+        });
+      });
+      
+      // Add labour total row
+      if (labour.length > 0) {
+        dataToExport.push({
+          'Invoice No': '',
+          'Date': '',
+          'Customer Name': '',
+          'Reg. No': '',
+          'Status': '',
+          'Total Amount': '',
+          'Manual JC No.': '',
+          'Mechanic': '',
+          'Frame No': '',
+          'Next Due Date': '',
+          'Model': '',
+          'Part Name': 'Total Labour',
+          'Part No.': '',
+          'HSN': '',
+          'Qty': '',
+          'Rate': '',
+          'GST %': '',
+          'Disc': '',
+          'Amount': labourTotal
+        });
+      }
+      
+      // Add grand total row
+      dataToExport.push({
+        'Invoice No': '',
+        'Date': '',
+        'Customer Name': '',
+        'Reg. No': '',
+        'Status': '',
+        'Total Amount': '',
+        'Manual JC No.': '',
+        'Mechanic': '',
+        'Frame No': '',
+        'Next Due Date': '',
+        'Model': '',
+        'Part Name': 'GRAND TOTAL',
+        'Part No.': '',
+        'HSN': '',
+        'Qty': '',
+        'Rate': '',
+        'GST %': '',
+        'Disc': '',
+        'Amount': grandTotal
+      });
+      
+      // Add empty row for spacing
+      dataToExport.push({});
     });
+    
     exportToExcel(dataToExport, `job-cards-${dateRange.start}-to-${dateRange.end}`);
   };
 

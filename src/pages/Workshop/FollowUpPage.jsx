@@ -208,7 +208,7 @@ const FollowUpPage = () => {
         }
         const dataToExport = followUps.map(f => ({
             "Source Type": f.source_type,
-            "Source Date": formatDate(f.source_date),
+            "Last Service Date": formatDate(f.source_date),
             "Customer Name": f.customer_name,
             "Mobile 1": f.mobile1,
             "Mobile 2": f.mobile2,
