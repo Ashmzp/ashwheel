@@ -62,6 +62,10 @@ const JobCardList = ({ jobCards = [], onEdit, onDelete, isLoading, dateRange, se
     const dataToExport = [];
     
     filteredJobCards.forEach(jc => {
+      console.log('Job Card:', jc);
+      console.log('Parts Items:', jc.parts_items);
+      console.log('Labour Items:', jc.labour_items);
+      
       const parts = Array.isArray(jc.parts_items) ? jc.parts_items : [];
       const labour = Array.isArray(jc.labour_items) ? jc.labour_items : [];
       
@@ -74,6 +78,7 @@ const JobCardList = ({ jobCards = [], onEdit, onDelete, isLoading, dateRange, se
         'Invoice No': jc.invoice_no,
         'Date': formatDate(jc.invoice_date),
         'Customer Name': jc.customer_name,
+        'Mobile No': jc.customer_mobile || '',
         'Reg. No': jc.reg_no,
         'Status': jc.status,
         'Total Amount': grandTotal,
@@ -94,10 +99,12 @@ const JobCardList = ({ jobCards = [], onEdit, onDelete, isLoading, dateRange, se
       
       // Add parts rows
       parts.forEach(part => {
+        console.log('Part:', part);
         dataToExport.push({
           'Invoice No': '',
           'Date': '',
           'Customer Name': '',
+          'Mobile No': '',
           'Reg. No': '',
           'Status': '',
           'Total Amount': '',
@@ -106,14 +113,14 @@ const JobCardList = ({ jobCards = [], onEdit, onDelete, isLoading, dateRange, se
           'Frame No': '',
           'Next Due Date': '',
           'Model': '',
-          'Part Name': part.name || part.part_name || '',
-          'Part No.': part.part_no || '',
-          'HSN': part.hsn || '',
-          'Qty': part.qty || '',
-          'Rate': part.rate || '',
-          'GST %': part.gst || '',
-          'Disc': part.discount || 0,
-          'Amount': part.amount || ''
+          'Part Name': part.name || part.part_name || part.partName || '',
+          'Part No.': part.part_no || part.partNo || '',
+          'HSN': part.hsn || part.HSN || '',
+          'Qty': part.qty || part.quantity || '',
+          'Rate': part.rate || part.price || '',
+          'GST %': part.gst || part.gstRate || '',
+          'Disc': part.discount || part.disc || 0,
+          'Amount': part.amount || part.total || ''
         });
       });
       
@@ -123,6 +130,7 @@ const JobCardList = ({ jobCards = [], onEdit, onDelete, isLoading, dateRange, se
           'Invoice No': '',
           'Date': '',
           'Customer Name': '',
+          'Mobile No': '',
           'Reg. No': '',
           'Status': '',
           'Total Amount': '',
@@ -144,10 +152,12 @@ const JobCardList = ({ jobCards = [], onEdit, onDelete, isLoading, dateRange, se
       
       // Add labour rows
       labour.forEach(lab => {
+        console.log('Labour:', lab);
         dataToExport.push({
           'Invoice No': '',
           'Date': '',
           'Customer Name': '',
+          'Mobile No': '',
           'Reg. No': '',
           'Status': '',
           'Total Amount': '',
@@ -156,14 +166,14 @@ const JobCardList = ({ jobCards = [], onEdit, onDelete, isLoading, dateRange, se
           'Frame No': '',
           'Next Due Date': '',
           'Model': '',
-          'Part Name': `Labour: ${lab.description || ''}`,
+          'Part Name': `Labour: ${lab.description || lab.name || ''}`,
           'Part No.': '',
           'HSN': '',
           'Qty': '',
           'Rate': '',
           'GST %': '',
           'Disc': '',
-          'Amount': lab.amount || ''
+          'Amount': lab.amount || lab.total || ''
         });
       });
       
@@ -173,6 +183,7 @@ const JobCardList = ({ jobCards = [], onEdit, onDelete, isLoading, dateRange, se
           'Invoice No': '',
           'Date': '',
           'Customer Name': '',
+          'Mobile No': '',
           'Reg. No': '',
           'Status': '',
           'Total Amount': '',
@@ -197,6 +208,7 @@ const JobCardList = ({ jobCards = [], onEdit, onDelete, isLoading, dateRange, se
         'Invoice No': '',
         'Date': '',
         'Customer Name': '',
+        'Mobile No': '',
         'Reg. No': '',
         'Status': '',
         'Total Amount': '',
