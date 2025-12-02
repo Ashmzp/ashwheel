@@ -57,9 +57,9 @@ export const getDeviceFingerprint = () => {
 };
 
 /**
- * Simple hash function
+ * Simple hash function that generates UUID
  * @param {string} str - String to hash
- * @returns {string} - Hash string
+ * @returns {string} - UUID string
  */
 const simpleHash = (str) => {
   let hash = 0;
@@ -68,15 +68,23 @@ const simpleHash = (str) => {
     hash = ((hash << 5) - hash) + char;
     hash = hash & hash; // Convert to 32bit integer
   }
-  return Math.abs(hash).toString(36).padStart(8, '0');
+  
+  // Convert hash to UUID format (xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx)
+  const hashStr = Math.abs(hash).toString(16).padStart(32, '0');
+  return `${hashStr.slice(0, 8)}-${hashStr.slice(8, 12)}-4${hashStr.slice(13, 16)}-${((parseInt(hashStr.slice(16, 17), 16) & 0x3) | 0x8).toString(16)}${hashStr.slice(17, 20)}-${hashStr.slice(20, 32)}`;
 };
 
 /**
- * Generate fallback ID if fingerprinting fails
- * @returns {string} - Random ID
+ * Generate fallback UUID if fingerprinting fails
+ * @returns {string} - Random UUID
  */
 const generateFallbackId = () => {
-  return 'fallback_' + Math.random().toString(36).substring(2, 15);
+  // Generate a valid UUID v4
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
 };
 
 /**
