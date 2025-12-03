@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Helmet } from 'react-helmet';
+import SEO from '@/components/SEO';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -13,6 +13,15 @@ const GstCalculatorPage = () => {
   const [amount, setAmount] = useState(1000);
   const [gstRate, setGstRate] = useState(18);
   const [calculationType, setCalculationType] = useState('add');
+
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {"@type": "Question", "name": "Is GST calculator free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, completely free for unlimited calculations."}},
+      {"@type": "Question", "name": "What GST rates are supported?", "acceptedAnswer": {"@type": "Answer", "text": "All Indian GST slabs: 3%, 5%, 12%, 18%, and 28%."}}
+    ]
+  }
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-IN', {
@@ -54,10 +63,7 @@ const GstCalculatorPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>GST Calculator - Ashwheel Tools</title>
-        <meta name="description" content="Quickly calculate Goods and Services Tax (GST) by adding or removing it from any amount." />
-      </Helmet>
+      <SEO path="/gst-calculator" faqSchema={faqSchema} />
       <div className="flex flex-col min-h-screen bg-gradient-to-br from-secondary/20 to-background p-4 sm:p-6">
         <header className="flex items-center justify-between mb-8">
           <Button variant="ghost" asChild>

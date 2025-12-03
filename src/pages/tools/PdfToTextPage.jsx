@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { Helmet } from 'react-helmet';
+import SEO from '@/components/SEO';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -17,6 +17,16 @@ const PdfToTextPage = () => {
   const [extractedText, setExtractedText] = useState('');
   const fileInputRef = useRef(null);
   const { toast } = useToast();
+
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {"@type": "Question", "name": "Is PDF to text extraction free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, completely free with unlimited extractions."}},
+      {"@type": "Question", "name": "Does it work with scanned PDFs?", "acceptedAnswer": {"@type": "Answer", "text": "No, only PDFs with selectable text. OCR support coming soon."}},
+      {"@type": "Question", "name": "Are my files secure?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, all processing happens in your browser."}}
+    ]
+  };
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -204,11 +214,7 @@ const PdfToTextPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>PDF to Text Extractor - Ashwheel Tools</title>
-        <meta name="description" content="Extract all selectable text from your PDF files and download as a TXT file. Ideal for copying content from PDFs for editing or analysis. Note: OCR for scanned PDFs is not yet supported." />
-        <meta name="keywords" content="pdf to text, extract text from pdf, pdf text extractor, copy text from pdf, convert pdf to txt, searchable pdf, pdf text converter" />
-      </Helmet>
+      <SEO path="/pdf-to-text" faqSchema={faqSchema} />
       <div className="flex flex-col min-h-screen bg-gradient-to-br from-secondary/20 to-background p-4 sm:p-6">
         <header className="flex items-center justify-between mb-8">
             <Button variant="ghost" asChild>

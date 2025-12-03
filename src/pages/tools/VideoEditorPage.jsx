@@ -1,16 +1,21 @@
 import React from 'react';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 import VideoEditorLayout from '@/components/VideoEditor/VideoEditorLayout';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 const VideoEditorPage = () => {
+  const faqSchema = {
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "Is this video editor really free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, our online video editor is completely free with no watermarks or time limits." } },
+      { "@type": "Question", "name": "What video formats are supported?", "acceptedAnswer": { "@type": "Answer", "text": "We support MP4, MOV, AVI, and most common video formats for upload and export." } },
+      { "@type": "Question", "name": "Can I add music to my videos?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, upload audio files to the media library and add them to your timeline as background music." } }
+    ]
+  };
+
   return (
     <>
-      <Helmet>
-        <title>Free Online Video Editor - AI Features | Ashwheel</title>
-        <meta name="description" content="Edit videos like a pro with Ashwheel's free online video editor. Trim, add text, transitions, and use AI features. No download required." />
-        <meta name="keywords" content="video editor, online video editor, free video editor, AI video editor, capcut alternative, video maker, create videos" />
-      </Helmet>
+      <SEO path="/tools/video-editor" faqSchema={faqSchema} />
       <VideoEditorLayout />
       <div className="container mx-auto px-4 py-8">
           <Card className="w-full">

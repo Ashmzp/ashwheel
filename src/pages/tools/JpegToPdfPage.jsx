@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -13,7 +13,17 @@ const JpegToPdfPage = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef(null);
   const { toast } = useToast();
-  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB per image
+  const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {"@type": "Question", "name": "Is JPEG to PDF conversion free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, completely free with unlimited conversions."}},
+      {"@type": "Question", "name": "Can I combine multiple images?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, you can combine multiple JPEG/PNG images into one PDF."}},
+      {"@type": "Question", "name": "Are my files secure?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, all processing happens in your browser."}}
+    ]
+  };
 
   const handleFileChange = (e) => {
     const selectedFiles = Array.from(e.target.files);
@@ -145,11 +155,7 @@ const JpegToPdfPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>JPEG to PDF Converter - Ashwheel Tools</title>
-        <meta name="description" content="Convert your JPEG and PNG images to a single PDF file for free. Easy, fast, and secure. Combine multiple images into one convenient PDF document." />
-        <meta name="keywords" content="jpeg to pdf, jpg to pdf, image to pdf converter, combine images to pdf, free jpg to pdf, convert photos to pdf, create pdf from images" />
-      </Helmet>
+      <SEO path="/jpeg-to-pdf" faqSchema={faqSchema} />
       <div className="flex flex-col min-h-screen bg-gradient-to-br from-secondary/20 to-background p-4 sm:p-6">
         <header className="flex items-center justify-between mb-8">
           <Button variant="ghost" asChild>

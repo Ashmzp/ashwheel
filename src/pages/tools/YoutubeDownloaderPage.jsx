@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-    import { Helmet } from 'react-helmet-async';
+    import SEO from '@/components/SEO';
     import { Link } from 'react-router-dom';
     import { Button } from '@/components/ui/button';
     import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -50,13 +50,18 @@ import React, { useState } from 'react';
         window.open(formatUrl, '_blank');
       };
 
+      const faqSchema = {
+        "@type": "FAQPage",
+        "mainEntity": [
+          { "@type": "Question", "name": "Can I download YouTube Shorts?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, our downloader supports both regular YouTube videos and YouTube Shorts in multiple formats." } },
+          { "@type": "Question", "name": "What formats are available?", "acceptedAnswer": { "@type": "Answer", "text": "You can download videos in MP4 format and audio in MP3 format in various quality options." } },
+          { "@type": "Question", "name": "Is it free to use?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, our YouTube downloader is completely free with no limits or registration required." } }
+        ]
+      };
+
       return (
         <>
-          <Helmet>
-            <title>YouTube Video & Shorts Downloader - Ashwheel Tools</title>
-            <meta name="description" content="Download YouTube videos and Shorts in high quality (MP4, MP3) for free. Fast, simple, and no software required." />
-            <meta name="keywords" content="youtube video downloader, youtube shorts downloader, save youtube videos, download youtube shorts, youtube mp4, youtube mp3, video to mp3" />
-          </Helmet>
+          <SEO path="/tools/youtube-downloader" faqSchema={faqSchema} />
           <div className="flex flex-col min-h-screen bg-gradient-to-br from-red-50 to-background p-4 sm:p-6">
             <header className="flex items-center justify-between mb-8">
               <Button variant="ghost" asChild>

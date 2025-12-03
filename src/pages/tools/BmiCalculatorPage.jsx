@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+    import SEO from '@/components/SEO';
     import ToolWrapper from '@/components/ToolWrapper';
     import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
     import { Input } from '@/components/ui/input';
@@ -6,6 +7,14 @@ import React, { useState, useMemo } from 'react';
     import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
     const BmiCalculatorPage = () => {
+      const faqSchema = {
+        "@type": "FAQPage",
+        "mainEntity": [
+          { "@type": "Question", "name": "What is BMI?", "acceptedAnswer": { "@type": "Answer", "text": "BMI (Body Mass Index) is a measure of body fat based on height and weight that applies to adult men and women." } },
+          { "@type": "Question", "name": "What is a healthy BMI range?", "acceptedAnswer": { "@type": "Answer", "text": "A BMI between 18.5 and 24.9 is considered normal weight. Below 18.5 is underweight, 25-29.9 is overweight, and 30+ is obese." } },
+          { "@type": "Question", "name": "Can I use both metric and imperial units?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, our calculator supports both metric (cm, kg) and imperial (feet, inches, lbs) units." } }
+        ]
+      };
       const [unit, setUnit] = useState('metric');
       const [height, setHeight] = useState('');
       const [weight, setWeight] = useState('');
@@ -43,6 +52,8 @@ import React, { useState, useMemo } from 'react';
       );
 
       return (
+        <>
+        <SEO path="/tools/bmi-calculator" faqSchema={faqSchema} />
         <ToolWrapper title="BMI Calculator" howToUse={howToUse}>
           <Card className="max-w-md mx-auto">
             <CardHeader><CardTitle>BMI Calculator</CardTitle></CardHeader>
@@ -74,6 +85,7 @@ import React, { useState, useMemo } from 'react';
             </CardContent>
           </Card>
         </ToolWrapper>
+        </>
       );
     };
 

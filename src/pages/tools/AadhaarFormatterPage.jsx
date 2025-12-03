@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -220,13 +220,18 @@ const AadhaarFormatterPage = () => {
     </div>
   );
 
+  const faqSchema = {
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "How do I format my Aadhaar card for printing?", "acceptedAnswer": { "@type": "Answer", "text": "Upload front and back images, crop them precisely using our tool, choose a layout, and download as JPEG or PDF." } },
+      { "@type": "Question", "name": "Can I crop the Aadhaar card images?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, our tool includes a precise cropper with zoom and rotation controls for perfect alignment." } },
+      { "@type": "Question", "name": "What layouts are available?", "acceptedAnswer": { "@type": "Answer", "text": "You can choose between vertical (top-bottom) or horizontal (side-by-side) layouts on an A4 page." } }
+    ]
+  };
+
   return (
     <>
-      <Helmet>
-        <title>Aadhaar Card Formatter - Ashwheel Tools</title>
-        <meta name="description" content="Manually crop your Aadhaar card front and back images and place them onto a single A4 page for easy printing. Download as JPEG or PDF. Works with one or both sides." />
-        <meta name="keywords" content="aadhaar formatter, crop aadhaar, print aadhaar, e-aadhaar format, aadhaar pdf, aadhaar jpeg, online aadhaar tool" />
-      </Helmet>
+      <SEO path="/tools/aadhaar-formatter" faqSchema={faqSchema} />
       <div className="flex flex-col min-h-screen bg-gradient-to-br from-secondary/20 to-background p-4 sm:p-6">
         <header className="flex items-center justify-between mb-8">
           <Button variant="ghost" asChild>

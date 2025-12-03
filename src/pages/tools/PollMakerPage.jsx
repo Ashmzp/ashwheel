@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
     import { useNavigate } from 'react-router-dom';
+    import SEO from '@/components/SEO';
     import ToolWrapper from '@/components/ToolWrapper';
     import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
     import { Button } from '@/components/ui/button';
@@ -100,7 +101,18 @@ import React, { useState } from 'react';
         </div>
       );
 
+      const faqSchema = {
+        "@type": "FAQPage",
+        "mainEntity": [
+          { "@type": "Question", "name": "How do I create a poll?", "acceptedAnswer": { "@type": "Answer", "text": "Enter your question and options, customize settings, then click Create Poll to get shareable links." } },
+          { "@type": "Question", "name": "Can I customize the poll appearance?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, you can change background color, text color, and choose between list or grid layout." } },
+          { "@type": "Question", "name": "How do people vote?", "acceptedAnswer": { "@type": "Answer", "text": "Share the voter link with anyone. They can vote without creating an account." } }
+        ]
+      };
+
       return (
+        <>
+        <SEO path="/tools/poll-maker" faqSchema={faqSchema} />
         <ToolWrapper title="Advanced Poll Maker" howToUse={howToUse}>
           <Card className="max-w-2xl mx-auto bg-card/80 backdrop-blur-sm shadow-lg">
             <CardHeader>
@@ -183,6 +195,7 @@ import React, { useState } from 'react';
             </CardContent>
           </Card>
         </ToolWrapper>
+        </>
       );
     };
 

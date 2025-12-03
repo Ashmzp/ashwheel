@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Helmet } from 'react-helmet';
+import SEO from '@/components/SEO';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -38,13 +38,18 @@ const TaxableAmountCalculatorPage = () => {
     };
   }, [totalAmount, taxRate]);
 
+  const faqSchema = {
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "What is a taxable amount calculator?", "acceptedAnswer": { "@type": "Answer", "text": "It calculates the pre-tax base amount from a total price that includes tax, also known as reverse GST calculation." } },
+      { "@type": "Question", "name": "How do I find the base value?", "acceptedAnswer": { "@type": "Answer", "text": "Enter the total amount (including tax) and the tax rate percentage. The calculator shows the taxable base value and tax breakdown." } },
+      { "@type": "Question", "name": "Does it show CGST and SGST?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, the calculator automatically splits the tax into CGST and SGST (each half of the total tax rate)." } }
+    ]
+  };
+
   return (
     <>
-      <Helmet>
-        <title>Taxable Amount Calculator - Ashwheel Tools</title>
-        <meta name="description" content="Calculate the taxable value and tax amount from a total amount inclusive of tax. Also known as a reverse GST calculator." />
-        <meta name="keywords" content="taxable amount calculator, reverse gst calculator, back calculation gst, find base value, pre-tax price" />
-      </Helmet>
+      <SEO path="/tools/taxable-amount-calculator" faqSchema={faqSchema} />
       <div className="flex flex-col min-h-screen bg-gradient-to-br from-secondary/20 to-background p-4 sm:p-6">
         <header className="flex items-center justify-between mb-8">
           <Button variant="ghost" asChild>

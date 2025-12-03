@@ -1,10 +1,20 @@
 import React, { useState } from 'react';
+    import SEO from '@/components/SEO';
     import ToolWrapper from '@/components/ToolWrapper';
     import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
     import { Button } from '@/components/ui/button';
     import { Textarea } from '@/components/ui/textarea';
 
     const TextCaseConverterPage = () => {
+      const faqSchema = {
+        "@type": "FAQPage",
+        "mainEntity": [
+          { "@type": "Question", "name": "What text cases can I convert to?", "acceptedAnswer": { "@type": "Answer", "text": "You can convert to UPPERCASE, lowercase, Title Case, and Sentence case with one click." } },
+          { "@type": "Question", "name": "How do I use the text case converter?", "acceptedAnswer": { "@type": "Answer", "text": "Paste your text in the box and click any case button. The text will instantly convert to that format." } },
+          { "@type": "Question", "name": "What is Title Case?", "acceptedAnswer": { "@type": "Answer", "text": "Title Case capitalizes the first letter of each word, commonly used for titles and headings." } }
+        ]
+      };
+
       const [text, setText] = useState('');
 
       const toSentenceCase = () => {
@@ -24,6 +34,8 @@ import React, { useState } from 'react';
       );
 
       return (
+        <>
+        <SEO path="/tools/text-case-converter" faqSchema={faqSchema} />
         <ToolWrapper title="Text Case Converter" howToUse={howToUse}>
           <Card className="max-w-3xl mx-auto">
             <CardHeader><CardTitle>Text Case Converter</CardTitle></CardHeader>
@@ -43,6 +55,7 @@ import React, { useState } from 'react';
             </CardContent>
           </Card>
         </ToolWrapper>
+        </>
       );
     };
 

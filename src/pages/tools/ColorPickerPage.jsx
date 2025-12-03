@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+    import SEO from '@/components/SEO';
     import ToolWrapper from '@/components/ToolWrapper';
     import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
     import { Button } from '@/components/ui/button';
@@ -7,6 +8,15 @@ import React, { useState, useCallback } from 'react';
     import { HexColorPicker } from 'react-colorful';
 
     const ColorPickerPage = () => {
+      const faqSchema = {
+        "@type": "FAQPage",
+        "mainEntity": [
+          { "@type": "Question", "name": "How do I pick a color?", "acceptedAnswer": { "@type": "Answer", "text": "Drag the selector on the color panel to choose your color. The HEX code is displayed below and can be copied." } },
+          { "@type": "Question", "name": "Can I generate color palettes?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, click Generate Palette to create a random 5-color palette. Click any color to copy its HEX code." } },
+          { "@type": "Question", "name": "What format are the colors in?", "acceptedAnswer": { "@type": "Answer", "text": "All colors are displayed in HEX format (e.g., #aabbcc) which is widely used in web design." } }
+        ]
+      };
+
       const [color, setColor] = useState("#aabbcc");
       const [palette, setPalette] = useState([]);
       const { toast } = useToast();
@@ -38,6 +48,8 @@ import React, { useState, useCallback } from 'react';
       );
 
       return (
+        <>
+        <SEO path="/tools/color-picker" faqSchema={faqSchema} />
         <ToolWrapper title="Color Picker & Palette Generator" howToUse={howToUse}>
           <div className="grid md:grid-cols-2 gap-8">
             <Card>
@@ -78,6 +90,7 @@ import React, { useState, useCallback } from 'react';
             </Card>
           </div>
         </ToolWrapper>
+        </>
       );
     };
 

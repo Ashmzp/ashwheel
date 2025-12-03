@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 import { Link } from 'react-router-dom';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
@@ -195,13 +195,18 @@ const PassportPhotoMakerPage = () => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const faqSchema = {
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "How do I create passport photos on an A4 sheet?", "acceptedAnswer": { "@type": "Answer", "text": "Upload your photos, crop each one to passport size, set the number of copies, generate the sheet, and download as JPEG or PDF." } },
+      { "@type": "Question", "name": "Can I add multiple photos to one sheet?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, you can upload multiple photos and set how many copies of each you want on the A4 sheet." } },
+      { "@type": "Question", "name": "What formats can I download?", "acceptedAnswer": { "@type": "Answer", "text": "You can download your passport photo sheet as a high-quality JPEG or PDF file." } }
+    ]
+  };
+
   return (
     <DndProvider backend={HTML5Backend}>
-      <Helmet>
-        <title>Free Passport Size Photo Maker Online (A4 Sheet) | Ashwheel</title>
-        <meta name="description" content="Create and print official passport, visa, or ID photos for free. Upload, crop, and arrange multiple photos on a standard A4 sheet. Download as high-quality JPEG or PDF." />
-        <meta name="keywords" content="passport photo maker, visa photo online, id photo creator, photo resizer for documents, passport size photo, official photos, print photos on A4, free photo tool" />
-      </Helmet>
+      <SEO path="/tools/passport-photo-maker" faqSchema={faqSchema} />
       <div className="flex flex-col min-h-screen bg-secondary/10 p-4 sm:p-6">
         <header className="flex items-center justify-between mb-8">
           <Button variant="ghost" asChild>

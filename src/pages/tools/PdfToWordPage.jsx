@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -108,12 +108,18 @@ const PdfToWordPage = () => {
     if(fileInputRef.current) fileInputRef.current.value = "";
   };
   
+  const faqSchema = {
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "How do I convert PDF to Word?", "acceptedAnswer": { "@type": "Answer", "text": "Upload your PDF file, click Convert & Download DOCX, and your editable Word document will be ready instantly." } },
+      { "@type": "Question", "name": "Is the conversion accurate?", "acceptedAnswer": { "@type": "Answer", "text": "The tool extracts text accurately from text-based PDFs. Complex layouts with images may require manual adjustment." } },
+      { "@type": "Question", "name": "Is my data secure?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, all conversion happens in your browser. Your files are never uploaded to any server." } }
+    ]
+  };
+
   return (
     <>
-      <Helmet>
-        <title>PDF to Word Converter - Ashwheel Tools</title>
-        <meta name="description" content="Convert your PDF files to editable Word documents (.docx) for free. Fast, secure, and client-side conversion." />
-      </Helmet>
+      <SEO path="/tools/pdf-to-word" faqSchema={faqSchema} />
       <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-4 sm:p-6">
         <header className="flex items-center justify-between mb-8">
             <Button variant="ghost" asChild>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+    import SEO from '@/components/SEO';
     import ToolWrapper from '@/components/ToolWrapper';
     import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
     import { Button } from '@/components/ui/button';
@@ -62,7 +63,18 @@ import React, { useState, useEffect } from 'react';
         </div>
       );
 
+      const faqSchema = {
+        "@type": "FAQPage",
+        "mainEntity": [
+          { "@type": "Question", "name": "How does the streak counter work?", "acceptedAnswer": { "@type": "Answer", "text": "The streak increases when you complete a habit on consecutive days. Missing a day resets it to zero." } },
+          { "@type": "Question", "name": "Is my data saved?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, all your habits and progress are saved in your browser's local storage." } },
+          { "@type": "Question", "name": "Can I track multiple habits?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, add as many habits as you want and track them all in one place." } }
+        ]
+      };
+
       return (
+        <>
+        <SEO path="/tools/habit-tracker" faqSchema={faqSchema} />
         <ToolWrapper title="Habit Tracker" howToUse={howToUse}>
           <Card className="max-w-lg mx-auto">
             <CardHeader><CardTitle>Habit Tracker</CardTitle></CardHeader>
@@ -97,6 +109,7 @@ import React, { useState, useEffect } from 'react';
             </CardContent>
           </Card>
         </ToolWrapper>
+        </>
       );
     };
 

@@ -1,0 +1,113 @@
+# Ashwheel - Free Online Tools Platform
+
+> A comprehensive suite of free online tools for PDF manipulation, image editing, financial calculations, and productivity enhancement.
+
+## About
+
+Ashwheel is a free online platform offering 40+ powerful tools designed to simplify daily tasks. From PDF editing to image conversion, financial calculators to productivity utilities - all tools are completely free, require no registration, and work directly in your browser.
+
+## Main Categories
+
+### PDF Tools
+- PDF Editor - Edit, annotate, and sign PDF documents
+- Split PDF - Divide PDFs into single pages or ranges
+- Merge PDF - Combine multiple PDFs into one
+- Compress PDF - Reduce file size without quality loss
+- PDF to JPEG - Convert PDF pages to images
+- PDF to Text - Extract text from PDFs
+- JPEG to PDF - Convert images to PDF
+- Word to PDF - Convert DOCX to PDF
+
+### Image Tools
+- CanvasCraft - Design custom layouts with photos and PDFs
+- Crop Anything - Crop images and PDFs freely
+- Image Compressor - Optimize images for web
+- Image Resizer - Resize to custom dimensions
+- JPEG to PNG - Convert with transparency support
+- PNG to JPEG - Convert with background options
+- Passport Photo Maker - Create official passport photos
+- Aadhaar Formatter - Format e-Aadhaar for printing
+
+### Productivity & Utility Tools
+- Password Generator - Generate secure passwords
+- Unit Converter - Convert measurement units
+- Color Picker & Palette - Pick colors and create palettes
+- Text Case Converter - Convert text cases
+- BMI Calculator - Calculate Body Mass Index
+- JSON Formatter - Format and validate JSON
+- Pomodoro Timer - Focus timer for productivity
+- Text Summarizer - Summarize long texts
+- Habit Tracker - Track daily habits
+- Poll Maker - Create instant polls
+
+### Video & Content Tools
+- Thumbnail Downloader - Download YouTube thumbnails
+- Word Counter - Count words, characters, sentences
+
+### Generators & Calculators
+- QR Code Generator - Create custom QR codes
+- Magic QR Generator - All links in one QR code
+- GST Calculator - Calculate Indian GST
+- EMI Calculator - Calculate loan EMIs
+- SIP Calculator - Calculate mutual fund returns
+- Taxable Amount Calculator - Reverse GST calculation
+- Age Calculator - Calculate exact age
+- Date Difference - Calculate days between dates
+
+### Web & Other Tools
+- URL Shortener - Create short links
+- Invoice Generator - Generate PDF invoices
+- Resume Builder - Build professional resumes
+- Marriage Biodata Maker - Create marriage biodata
+
+## Premium Software
+
+**Ashwheel Pro** - Complete management software for automobile dealerships, showrooms, and workshops. Features include stock management, sales tracking, job cards, invoicing, and comprehensive analytics.
+
+## Key Features
+
+- **100% Free** - All tools are completely free to use
+- **No Registration** - Use tools instantly without signing up
+- **Privacy First** - All processing happens in your browser
+- **No Watermarks** - Download clean files without branding
+- **Unlimited Usage** - No limits on file size or usage
+- **Mobile Friendly** - Works on all devices
+- **Fast & Secure** - Browser-based processing for speed and security
+- **No Downloads** - No software installation required
+
+## Technology Stack
+
+- React 18 with Vite
+- TailwindCSS for styling
+- Supabase for backend (Pro version)
+- PDF.js for PDF manipulation
+- Sharp for image processing
+- Progressive Web App (PWA) enabled
+
+## Target Audience
+
+- Students and educators
+- Small business owners
+- Freelancers and contractors
+- Content creators
+- Designers and developers
+- Financial planners
+- General users needing quick online tools
+
+## Contact
+
+- Website: https://ashwheel.cloud
+- Email: support@ashwheel.cloud
+- Social Media: @ash_mzp
+
+## SEO Keywords
+
+free online tools, pdf editor, image converter, video editor, gst calculator, emi calculator, resume builder, invoice generator, qr code generator, password generator, image compressor, pdf merger, pdf splitter, online utilities, productivity tools, document management, photo editing, financial calculators, ashwheel, ashwheel pro, showroom management software, workshop management
+
+## Last Updated
+
+2025-12-03
+
+## License
+
+All tools are provided free for personal and commercial use. Ashwheel Pro is a commercial product with separate licensing.

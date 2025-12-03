@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -47,12 +47,18 @@ const AgeCalculatorPage = () => {
     setAge({ years, months, days, totalDays, daysUntilBirthday, error: null });
   };
 
+  const faqSchema = {
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "How do I calculate my exact age?", "acceptedAnswer": { "@type": "Answer", "text": "Enter your date of birth and click Calculate Age. The tool shows your age in years, months, days, and total days lived." } },
+      { "@type": "Question", "name": "Can I see when my next birthday is?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, the calculator displays a countdown showing how many days until your next birthday." } },
+      { "@type": "Question", "name": "Is the age calculation accurate?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, it calculates precise age down to the day, accounting for leap years and varying month lengths." } }
+    ]
+  };
+
   return (
     <>
-      <Helmet>
-        <title>Age Calculator - Ashwheel</title>
-        <meta name="description" content="Calculate your exact age in years, months, and days from your date of birth with our free online Age Calculator." />
-      </Helmet>
+      <SEO path="/tools/age-calculator" faqSchema={faqSchema} />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

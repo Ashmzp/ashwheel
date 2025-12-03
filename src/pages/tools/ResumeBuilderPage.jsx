@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 import { Link } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import { useToast } from '@/components/ui/use-toast';
@@ -60,13 +60,18 @@ const ResumeBuilderPage = () => {
     setIsDownloading(false);
   };
 
+  const faqSchema = {
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "How do I create a resume?", "acceptedAnswer": { "@type": "Answer", "text": "Fill in your details in the form, choose a template, and download as PDF or DOCX. The preview updates in real-time." } },
+      { "@type": "Question", "name": "Can I download in multiple formats?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, you can download your resume as both PDF (for printing) and DOCX (for editing in Word)." } },
+      { "@type": "Question", "name": "Are there multiple templates?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, choose from Classic and Modern templates to match your style and industry." } }
+    ]
+  };
+
   return (
     <>
-      <Helmet>
-        <title>Resume Builder - Ashwheel Tools</title>
-        <meta name="description" content="Build a professional resume in minutes with multiple templates and download it as a PDF or DOCX file." />
-        <meta name="keywords" content="resume builder, cv builder, free resume maker, professional resume, cv template" />
-      </Helmet>
+      <SEO path="/tools/resume-builder" faqSchema={faqSchema} />
       <div className="flex flex-col min-h-screen bg-gradient-to-br from-secondary/20 to-background">
         <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-sm shadow-sm">
             <div className="container mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">

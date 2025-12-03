@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Helmet } from 'react-helmet';
+import SEO from '@/components/SEO';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -15,6 +15,15 @@ const StatCard = ({ title, value }) => (
 );
 
 const WordCounterPage = () => {
+  const faqSchema = {
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "How do I count words in my text?", "acceptedAnswer": { "@type": "Answer", "text": "Simply paste or type your text in the text area. Word, character, sentence, and paragraph counts update instantly." } },
+      { "@type": "Question", "name": "Does it count characters with spaces?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, the character count includes all characters including spaces, punctuation, and line breaks." } },
+      { "@type": "Question", "name": "Can I clear the text easily?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, click the 'Clear Text' button to remove all content and start fresh." } }
+    ]
+  };
+
   const [text, setText] = useState('');
 
   const stats = useMemo(() => {
@@ -38,11 +47,7 @@ const WordCounterPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Word Counter - Ashwheel Tools</title>
-        <meta name="description" content="Count words, characters, sentences, and paragraphs in your text instantly. A free and easy-to-use online tool." />
-        <meta name="keywords" content="word counter, character count, text analysis, sentence counter, paragraph counter, writing tool" />
-      </Helmet>
+      <SEO path="/tools/word-counter" faqSchema={faqSchema} />
       <div className="flex flex-col min-h-screen bg-gradient-to-br from-secondary/20 to-background p-4 sm:p-6">
         <header className="flex items-center justify-between mb-8">
           <Button variant="ghost" asChild>

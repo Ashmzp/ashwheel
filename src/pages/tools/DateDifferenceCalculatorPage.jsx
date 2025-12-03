@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -44,12 +44,18 @@ const DateDifferenceCalculatorPage = () => {
     setDifference({ years, months, days, totalDays, error: null });
   };
 
+  const faqSchema = {
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "How do I calculate date difference?", "acceptedAnswer": { "@type": "Answer", "text": "Select a start date and end date, then click Calculate Difference. The tool shows the duration in years, months, days, and total days." } },
+      { "@type": "Question", "name": "Can I calculate past dates?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, you can calculate the difference between any two dates, past or future." } },
+      { "@type": "Question", "name": "What if start date is after end date?", "acceptedAnswer": { "@type": "Answer", "text": "The calculator will show an error message if the start date is after the end date." } }
+    ]
+  };
+
   return (
     <>
-      <Helmet>
-        <title>Date Difference Calculator - Ashwheel</title>
-        <meta name="description" content="Calculate the duration between two dates in years, months, and days with our free online Date Difference Calculator." />
-      </Helmet>
+      <SEO path="/tools/date-difference-calculator" faqSchema={faqSchema} />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

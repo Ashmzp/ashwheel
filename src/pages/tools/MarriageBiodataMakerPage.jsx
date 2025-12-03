@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 import { Link } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import { useToast } from '@/components/ui/use-toast';
@@ -217,13 +217,18 @@ const MarriageBiodataMakerPage = () => {
         setIsDownloading(false);
     };
 
+    const faqSchema = {
+        "@type": "FAQPage",
+        "mainEntity": [
+            { "@type": "Question", "name": "How do I create a marriage biodata?", "acceptedAnswer": { "@type": "Answer", "text": "Fill in personal, family, and contact details in the form, choose a template, and download as PDF." } },
+            { "@type": "Question", "name": "Are there different templates?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, choose from Classic (traditional) and Modern (contemporary) templates to suit your preference." } },
+            { "@type": "Question", "name": "Can I add siblings information?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, you can add multiple siblings with their details using the Add Sibling button in the family section." } }
+        ]
+    };
+
     return (
         <>
-            <Helmet>
-                <title>Marriage Biodata Maker - Ashwheel Tools</title>
-                <meta name="description" content="Create a professional and beautiful marriage biodata online for free. Choose from templates and download as a PDF." />
-                <meta name="keywords" content="marriage biodata maker, biodata for marriage, matrimonial biodata, free biodata maker" />
-            </Helmet>
+            <SEO path="/tools/marriage-biodata-maker" faqSchema={faqSchema} />
             <div className="flex flex-col min-h-screen bg-gradient-to-br from-secondary/20 to-background">
                 <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-sm shadow-sm">
                     <div className="container mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -198,12 +198,18 @@ const CropAnythingPage = () => {
 
     const currentFileToCrop = files.find(f => f.id === currentCroppingFileId);
 
+    const faqSchema = {
+        "@type": "FAQPage",
+        "mainEntity": [
+            { "@type": "Question", "name": "Can I crop PDF pages?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, upload a PDF and each page will be extracted as an image that you can crop individually." } },
+            { "@type": "Question", "name": "How many images can I crop at once?", "acceptedAnswer": { "@type": "Answer", "text": "You can upload and crop multiple images or PDF pages in a single session, then arrange them all on one A4 sheet." } },
+            { "@type": "Question", "name": "What's the output format?", "acceptedAnswer": { "@type": "Answer", "text": "The final output is a PDF file with all your cropped images arranged on an A4-sized page." } }
+        ]
+    };
+
     return (
         <DndProvider backend={HTML5Backend}>
-            <Helmet>
-                <title>Universal Cropper - Crop Multiple Images & PDFs to A4 | Ashwheel</title>
-                <meta name="description" content="Crop multiple images or PDF pages and arrange them on a single A4 sheet. Our free online tool makes it easy to prepare documents for printing or sharing. Upload, crop, and download." />
-            </Helmet>
+            <SEO path="/tools/crop-anything" faqSchema={faqSchema} />
             <div className="flex flex-col min-h-screen bg-gradient-to-br from-green-50 to-teal-50 p-4 sm:p-6">
                 <header className="flex items-center justify-between mb-8">
                     <Button variant="ghost" asChild>

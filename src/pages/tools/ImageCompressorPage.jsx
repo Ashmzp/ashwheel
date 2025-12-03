@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,10 +21,19 @@ const formatBytes = (bytes, decimals = 2) => {
 
 const ImageCompressorPage = () => {
   const [file, setFile] = useState(null);
-  const [targetSize, setTargetSize] = useState(500); // in KB
+  const [targetSize, setTargetSize] = useState(500);
   const [compressedFile, setCompressedFile] = useState(null);
   const [isCompressing, setIsCompressing] = useState(false);
   const { toast } = useToast();
+
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {"@type": "Question", "name": "Is image compression free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, completely free with unlimited compressions."}},
+      {"@type": "Question", "name": "Will I lose image quality?", "acceptedAnswer": {"@type": "Answer", "text": "Our smart algorithm maintains the best possible quality while reducing file size."}}
+    ]
+  }
 
   const onDrop = useCallback((acceptedFiles) => {
     const imageFile = acceptedFiles[0];
@@ -104,10 +113,7 @@ const ImageCompressorPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Image Compressor - Ashwheel</title>
-        <meta name="description" content="Reduce image file size without losing quality. Compress JPEG, PNG, and WEBP images online for free." />
-      </Helmet>
+      <SEO path="/image-compressor" faqSchema={faqSchema} />
       <div className="container mx-auto p-4 max-w-5xl">
         <Card>
           <CardHeader>

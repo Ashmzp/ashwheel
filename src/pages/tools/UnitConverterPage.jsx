@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+    import SEO from '@/components/SEO';
     import ToolWrapper from '@/components/ToolWrapper';
     import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
     import { Input } from '@/components/ui/input';
@@ -37,6 +38,15 @@ import React, { useState, useMemo } from 'react';
     };
 
     const UnitConverterPage = () => {
+      const faqSchema = {
+        "@type": "FAQPage",
+        "mainEntity": [
+          { "@type": "Question", "name": "What units can I convert?", "acceptedAnswer": { "@type": "Answer", "text": "You can convert length (meters, feet, miles), weight (grams, pounds), and temperature (Celsius, Fahrenheit, Kelvin)." } },
+          { "@type": "Question", "name": "How accurate are the conversions?", "acceptedAnswer": { "@type": "Answer", "text": "All conversions use standard conversion factors and display results to 4 decimal places for precision." } },
+          { "@type": "Question", "name": "Can I convert temperature?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, select Temperature category to convert between Celsius, Fahrenheit, and Kelvin." } }
+        ]
+      };
+
       const [category, setCategory] = useState('length');
       const [fromUnit, setFromUnit] = useState('meter');
       const [toUnit, setToUnit] = useState('kilometer');
@@ -73,6 +83,8 @@ import React, { useState, useMemo } from 'react';
       );
 
       return (
+        <>
+        <SEO path="/tools/unit-converter" faqSchema={faqSchema} />
         <ToolWrapper title="Unit Converter" howToUse={howToUse}>
           <Card className="max-w-2xl mx-auto">
             <CardHeader>
@@ -119,6 +131,7 @@ import React, { useState, useMemo } from 'react';
             </CardContent>
           </Card>
         </ToolWrapper>
+        </>
       );
     };
 

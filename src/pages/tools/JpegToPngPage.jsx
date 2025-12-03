@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +13,16 @@ const JpegToPngPage = () => {
   const [convertedFiles, setConvertedFiles] = useState([]);
   const [isConverting, setIsConverting] = useState(false);
   const { toast } = useToast();
+
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {"@type": "Question", "name": "Is JPEG to PNG conversion free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, completely free with unlimited conversions."}},
+      {"@type": "Question", "name": "Will I lose quality?", "acceptedAnswer": {"@type": "Answer", "text": "No, conversion maintains original quality."}},
+      {"@type": "Question", "name": "Can I convert multiple files?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, batch conversion is supported."}}
+    ]
+  };
 
   const onDrop = useCallback((acceptedFiles) => {
     const jpegFiles = acceptedFiles.filter(
@@ -121,10 +131,7 @@ const JpegToPngPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>JPEG to PNG Converter - Ashwheel</title>
-        <meta name="description" content="Free and easy online tool to convert JPEG images to PNG format with transparency support. No quality loss." />
-      </Helmet>
+      <SEO path="/jpeg-to-png" faqSchema={faqSchema} />
       <div className="container mx-auto p-4 max-w-4xl">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           <Card className="w-full">

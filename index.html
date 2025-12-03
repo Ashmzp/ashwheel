@@ -1,38 +1,132 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <script src="/suppress-ws-error.js"></script>
-    <link rel="icon" type="image/svg+xml" href="/images/icon-192x192.svg" />
-    <link rel="alternate icon" href="/images/icon-192x192.svg" />
-    <link rel="apple-touch-icon" href="/images/icon-192x192.svg">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#6d28d9"/>
-    <link rel="manifest" href="/manifest.json" />
 
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Ashwheel">
+<head>
+  <meta charset="UTF-8" />
+  <script src="/suppress-ws-error.js"></script>
 
-    <title>Ashwheel - Free Online Tools for PDF, Images, & More</title>
-    <script>
-      (function() {
-        try {
-          const theme = localStorage.getItem('ui-theme');
-          if (theme === '"dark"') {
-            document.documentElement.classList.add('dark');
-            document.documentElement.setAttribute('data-theme', 'dark');
-          } else {
-            document.documentElement.classList.remove('dark');
-             document.documentElement.setAttribute('data-theme', 'light');
-          }
-        } catch (e) {}
-      })();
+  <!-- Favicons and Icons -->
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <link rel="icon" type="image/svg+xml" href="/images/icon-192x192.svg" />
+  <link rel="alternate icon" href="/images/icon-192x192.svg" />
+  <link rel="apple-touch-icon" href="/images/icon-192x192.svg">
+
+  <!-- Viewport and Mobile Optimization -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#6d28d9" />
+  <meta name="color-scheme" content="light dark">
+  <link rel="manifest" href="/manifest.json" />
+
+  <!-- Mobile Web App -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Ashwheel">
+  <meta name="format-detection" content="telephone=no">
+
+  <!-- SEO Meta Tags -->
+  <title>Ashwheel - Free Online Tools for PDF, Images, & More</title>
+  <meta name="description"
+    content="Ashwheel offers a powerful suite of free online tools. Edit videos, manage PDFs, convert images, and use financial calculators—all in one place. Simplify your daily tasks with our efficient and user-friendly web tools." />
+  <meta name="keywords"
+    content="free online tools, pdf editor, image converter, video editor, gst calculator, resume builder, ashwheel, productivity tools, online utilities, document management, photo editing, financial calculators" />
+  <meta name="author" content="Ashwheel" />
+  <meta name="language" content="English" />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+  <meta name="referrer" content="origin-when-cross-origin" />
+
+  <!-- Canonical URL -->
+  <link rel="canonical" href="https://ashwheel.cloud/" />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://ashwheel.cloud/" />
+  <meta property="og:title" content="Ashwheel - Free Online Tools for PDF, Images, & More" />
+  <meta property="og:description"
+    content="Ashwheel offers a powerful suite of free online tools. Edit videos, manage PDFs, convert images, and use financial calculators—all in one place." />
+  <meta property="og:image" content="https://ashwheel.cloud/images/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:site_name" content="Ashwheel" />
+  <meta property="og:locale" content="en_IN" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:url" content="https://ashwheel.cloud/" />
+  <meta name="twitter:title" content="Ashwheel - Free Online Tools for PDF, Images, & More" />
+  <meta name="twitter:description"
+    content="Ashwheel offers a powerful suite of free online tools. Edit videos, manage PDFs, convert images, and use financial calculators—all in one place." />
+  <meta name="twitter:image" content="https://ashwheel.cloud/images/og-image.png" />
+  <meta name="twitter:site" content="@ash_mzp" />
+  <meta name="twitter:creator" content="@ash_mzp" />
+
+  <!-- Geographic Meta Tags -->
+  <meta name="geo.region" content="IN" />
+  <meta name="geo.placename" content="India" />
+
+  <!-- Structured Data - Organization -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Ashwheel",
+      "url": "https://ashwheel.cloud",
+      "logo": "https://ashwheel.cloud/images/icon-512x512.png",
+      "description": "Free online tools platform offering PDF, image, video editing, and productivity tools",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "Customer Service",
+        "email": "support@ashwheel.cloud",
+        "availableLanguage": ["English", "Hindi"]
+      },
+      "sameAs": [
+        "https://www.facebook.com/share/158pNG3ihR9/",
+        "https://www.instagram.com/ash.mzp",
+        "https://x.com/ash_mzp",
+        "https://www.linkedin.com/in/ashish-kumar-mzp/"
+      ]
+    }
     </script>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+
+  <!-- Structured Data - Website -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Ashwheel",
+      "url": "https://ashwheel.cloud/",
+      "description": "Free online tools for PDF, images, calculators & more",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://ashwheel.cloud/#tools?q={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
+  <!-- Theme Script -->
+  <script>
+    (function () {
+      try {
+        const theme = localStorage.getItem('ui-theme');
+        if (theme === '"dark"') {
+          document.documentElement.classList.add('dark');
+          document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+      } catch (e) { }
+    })();
+  </script>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+
 </html>

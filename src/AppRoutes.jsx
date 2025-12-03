@@ -79,6 +79,7 @@ import UrlShortenerPage from '@/pages/tools/UrlShortenerPage';
 import InvoiceGeneratorPage from '@/pages/tools/InvoiceGeneratorPage';
 import ResumeBuilderPage from '@/pages/tools/ResumeBuilderPage';
 import MarriageBiodataMakerPage from '@/pages/tools/MarriageBiodataMakerPage';
+import ResetPassword from '@/pages/ResetPassword';
 import PlaceholderPage from '@/pages/PlaceholderPage';
 
 const AppRoutes = () => {
@@ -91,6 +92,7 @@ const AppRoutes = () => {
         <Route path="/login" element={<UserLogin />} />
         <Route path="/admin-login" element={<AdminLogin />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
 
         {/* Static Pages */}

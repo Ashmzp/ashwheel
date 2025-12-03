@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Helmet } from 'react-helmet';
+import SEO from '@/components/SEO';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -44,13 +44,18 @@ const SipCalculatorPage = () => {
   const investedPercentage = totalValue > 0 ? (investedAmount / totalValue) * 100 : 0;
   const returnsPercentage = totalValue > 0 ? (estimatedReturns / totalValue) * 100 : 0;
 
+  const faqSchema = {
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "How does a SIP calculator work?", "acceptedAnswer": { "@type": "Answer", "text": "Enter your monthly investment, expected return rate, and time period. The calculator shows your total investment value and returns." } },
+      { "@type": "Question", "name": "What is a good SIP return rate?", "acceptedAnswer": { "@type": "Answer", "text": "Historically, equity mutual funds have returned 10-15% annually, but returns vary based on market conditions." } },
+      { "@type": "Question", "name": "Can I change the investment amount?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, use the slider or input field to adjust monthly investment from ₹500 to ₹1,00,000." } }
+    ]
+  };
+
   return (
     <>
-      <Helmet>
-        <title>SIP Calculator - Ashwheel Tools</title>
-        <meta name="description" content="Estimate the future value of your Systematic Investment Plan (SIP) investments." />
-        <meta name="keywords" content="sip calculator, mutual fund calculator, investment planning, wealth creation, financial calculator" />
-      </Helmet>
+      <SEO path="/tools/sip-calculator" faqSchema={faqSchema} />
       <div className="flex flex-col min-h-screen bg-gradient-to-br from-secondary/20 to-background p-4 sm:p-6">
         <header className="flex items-center justify-between mb-8">
           <Button variant="ghost" asChild>

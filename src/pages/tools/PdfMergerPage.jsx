@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { Helmet } from 'react-helmet-async';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
+import SEO from '@/components/SEO';
+import { Link } from 'react-router-dom';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { PDFDocument } from 'pdf-lib';
 import { saveAs } from 'file-saver';
@@ -83,7 +84,46 @@ const PdfMergerPage = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef(null);
   const { toast } = useToast();
-  const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+  const MAX_FILE_SIZE = 100 * 1024 * 1024;
+
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Is it free to merge PDF files on Ashwheel?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes, our PDF merger is completely free to use with no limitations. You can merge unlimited PDF files without any watermarks or hidden charges."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is it safe to merge PDFs online?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Absolutely! All PDF merging happens directly in your browser. Your files are never uploaded to our servers, ensuring complete privacy and security."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How many PDF files can I merge at once?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "There's no limit! You can merge as many PDF files as you need in a single operation."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Will the merged PDF have watermarks?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No, your merged PDF will be completely clean without any watermarks or branding."
+        }
+      }
+    ]
+  }
 
   const processFiles = useCallback(async (files) => {
     setIsProcessing(true);
@@ -230,11 +270,7 @@ const PdfMergerPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>PDF Merger - Combine, Rearrange, and Edit Pages</title>
-        <meta name="description" content="Merge multiple PDFs into one file. Rearrange, add, or delete pages with our free and secure online PDF merger. No uploads required." />
-        <meta name="keywords" content="merge pdf, combine pdf, rearrange pdf pages, delete pdf pages, pdf joiner" />
-      </Helmet>
+      <SEO path="/merge-pdf" faqSchema={faqSchema} />
       <div className="min-h-screen bg-background p-4 sm:p-6">
         <main className="max-w-7xl mx-auto">
           <Card>
@@ -279,6 +315,52 @@ const PdfMergerPage = () => {
               <p><strong>Security Note:</strong> All processing happens directly in your browser. Your files are never uploaded to our servers, ensuring your data remains private.</p>
             </CardContent>
           </Card>
+
+          <div className="mt-12 max-w-4xl mx-auto space-y-8">
+            <Card>
+              <CardContent className="p-6">
+                <h2 className="text-2xl font-bold mb-4">Frequently Asked Questions</h2>
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2">Q: Is it free to merge PDF files on Ashwheel?</h3>
+                    <p className="text-muted-foreground">A: Yes, our PDF merger is completely free to use with no limitations. You can merge unlimited PDF files without any watermarks or hidden charges.</p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2">Q: Is it safe to merge PDFs online?</h3>
+                    <p className="text-muted-foreground">A: Absolutely! All PDF merging happens directly in your browser. Your files are never uploaded to our servers, ensuring complete privacy and security.</p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2">Q: How many PDF files can I merge at once?</h3>
+                    <p className="text-muted-foreground">A: There's no limit! You can merge as many PDF files as you need in a single operation.</p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2">Q: Will the merged PDF have watermarks?</h3>
+                    <p className="text-muted-foreground">A: No, your merged PDF will be completely clean without any watermarks or branding.</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <h2 className="text-2xl font-bold mb-4">Related PDF Tools</h2>
+                <div className="grid md:grid-cols-3 gap-4">
+                  <Link to="/split-pdf" className="block p-4 border rounded-lg hover:shadow-lg transition">
+                    <h3 className="font-semibold mb-2">Split PDF</h3>
+                    <p className="text-sm text-muted-foreground">Separate a large PDF into multiple smaller files</p>
+                  </Link>
+                  <Link to="/compress-pdf" className="block p-4 border rounded-lg hover:shadow-lg transition">
+                    <h3 className="font-semibold mb-2">Compress PDF</h3>
+                    <p className="text-sm text-muted-foreground">Reduce PDF file size without losing quality</p>
+                  </Link>
+                  <Link to="/pdf-to-jpeg" className="block p-4 border rounded-lg hover:shadow-lg transition">
+                    <h3 className="font-semibold mb-2">PDF to JPG</h3>
+                    <p className="text-sm text-muted-foreground">Convert PDF pages to image format</p>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </main>
       </div>
     </>

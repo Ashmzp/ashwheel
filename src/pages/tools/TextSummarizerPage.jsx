@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+    import SEO from '@/components/SEO';
     import ToolWrapper from '@/components/ToolWrapper';
     import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
     import { Button } from '@/components/ui/button';
@@ -47,7 +48,18 @@ import React, { useState } from 'react';
         </div>
       );
 
+      const faqSchema = {
+        "@type": "FAQPage",
+        "mainEntity": [
+          { "@type": "Question", "name": "How does the summarizer work?", "acceptedAnswer": { "@type": "Answer", "text": "It ranks sentences by word frequency and selects the most important ones based on your chosen length." } },
+          { "@type": "Question", "name": "Can I control summary length?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, use the slider to choose how many sentences you want in your summary (1-10)." } },
+          { "@type": "Question", "name": "What types of text work best?", "acceptedAnswer": { "@type": "Answer", "text": "The tool works best with informative articles and documents with clear sentence structure." } }
+        ]
+      };
+
       return (
+        <>
+        <SEO path="/tools/text-summarizer" faqSchema={faqSchema} />
         <ToolWrapper title="Basic Text Summarizer" howToUse={howToUse}>
           <Card className="max-w-3xl mx-auto">
             <CardHeader><CardTitle>Basic Text Summarizer</CardTitle></CardHeader>
@@ -79,6 +91,7 @@ import React, { useState } from 'react';
             </CardContent>
           </Card>
         </ToolWrapper>
+        </>
       );
     };
 

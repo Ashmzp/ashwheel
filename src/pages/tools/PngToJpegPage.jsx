@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 import { useDropzone } from 'react-dropzone';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,17 @@ const PngToJpegPage = () => {
   const [bgColor, setBgColor] = useState('#ffffff');
   const [isConverting, setIsConverting] = useState(false);
   const { toast } = useToast();
-  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+  const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {"@type": "Question", "name": "Is PNG to JPEG conversion free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, completely free with unlimited conversions."}},
+      {"@type": "Question", "name": "Can I set background color?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, choose any color for transparent areas."}},
+      {"@type": "Question", "name": "Can I adjust quality?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, quality slider from 10% to 100%."}}
+    ]
+  };
 
   const onDrop = useCallback((acceptedFiles) => {
     const pngFile = acceptedFiles.find(f => f.type === 'image/png');
@@ -112,11 +122,7 @@ const PngToJpegPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>PNG to JPEG Converter | Ashwheel</title>
-        <meta name="description" content="Convert PNG images to high-quality JPEG files. Customize background color for transparency and adjust image quality. Free, fast, and easy to use." />
-        <meta name="keywords" content="png to jpeg, png to jpg, convert png to jpeg, image converter, transparent png to jpg, png to jpg converter, image quality settings, convert image format" />
-      </Helmet>
+      <SEO path="/png-to-jpeg" faqSchema={faqSchema} />
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, y: -20 }}

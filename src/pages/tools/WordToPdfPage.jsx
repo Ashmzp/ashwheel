@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -15,6 +15,16 @@ const WordToPdfPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef(null);
   const { toast } = useToast();
+
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {"@type": "Question", "name": "Is Word to PDF conversion free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, completely free with unlimited conversions."}},
+      {"@type": "Question", "name": "Are my files secure?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, all processing happens in your browser."}},
+      {"@type": "Question", "name": "What file formats are supported?", "acceptedAnswer": {"@type": "Answer", "text": "This tool converts .docx files to PDF."}}
+    ]
+  };
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -122,11 +132,7 @@ const WordToPdfPage = () => {
   
   return (
     <>
-      <Helmet>
-        <title>Word to PDF Converter - Ashwheel Tools</title>
-        <meta name="description" content="Convert your Word documents (.docx) to high-quality PDF files for free. Fast, secure, and client-side conversion. Easily transform your documents for sharing and printing." />
-        <meta name="keywords" content="word to pdf, docx to pdf, convert word to pdf, free word to pdf converter, convert documents, online word converter, doc to pdf" />
-      </Helmet>
+      <SEO path="/word-to-pdf" faqSchema={faqSchema} />
       <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-4 sm:p-6">
         <header className="flex items-center justify-between mb-8">
             <Button variant="ghost" asChild>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-    import { Helmet } from 'react-helmet-async';
+    import SEO from '@/components/SEO';
     import { Link } from 'react-router-dom';
     import { Button } from '@/components/ui/button';
     import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -49,12 +49,18 @@ import React, { useState } from 'react';
         window.open(formatUrl, '_blank');
       };
 
+      const faqSchema = {
+        "@type": "FAQPage",
+        "mainEntity": [
+          { "@type": "Question", "name": "Can I download Instagram Reels?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, paste the Reel link and download it in high quality without watermarks." } },
+          { "@type": "Question", "name": "Do I need to log in?", "acceptedAnswer": { "@type": "Answer", "text": "No, our tool works anonymously. No login or Instagram account required." } },
+          { "@type": "Question", "name": "What can I download?", "acceptedAnswer": { "@type": "Answer", "text": "You can download Instagram Reels, videos, IGTV, and stories in various formats." } }
+        ]
+      };
+
       return (
         <>
-          <Helmet>
-            <title>Instagram Reel & Video Downloader - Ashwheel Tools</title>
-            <meta name="description" content="Save Instagram Reels, videos, and stories directly to your device. Free, anonymous, and high-resolution downloads." />
-          </Helmet>
+          <SEO path="/tools/instagram-downloader" faqSchema={faqSchema} />
           <div className="flex flex-col min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 p-4 sm:p-6">
             <header className="flex items-center justify-between mb-8">
               <Button variant="ghost" asChild>

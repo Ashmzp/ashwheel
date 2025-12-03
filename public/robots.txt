@@ -1,4 +1,97 @@
+# Ashwheel.cloud - Robots.txt
+# Updated: 2025-12-03
+# Allow all search engines and AI crawlers to index our free tools
+
+# Default rules for all crawlers
 User-agent: *
 Allow: /
+Crawl-delay: 1
 
+# Disallow admin and authentication pages
+Disallow: /admin/
+Disallow: /admin-login
+Disallow: /login
+Disallow: /auth/
+Disallow: /api/
+
+# Disallow dynamic poll admin pages
+Disallow: /poll/*/vote
+Disallow: /poll/*/admin
+Disallow: /tools/poll-maker/*/admin
+
+# Allow all public tools
+Allow: /tools/
+
+# Specific AI Crawlers - Welcome them!
+User-agent: GPTBot
+Allow: /
+Crawl-delay: 2
+
+User-agent: ChatGPT-User
+Allow: /
+Crawl-delay: 2
+
+User-agent: Claude-Web
+Allow: /
+Crawl-delay: 2
+
+User-agent: Google-Extended
+Allow: /
+Crawl-delay: 1
+
+User-agent: anthropic-ai
+Allow: /
+Crawl-delay: 2
+
+User-agent: Applebot-Extended
+Allow: /
+Crawl-delay: 2
+
+User-agent: PerplexityBot
+Allow: /
+Crawl-delay: 2
+
+User-agent: Bytespider
+Allow: /
+Crawl-delay: 3
+
+# Google Bot - Priority crawler
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0.5
+
+# Bing Bot
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+# Yandex Bot
+User-agent: Yandex
+Allow: /
+Crawl-delay: 2
+
+# Baidu Bot
+User-agent: Baiduspider
+Allow: /
+Crawl-delay: 2
+
+# Block malicious bots
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+# Sitemap locations
 Sitemap: https://ashwheel.cloud/sitemap.xml
+Sitemap: https://ashwheel.cloud/llms.txt
+
+# Host declaration (preferred domain)
+Host: ashwheel.cloud
+

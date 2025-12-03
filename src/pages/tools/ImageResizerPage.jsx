@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,6 +25,16 @@ const ImageResizerPage = () => {
   const [resizedFile, setResizedFile] = useState(null);
   const [isResizing, setIsResizing] = useState(false);
   const { toast } = useToast();
+
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {"@type": "Question", "name": "Is image resizing free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, completely free with unlimited resizing."}},
+      {"@type": "Question", "name": "What units are supported?", "acceptedAnswer": {"@type": "Answer", "text": "Centimeters, inches, and pixels."}},
+      {"@type": "Question", "name": "Can I compress while resizing?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, set a target file size in KB."}}
+    ]
+  };
 
   const [dpi, setDpi] = useState(300);
   const [width, setWidth] = useState(3.5);
@@ -150,10 +160,7 @@ const ImageResizerPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Image Resizer - Ashwheel</title>
-        <meta name="description" content="Resize images to specific dimensions (cm, inch, px) and compress to a target file size in KB." />
-      </Helmet>
+      <SEO path="/image-resizer" faqSchema={faqSchema} />
       <div className="container mx-auto p-4 max-w-4xl">
         <Card>
           <CardHeader>

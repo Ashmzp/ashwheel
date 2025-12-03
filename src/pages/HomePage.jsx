@@ -5,6 +5,7 @@ import React, { useState, useMemo, useEffect } from 'react';
     import { Input } from '@/components/ui/input';
     import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
     import { FileText, Image, Video, Scissors, FileJson, FileType, Split, Merge, Minimize as Compress, Type, QrCode, Calculator, Percent, Calendar, Link2, Download, User, Shield, FileImage, FileUp, FileDown, PenSquare, Clock, Hash, Palette, TextSelection as TextSearch, ZoomIn, Crop, Repeat, Sparkles, Facebook, Instagram, Youtube, Heart, Edit, KeyRound, Scale, Paintbrush, CaseSensitive, Weight, Code, Timer, BookText, CheckSquare, Vote, Layers } from 'lucide-react';
+    import ProBanner from '@/components/ProBanner';
 
     const toolCategories = {
         "PDF Tools": {
@@ -182,10 +183,10 @@ import React, { useState, useMemo, useEffect } from 'react';
                                 transition={{ duration: 0.5, delay: 0.2 }}
                                 className="text-4xl md:text-5xl font-extrabold tracking-tight text-primary"
                             >
-                                Welcome to Ashwheel Tools
+                                Ashwheel — Tools for Everyone, Software for Businesses
                             </motion.h1>
                             <motion.p initial={{y: -20, opacity: 0}} animate={{y: 0, opacity: 1}} transition={{duration: 0.5, delay: 0.4}} className="mt-4 text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
-                                Unlock your productivity with our collection of free, easy-to-use online tools. From PDF conversion and image editing to financial calculators and resume building, we have everything you need to get things done faster and more efficiently.
+                                <span className="font-semibold text-primary">Free Online Tools</span> for PDF, images, calculators & more. Plus <span className="font-semibold text-yellow-500">Ashwheel Pro</span> — complete showroom & workshop management software.
                             </motion.p>
                         </header>
 
@@ -207,6 +208,7 @@ import React, { useState, useMemo, useEffect } from 'react';
                         </motion.div>
 
                         <main id="tools">
+                            {!searchTerm && <ProBanner />}
                             {Object.keys(filteredTools).length > 0 ? (
                                 Object.entries(filteredTools).map(([category, { id, icon: CategoryIcon, color, tools }]) => (
                                     <motion.section

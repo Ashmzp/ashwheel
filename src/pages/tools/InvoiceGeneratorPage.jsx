@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Helmet } from 'react-helmet';
+import SEO from '@/components/SEO';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -147,12 +147,18 @@ const InvoiceGeneratorPage = () => {
         }
     };
     
+    const faqSchema = {
+        "@type": "FAQPage",
+        "mainEntity": [
+            { "@type": "Question", "name": "How do I create an invoice?", "acceptedAnswer": { "@type": "Answer", "text": "Fill in your company and client details, add items with quantities and rates, set tax and discounts, then download as PDF or DOCX." } },
+            { "@type": "Question", "name": "Can I add my company logo?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, upload your logo at the top of the form. It will appear on the invoice preview and final download." } },
+            { "@type": "Question", "name": "Does the invoice number auto-increment?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, after each print/download, the invoice number automatically increments for your next invoice." } }
+        ]
+    };
+
     return (
         <>
-            <Helmet>
-                <title>Invoice Generator - Ashwheel Tools</title>
-                <meta name="description" content="Create, customize, and download professional invoices for free. Perfect for small businesses and freelancers." />
-            </Helmet>
+            <SEO path="/tools/invoice-generator" faqSchema={faqSchema} />
             <div className="flex flex-col min-h-screen bg-gradient-to-br from-secondary/5 to-background p-4 sm:p-6 lg:p-8">
                  <header className="flex items-center justify-between mb-8 non-printable">
                     <Button variant="ghost" asChild>

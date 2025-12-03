@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
+    import SEO from '@/components/SEO';
     import { fabric } from 'fabric';
     import { useDropzone } from 'react-dropzone';
     import { getDocument } from 'pdfjs-dist';
@@ -209,7 +210,18 @@ import React, { useRef, useEffect, useState } from 'react';
             </div>
         );
 
+        const faqSchema = {
+            "@type": "FAQPage",
+            "mainEntity": [
+                { "@type": "Question", "name": "What can I create with CanvasCraft?", "acceptedAnswer": { "@type": "Answer", "text": "Create custom layouts by combining images and PDF pages on a canvas. Perfect for collages, presentations, and print materials." } },
+                { "@type": "Question", "name": "What file formats are supported?", "acceptedAnswer": { "@type": "Answer", "text": "You can upload JPEG, PNG images and PDF files. Export as JPEG or PDF." } },
+                { "@type": "Question", "name": "Can I customize canvas size?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, choose from presets (A4, A3, Letter) or enter custom dimensions in millimeters." } }
+            ]
+        };
+
         return (
+            <>
+            <SEO path="/tools/canvas-craft" faqSchema={faqSchema} />
             <ToolWrapper
                 title="CanvasCraft"
                 subtitle="Your Creative Space for Photo & PDF Layouts"
@@ -295,6 +307,7 @@ import React, { useRef, useEffect, useState } from 'react';
                     </DialogContent>
                 </Dialog>
             </ToolWrapper>
+            </>
         );
     };
 

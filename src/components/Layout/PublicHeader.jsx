@@ -41,8 +41,14 @@ import React from 'react';
                 <AnimatedLogo className="h-12 w-auto" isLink={false} />
             </Link>
             <nav className="hidden md:flex items-center gap-1">
-                <Button variant="ghost" asChild><Link to="/ashwheel-pro"><Zap className="mr-2 h-4 w-4 text-yellow-400" /> Ashwheel Pro</Link></Button>
-                <Button variant="ghost" onClick={(e) => handleNavClick(e, '/#tools')}><Wrench className="mr-2 h-4 w-4" /> Tools</Button>
+                <Button variant="ghost" onClick={(e) => handleNavClick(e, '/#tools')}><Wrench className="mr-2 h-4 w-4" /> Tools <span className="ml-1 text-xs text-green-500">(Free)</span></Button>
+                <Button variant="ghost" asChild>
+                  <Link to="/ashwheel-pro" className="relative">
+                    <Zap className="mr-2 h-4 w-4 text-yellow-400" /> 
+                    Ashwheel Pro
+                    <span className="ml-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-yellow-400 text-black">SaaS</span>
+                  </Link>
+                </Button>
                 <Button variant="ghost" asChild><Link to="/about"><Info className="mr-2 h-4 w-4" /> About</Link></Button>
                 <Button variant="ghost" asChild><Link to="/contact"><MessageSquare className="mr-2 h-4 w-4" /> Contact</Link></Button>
                 <Button variant="ghost" asChild><Link to="/feedback"><Star className="mr-2 h-4 w-4" /> Feedback</Link></Button>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-    import { Helmet } from 'react-helmet-async';
+    import SEO from '@/components/SEO';
     import { Link } from 'react-router-dom';
     import { Button } from '@/components/ui/button';
     import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -49,12 +49,18 @@ import React, { useState } from 'react';
         window.open(formatUrl, '_blank');
       };
 
+      const faqSchema = {
+        "@type": "FAQPage",
+        "mainEntity": [
+          { "@type": "Question", "name": "Can I download Facebook Reels?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, our tool supports downloading both Facebook videos and Reels in HD quality." } },
+          { "@type": "Question", "name": "Is it safe to use?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, our downloader is completely safe and doesn't require any Facebook login or permissions." } },
+          { "@type": "Question", "name": "What quality can I download?", "acceptedAnswer": { "@type": "Answer", "text": "You can download videos in various qualities including HD, depending on the original upload quality." } }
+        ]
+      };
+
       return (
         <>
-          <Helmet>
-            <title>Facebook Video & Reel Downloader - Ashwheel Tools</title>
-            <meta name="description" content="Download videos and Reels from Facebook in HD quality. Easy-to-use online tool for saving Facebook content." />
-          </Helmet>
+          <SEO path="/tools/facebook-downloader" faqSchema={faqSchema} />
           <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-50 to-background p-4 sm:p-6">
             <header className="flex items-center justify-between mb-8">
               <Button variant="ghost" asChild>

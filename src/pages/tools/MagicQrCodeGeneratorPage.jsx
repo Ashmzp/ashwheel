@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 import { useNavigate } from 'react-router-dom';
 import { QRCodeCanvas } from 'qrcode.react';
 import { Button } from '@/components/ui/button';
@@ -160,11 +160,18 @@ const MagicQrCodeGeneratorPage = () => {
     </Popover>
   );
 
+  const faqSchema = {
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "What is a Magic QR Profile?", "acceptedAnswer": { "@type": "Answer", "text": "It's a QR code that links to a beautiful page with all your social media and custom links in one place." } },
+      { "@type": "Question", "name": "Do I need to create an account?", "acceptedAnswer": { "@type": "Answer", "text": "No, all your data is stored in the QR code itself. No registration or login required." } },
+      { "@type": "Question", "name": "Can I customize the QR code?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, change colors, add your logo, and adjust the design to match your brand." } }
+    ]
+  };
+
   return (
     <>
-      <Helmet>
-        <title>Magic QR Profile Generator | Ashwheel Tools</title>
-      </Helmet>
+      <SEO path="/tools/magic-qr-generator" faqSchema={faqSchema} />
       <div className="bg-gradient-to-b from-gray-900 via-purple-900 to-gray-900 text-white min-h-screen p-4 md:p-8">
         <main className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Side: Form */}

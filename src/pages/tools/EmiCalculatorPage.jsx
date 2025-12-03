@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Helmet } from 'react-helmet';
+import SEO from '@/components/SEO';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -12,6 +12,15 @@ const EmiCalculatorPage = () => {
   const [principal, setPrincipal] = useState(500000);
   const [interestRate, setInterestRate] = useState(9.5);
   const [tenure, setTenure] = useState(5);
+
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {"@type": "Question", "name": "How is EMI calculated?", "acceptedAnswer": {"@type": "Answer", "text": "EMI = [P x R x (1+R)^N]/[(1+R)^N-1] where P=Principal, R=Rate per month, N=Tenure in months."}},
+      {"@type": "Question", "name": "Is this calculator accurate?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, uses standard EMI formula used by banks and financial institutions."}}
+    ]
+  }
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-IN', {
@@ -45,10 +54,7 @@ const EmiCalculatorPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>EMI Calculator - Ashwheel Tools</title>
-        <meta name="description" content="Calculate your Equated Monthly Installment (EMI) for loans with our easy-to-use calculator." />
-      </Helmet>
+      <SEO path="/emi-calculator" faqSchema={faqSchema} />
       <div className="flex flex-col min-h-screen bg-gradient-to-br from-secondary/20 to-background p-4 sm:p-6">
         <header className="flex items-center justify-between mb-8">
           <Button variant="ghost" asChild>

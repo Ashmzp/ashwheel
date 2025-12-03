@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
-    import { Helmet } from 'react-helmet-async';
+    import SEO from '@/components/SEO';
     import { Link } from 'react-router-dom';
     import { Button } from '@/components/ui/button';
     import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -20,7 +20,17 @@ import React, { useState, useRef, useCallback } from 'react';
       const [isConverting, setIsConverting] = useState(false);
       const fileInputRef = useRef(null);
       const { toast } = useToast();
-      const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
+      const MAX_FILE_SIZE = 50 * 1024 * 1024;
+
+      const faqSchema = {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {"@type": "Question", "name": "Is PDF to JPEG conversion free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, completely free with unlimited conversions."}},
+          {"@type": "Question", "name": "Are my files secure?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, all processing happens in your browser. Files never uploaded."}},
+          {"@type": "Question", "name": "What is the maximum file size?", "acceptedAnswer": {"@type": "Answer", "text": "You can upload PDF files up to 50MB."}}
+        ]
+      };
 
       const handleFileChange = (e) => {
         const selectedFile = e.target.files[0];
@@ -181,11 +191,7 @@ import React, { useState, useRef, useCallback } from 'react';
 
       return (
         <>
-          <Helmet>
-            <title>PDF to JPEG Converter - Ashwheel Tools</title>
-            <meta name="description" content="Convert your PDF files to high-quality JPEG images for free. Easy, fast, and secure. Single-page PDFs download as JPEG, multi-page PDFs as a ZIP file. Optimize PDFs for web and social media." />
-            <meta name="keywords" content="pdf to jpeg, pdf to jpg, convert pdf to image, extract images from pdf, pdf to image converter, pdf to jpg converter, extract pdf pages, PDF for social media" />
-          </Helmet>
+          <SEO path="/pdf-to-jpeg" faqSchema={faqSchema} />
           <div className="flex flex-col min-h-screen bg-gradient-to-br from-secondary/20 to-background p-4 sm:p-6">
             <header className="flex items-center justify-between mb-8">
                 <Button variant="ghost" asChild>

@@ -1,0 +1,29 @@
+# humanstxt.org
+
+/* TEAM */
+Developer: Ashish Kumar
+Site: https://ashwheel.cloud
+Twitter: @ash_mzp
+Location: India
+
+/* THANKS */
+To all our users who trust Ashwheel for their daily tasks
+Open source community for amazing libraries and tools
+
+/* SITE */
+Last update: 2025-12-03
+Standards: HTML5, CSS3, JavaScript ES6+
+Components: React, Vite, TailwindCSS
+Software: Visual Studio Code, Git
+Hosting: Coolify Self-Hosted
+Backend: Supabase
+
+/* FEATURES */
+40+ Free Online Tools
+PDF Manipulation Tools
+Image Editing & Conversion
+Financial Calculators
+Productivity Utilities
+No Registration Required
+100% Free Forever
+Privacy-First Approach

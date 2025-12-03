@@ -1,0 +1,10 @@
+Contact: mailto:support@ashwheel.cloud
+Expires: 2025-12-31T23:59:59.000Z
+Preferred-Languages: en, hi
+Canonical: https://ashwheel.cloud/.well-known/security.txt
+
+# Ashwheel - Legitimate Business Software
+# This is a safe and legitimate website providing:
+# - Free online productivity tools
+# - Automobile business management software
+# - No malware, no phishing, no harmful content

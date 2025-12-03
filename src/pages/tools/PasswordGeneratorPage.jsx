@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+    import SEO from '@/components/SEO';
     import ToolWrapper from '@/components/ToolWrapper';
     import { Button } from '@/components/ui/button';
     import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +11,15 @@ import React, { useState } from 'react';
     import { Copy, RefreshCw } from 'lucide-react';
 
     const PasswordGeneratorPage = () => {
+      const faqSchema = {
+        "@type": "FAQPage",
+        "mainEntity": [
+          { "@type": "Question", "name": "How do I generate a strong password?", "acceptedAnswer": { "@type": "Answer", "text": "Set your desired length (8-64 characters), enable uppercase, lowercase, numbers, and symbols, then click Generate Password." } },
+          { "@type": "Question", "name": "What makes a password secure?", "acceptedAnswer": { "@type": "Answer", "text": "A secure password is at least 12 characters long and includes a mix of uppercase, lowercase, numbers, and special symbols." } },
+          { "@type": "Question", "name": "Can I copy the generated password?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, click the copy icon next to the password field to copy it to your clipboard instantly." } }
+        ]
+      };
+
       const [password, setPassword] = useState('');
       const [length, setLength] = useState(16);
       const [includeUppercase, setIncludeUppercase] = useState(true);
@@ -65,6 +75,8 @@ import React, { useState } from 'react';
       );
 
       return (
+        <>
+        <SEO path="/tools/password-generator" faqSchema={faqSchema} />
         <ToolWrapper title="Password Generator" howToUse={howToUse}>
           <Card className="max-w-2xl mx-auto">
             <CardHeader>
@@ -125,6 +137,7 @@ import React, { useState } from 'react';
             </CardContent>
           </Card>
         </ToolWrapper>
+        </>
       );
     };
 

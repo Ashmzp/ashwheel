@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/NewSupabaseAuthContext';
 import AppRoutes from '@/AppRoutes';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import OfflineIndicator from '@/components/OfflineIndicator';
+import { initGA, trackPageView } from '@/utils/analytics';
 
 import Sidebar from '@/components/Layout/Sidebar';
 import Header from '@/components/Layout/Header';
@@ -16,11 +17,20 @@ function App() {
   const { user, loading, loadingUserData } = useAuth();
   const location = useLocation();
 
+  useEffect(() => {
+    initGA();
+  }, []);
+
+  useEffect(() => {
+    trackPageView(location.pathname + location.search);
+  }, [location]);
+
   const isPrintRoute = location.pathname.startsWith('/print');
   const isAuthRoute =
     location.pathname === '/login' ||
     location.pathname === '/admin-login' ||
     location.pathname === '/signup' ||
+    location.pathname === '/reset-password' ||
     location.pathname === '/auth/callback';
 
   // Check if current route is a public route (tools, static pages, home)

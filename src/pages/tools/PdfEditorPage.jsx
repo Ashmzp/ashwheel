@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-    import { Helmet } from 'react-helmet-async';
+    import SEO from '@/components/SEO';
+    import ToolProCTA from '@/components/ToolProCTA';
     import { useNavigate } from 'react-router-dom';
     import { Button } from '@/components/ui/button';
     import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -524,12 +525,18 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
         </div>
       );
     
+      const faqSchema = {
+        "@type": "FAQPage",
+        "mainEntity": [
+          { "@type": "Question", "name": "Can I edit text in a PDF?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, you can add new text, edit existing text, change font size and color using our PDF editor." } },
+          { "@type": "Question", "name": "Can I add images to my PDF?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, upload images from your device and place them anywhere on your PDF pages." } },
+          { "@type": "Question", "name": "Does it work offline?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, all processing happens in your browser. Your files never leave your device." } }
+        ]
+      };
+
       return (
         <>
-          <Helmet>
-            <title>Advanced PDF Editor - Ashwheel Tools</title>
-            <meta name="description" content="Edit PDF files with advanced tools. Add text, images, signatures, and manage pages." />
-          </Helmet>
+          <SEO path="/tools/pdf-editor" faqSchema={faqSchema} />
           <div className="flex flex-col h-screen bg-background text-foreground" {...getRootProps()}>
             <header className="flex-shrink-0 bg-secondary/50 border-b border-border">
               <div className="container mx-auto px-4 py-2 flex items-center justify-between">
@@ -569,7 +576,8 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
                   </CardContent>
                 </Card>
                 <div className="max-w-3xl mx-auto mt-8 w-full">
-                  <Accordion type="single" collapsible>
+                  <ToolProCTA />
+                  <Accordion type="single" collapsible className="mt-6">
                     <AccordionItem value="how-to-use">
                       <AccordionTrigger>
                         <div className="flex items-center">

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+    import SEO from '@/components/SEO';
     import ToolWrapper from '@/components/ToolWrapper';
     import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
     import { Button } from '@/components/ui/button';
@@ -74,7 +75,18 @@ import React, { useState, useEffect, useRef } from 'react';
         </div>
       );
 
+      const faqSchema = {
+        "@type": "FAQPage",
+        "mainEntity": [
+          { "@type": "Question", "name": "What is the Pomodoro Technique?", "acceptedAnswer": { "@type": "Answer", "text": "It's a time management method using 25-minute focused work sessions followed by short breaks." } },
+          { "@type": "Question", "name": "How long are the breaks?", "acceptedAnswer": { "@type": "Answer", "text": "Short breaks are 5 minutes, and long breaks (after 4 sessions) are 15 minutes." } },
+          { "@type": "Question", "name": "Will I get notifications?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, you'll receive browser notifications when each session ends (if you allow notifications)." } }
+        ]
+      };
+
       return (
+        <>
+        <SEO path="/tools/pomodoro-timer" faqSchema={faqSchema} />
         <ToolWrapper title="Pomodoro Timer" howToUse={howToUse}>
           <Card className="max-w-md mx-auto">
             <CardHeader><CardTitle>Pomodoro Timer</CardTitle></CardHeader>
@@ -94,6 +106,7 @@ import React, { useState, useEffect, useRef } from 'react';
             </CardContent>
           </Card>
         </ToolWrapper>
+        </>
       );
     };
 

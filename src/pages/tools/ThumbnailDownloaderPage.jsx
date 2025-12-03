@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -75,13 +75,18 @@ const ThumbnailDownloaderPage = () => {
   };
 
 
+  const faqSchema = {
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "How do I download a YouTube thumbnail?", "acceptedAnswer": { "@type": "Answer", "text": "Paste the YouTube video URL, click Fetch Thumbnails, and download your preferred resolution." } },
+      { "@type": "Question", "name": "What resolutions are available?", "acceptedAnswer": { "@type": "Answer", "text": "We provide Max Resolution, HD, Medium, Standard, and Default thumbnail sizes." } },
+      { "@type": "Question", "name": "Can I use thumbnails commercially?", "acceptedAnswer": { "@type": "Answer", "text": "Thumbnails are copyrighted by their creators. Use them according to YouTube's terms of service." } }
+    ]
+  };
+
   return (
     <>
-      <Helmet>
-        <title>YouTube Thumbnail Downloader - Ashwheel</title>
-        <meta name="description" content="Download high-quality thumbnails from any YouTube video for free." />
-        <meta name="keywords" content="youtube thumbnail downloader, download youtube thumbnail, thumbnail grabber, video thumbnail" />
-      </Helmet>
+      <SEO path="/tools/thumbnail-downloader" faqSchema={faqSchema} />
       <div className="flex flex-col min-h-screen bg-gradient-to-br from-secondary/20 to-background p-4 sm:p-6">
         <header className="flex items-center justify-between mb-8">
           <Button variant="ghost" asChild>

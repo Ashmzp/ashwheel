@@ -1,10 +1,10 @@
 import React, { useState, useRef, useCallback } from 'react';
+import SEO from '@/components/SEO';
 import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Download, Palette, Upload, Trash2, FileDown, Settings, Paintbrush, Square } from 'lucide-react';
-import SeoWrapper from '@/components/SeoWrapper';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
@@ -13,6 +13,15 @@ import { HexColorPicker } from "react-colorful";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const QrCodeGeneratorPage = () => {
+    const faqSchema = {
+        "@type": "FAQPage",
+        "mainEntity": [
+            { "@type": "Question", "name": "How do I create a QR code?", "acceptedAnswer": { "@type": "Answer", "text": "Enter your text or URL in the input field, customize colors and logo if desired, then download as PNG or JPEG." } },
+            { "@type": "Question", "name": "Can I add a logo to my QR code?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, upload your logo in the Logo & Style tab and adjust its size. The QR code will remain scannable." } },
+            { "@type": "Question", "name": "What formats can I download?", "acceptedAnswer": { "@type": "Answer", "text": "You can download your custom QR code as PNG or JPEG in high resolution (512x512px)." } }
+        ]
+    };
+
     const [qrValue, setQrValue] = useState('https://ashwheel.com');
     const [fgColor, setFgColor] = useState('#000000');
     const [bgColor, setBgColor] = useState('#ffffff');
@@ -67,11 +76,8 @@ const QrCodeGeneratorPage = () => {
     );
 
     return (
-        <SeoWrapper
-            title="Free QR Code Generator | Customize with Colors & Logos"
-            description="Generate high-quality, custom QR codes for URLs, text, and more. Customize colors, add your logo, and download in PNG, JPEG, or PDF formats for free."
-            keywords={['QR code generator', 'custom QR code', 'free QR code', 'QR code with logo', 'qr code color']}
-        >
+        <>
+        <SEO path="/tools/qr-code-generator" faqSchema={faqSchema} />
             <div className="container mx-auto py-8 px-4">
                 <div className="grid lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-2">
@@ -202,7 +208,7 @@ const QrCodeGeneratorPage = () => {
                     </CardContent>
                  </Card>
             </div>
-        </SeoWrapper>
+        </>
     );
 };
 

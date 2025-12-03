@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -47,13 +47,18 @@ const UrlShortenerPage = () => {
     });
   };
 
+  const faqSchema = {
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "How do I shorten a URL?", "acceptedAnswer": { "@type": "Answer", "text": "Paste your long URL in the input field, click Shorten, and get your short link instantly." } },
+      { "@type": "Question", "name": "Is it free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, our URL shortener is completely free with no registration required." } },
+      { "@type": "Question", "name": "Do short links expire?", "acceptedAnswer": { "@type": "Answer", "text": "No, your shortened links are permanent and will work indefinitely." } }
+    ]
+  };
+
   return (
     <>
-      <Helmet>
-        <title>URL Shortener - Ashwheel</title>
-        <meta name="description" content="Create short, shareable links with our free and easy-to-use URL Shortener." />
-        <meta name="keywords" content="url shortener, link shortener, shorten url, short link, custom url" />
-      </Helmet>
+      <SEO path="/tools/url-shortener" faqSchema={faqSchema} />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

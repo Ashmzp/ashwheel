@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, useMemo } from 'react';
-import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
+import SEO from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -21,7 +21,17 @@ const PdfCompressorPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef(null);
   const { toast } = useToast();
-  const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
+  const MAX_FILE_SIZE = 50 * 1024 * 1024;
+
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {"@type": "Question", "name": "Is this PDF compressor free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, completely free with no limits."}},
+      {"@type": "Question", "name": "Are my files secure?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, all processing happens in your browser. Files never uploaded."}},
+      {"@type": "Question", "name": "Does this work on password-protected PDFs?", "acceptedAnswer": {"@type": "Answer", "text": "No, encrypted PDFs cannot be processed for security reasons."}}
+    ]
+  }
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -163,11 +173,7 @@ const PdfCompressorPage = () => {
   
   return (
     <>
-      <Helmet>
-        <title>PDF Compressor - Ashwheel Tools</title>
-        <meta name="description" content="Reduce the size of your PDF files online for free while maintaining quality. Easy, fast, and secure. Optimize your PDFs for email and web sharing." />
-        <meta name="keywords" content="compress pdf, pdf compressor, reduce pdf size, optimize pdf, shrink pdf file, email pdf, web optimized pdf, PDF file size reducer" />
-      </Helmet>
+      <SEO path="/compress-pdf" faqSchema={faqSchema} />
       <div className="flex flex-col min-h-screen bg-gradient-to-br from-secondary/20 to-background p-4 sm:p-6">
         <header className="flex items-center justify-between mb-8">
             <Button variant="ghost" asChild>

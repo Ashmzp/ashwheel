@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -22,7 +22,17 @@ const SplitPdfPage = () => {
   const [pagePreviews, setPagePreviews] = useState([]);
   const fileInputRef = useRef(null);
   const { toast } = useToast();
-  const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20 MB
+  const MAX_FILE_SIZE = 20 * 1024 * 1024;
+
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {"@type": "Question", "name": "Is PDF splitting free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, completely free with unlimited splits."}},
+      {"@type": "Question", "name": "Are my files secure?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, all processing happens in your browser. Files never uploaded."}},
+      {"@type": "Question", "name": "Can I select specific pages?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, you can remove unwanted pages before downloading."}}
+    ]
+  }
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -160,11 +170,7 @@ const SplitPdfPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Split PDF - Ashwheel Tools</title>
-        <meta name="description" content="Split a PDF into multiple single-page PDF files. Free, fast, and secure. Break down large PDF documents into manageable parts." />
-        <meta name="keywords" content="split pdf, pdf splitter, separate pdf pages, divide pdf, extract pdf pages, pdf cutter" />
-      </Helmet>
+      <SEO path="/split-pdf" faqSchema={faqSchema} />
       <div className="flex flex-col min-h-screen bg-background p-4 sm:p-6">
         <main className="w-full max-w-7xl mx-auto space-y-8">
             <Card>
