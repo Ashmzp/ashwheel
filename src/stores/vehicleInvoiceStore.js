@@ -1,15 +1,15 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { getCurrentDate } from '@/utils/dateUtils';
-import { startOfMonth, endOfMonth } from 'date-fns';
+import { startOfMonth, endOfMonth, format } from 'date-fns';
 
 const useVehicleInvoiceStore = create(
   persist(
     (set) => ({
       searchTerm: '',
       dateRange: {
-        start: startOfMonth(new Date()).toISOString().split('T')[0],
-        end: endOfMonth(new Date()).toISOString().split('T')[0],
+        start: format(startOfMonth(new Date()), 'yyyy-MM-dd'),
+        end: format(endOfMonth(new Date()), 'yyyy-MM-dd'),
       },
       pagination: {
         currentPage: 1,
@@ -19,7 +19,7 @@ const useVehicleInvoiceStore = create(
       setPagination: (pagination) => set(state => ({ pagination: { ...state.pagination, ...pagination } })),
     }),
     {
-      name: 'vehicle-invoice-list-storage',
+      name: 'vehicle-invoice-list-storage-v2',
       storage: createJSONStorage(() => localStorage),
     }
   )

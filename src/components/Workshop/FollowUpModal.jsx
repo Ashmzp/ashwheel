@@ -3,16 +3,29 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { DateInput } from '@/components/ui/date-input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useAuth } from '@/contexts/NewSupabaseAuthContext';
 import { formatDateTimeForInput, addDaysToDate } from '@/utils/dateUtils';
 import { cn } from '@/lib/utils';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import useFollowUpStore from '@/stores/followUpStore';
 import { useSettingsStore } from '@/stores/settingsStore';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+const REMARK_OPTIONS = [
+    'Ringing No Response',
+    'Call Back',
+    'Not Reachable',
+    'Switched Off',
+    'Wrong No',
+    'Engaged/Busy',
+    'No Need Follow-Up',
+    'Others'
+];
 
 const StaffSearchInput = ({ value, onChange, suggestions }) => {
     const [inputValue, setInputValue] = useState(value);
@@ -95,6 +108,10 @@ const FollowUpModal = ({ isOpen, onOpenChange, followUpData, onSave, staffList }
     const { user } = useAuth();
     const { settings } = useSettingsStore();
     const workshopSettings = settings.workshop_settings || {};
+    
+    console.log('FollowUpModal - staffList prop:', staffList);
+    console.log('FollowUpModal - settings:', settings);
+    console.log('FollowUpModal - follow_up_by_list:', workshopSettings.follow_up_by_list);
 
     useEffect(() => {
         if (followUpData) {
@@ -110,10 +127,18 @@ const FollowUpModal = ({ isOpen, onOpenChange, followUpData, onSave, staffList }
     }, [followUpData, setFormField]);
 
     useEffect(() => {
+        console.log('Workshop settings:', workshopSettings);
+        console.log('Last service date:', formData.lastServiceDate);
+        console.log('Follow up days:', workshopSettings.follow_up_after_service_days);
+        
         if (formData.lastServiceDate && workshopSettings.follow_up_after_service_days) {
             const days = parseInt(workshopSettings.follow_up_after_service_days, 10);
-            const nextDate = addDaysToDate(new Date(formData.lastServiceDate), days);
-            setFormField('nextFollowUpDate', format(new Date(nextDate), 'yyyy-MM-dd'));
+            if (!isNaN(days) && days > 0) {
+                const nextDate = addDaysToDate(new Date(formData.lastServiceDate), days);
+                const formattedDate = format(new Date(nextDate), 'yyyy-MM-dd');
+                console.log('Auto-setting next follow-up date:', formattedDate);
+                setFormField('nextFollowUpDate', formattedDate);
+            }
         }
     }, [formData.lastServiceDate, workshopSettings.follow_up_after_service_days, setFormField]);
     
@@ -189,11 +214,20 @@ const FollowUpModal = ({ isOpen, onOpenChange, followUpData, onSave, staffList }
                 <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto pr-2">
                     <div>
                         <Label htmlFor="remark">New Remark</Label>
-                        <Textarea id="remark" value={formData.remark} onChange={(e) => setFormField('remark', e.target.value)} placeholder="Enter new follow-up details..." />
+                        <Select value={formData.remark} onValueChange={(value) => setFormField('remark', value)}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select remark..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {REMARK_OPTIONS.map((option) => (
+                                    <SelectItem key={option} value={option}>{option}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
                     <div>
                         <Label htmlFor="last_service_date">Last Service Date</Label>
-                        <Input type="date" id="last_service_date" value={formData.lastServiceDate} onChange={(e) => setFormField('lastServiceDate', e.target.value)} />
+                        <DateInput id="last_service_date" value={formData.lastServiceDate} onChange={(e) => setFormField('lastServiceDate', e.target.value)} />
                         {workshopSettings.follow_up_after_service_days && (
                             <p className="text-xs text-muted-foreground mt-1">
                                 Next follow-up will be auto-calculated ({workshopSettings.follow_up_after_service_days} days after service)
@@ -202,11 +236,14 @@ const FollowUpModal = ({ isOpen, onOpenChange, followUpData, onSave, staffList }
                     </div>
                     <div>
                         <Label htmlFor="next_follow_up_date">Next Follow-up Date</Label>
-                        <Input type="date" id="next_follow_up_date" value={formData.nextFollowUpDate} onChange={(e) => setFormField('nextFollowUpDate', e.target.value)} />
+                        <DateInput id="next_follow_up_date" value={formData.nextFollowUpDate} onChange={(e) => setFormField('nextFollowUpDate', e.target.value)} />
                     </div>
                     <div>
                         <Label htmlFor="appointment_datetime">Appointment Date & Time</Label>
-                        <Input type="datetime-local" id="appointment_datetime" value={formData.appointmentDateTime} onChange={(e) => setFormField('appointmentDateTime', e.target.value)} />
+                        <div className="relative">
+                            <Input type="datetime-local" id="appointment_datetime" value={formData.appointmentDateTime} onChange={(e) => setFormField('appointmentDateTime', e.target.value)} className="pr-10" />
+                            <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                        </div>
                     </div>
                     <div>
                         <Label htmlFor="followed_by">Followed By</Label>

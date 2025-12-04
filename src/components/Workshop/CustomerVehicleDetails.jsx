@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { DateInput } from '@/components/ui/date-input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { UserPlus, User, Phone, MapPin, Building } from 'lucide-react';
@@ -170,7 +171,7 @@ const CustomerVehicleDetails = ({ formData, setFormData, errors, workshopSetting
               </div>
               <div>
                 <Label htmlFor="invoice_date">Invoice Date</Label>
-                <Input type="date" id="invoice_date" value={formData.invoice_date || ''} onChange={handleInputChange} />
+                <DateInput id="invoice_date" value={formData.invoice_date || ''} onChange={handleInputChange} />
               </div>
               <div>
                 <Label htmlFor="manual_jc_no">{workshopSettings.manual_jc_no_label || 'Job Card No.'} {workshopSettings.manual_jc_no_mandatory && '*'}</Label>

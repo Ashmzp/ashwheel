@@ -2,6 +2,7 @@ import React, { useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { DateInput } from '@/components/ui/date-input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea.jsx';
 import { useSettingsStore } from '@/stores/settingsStore';
@@ -94,7 +95,7 @@ const JobSummary = ({ formData, setFormData }) => {
             </div>
             <div>
               <Label htmlFor="next_due_date">Next Due Date</Label>
-              <Input type="date" id="next_due_date" value={formData.next_due_date || ''} onChange={handleInputChange} />
+              <DateInput id="next_due_date" value={formData.next_due_date || ''} onChange={handleInputChange} />
             </div>
           </div>
           <div>
