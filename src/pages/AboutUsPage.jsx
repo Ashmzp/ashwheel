@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Users, Target, Lightbulb, Mail, Settings, ShoppingCart, BarChart, Package, Shield, Lock, Database, Heart } from 'lucide-react';
+import { Users, Target, Lightbulb, Mail, Settings, ShoppingCart, BarChart, Package, Shield, Lock, Database, Heart, Smartphone, TrendingUp } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import SeoWrapper from '@/components/SeoWrapper';
@@ -10,42 +10,48 @@ const AboutUsPage = () => {
         "Showroom Management": [{
             icon: <ShoppingCart className="h-6 w-6 text-primary" />,
             title: "Vehicle Purchases & Stock",
-            description: "Easily manage new vehicle acquisitions and track your entire inventory in real-time."
+            description: "Vehicle purchases & live stock tracking"
         }, {
             icon: <Users className="h-6 w-6 text-primary" />,
-            title: "Customer & Invoice Management",
-            description: "Maintain detailed customer records and generate professional vehicle invoices with just a few clicks."
+            title: "Customer & Invoicing",
+            description: "Customer records & professional invoicing"
         }, {
             icon: <BarChart className="h-6 w-6 text-primary" />,
-            title: "Comprehensive Reports",
-            description: "Gain insights into your sales, stock, and profitability with powerful, easy-to-understand reports."
+            title: "Sales Reports",
+            description: "Clear sales and profitability reports"
         }],
         "Workshop Management": [{
             icon: <Settings className="h-6 w-6 text-primary" />,
-            title: "Job Card Creation",
-            description: "Create and manage detailed job cards for every service, tracking labor and parts used."
+            title: "Job Card System",
+            description: "Job card creation and service tracking"
         }, {
             icon: <Package className="h-6 w-6 text-primary" />,
-            title: "Inventory & Spares",
-            description: "Keep a precise count of your workshop inventory, from spare parts to consumables."
+            title: "Inventory Management",
+            description: "Inventory & spare parts management"
         }, {
             icon: <Users className="h-6 w-6 text-primary" />,
-            title: "Customer Follow-ups",
-            description: "Automate service reminders and follow-ups to enhance customer retention and satisfaction."
+            title: "Service Reminders",
+            description: "Automated service reminders and follow-ups"
         }],
     };
 
     const trustPoints = [
-        { icon: <Shield className="h-5 w-5" />, text: "Your data is never sold to third parties" },
-        { icon: <Lock className="h-5 w-5" />, text: "End-to-end encryption for all transactions" },
+        { icon: <Shield className="h-5 w-5" />, text: "Your data is never sold or shared" },
+        { icon: <Lock className="h-5 w-5" />, text: "Secure encryption for all operations" },
         { icon: <Database className="h-5 w-5" />, text: "Automatic backups every 24 hours" },
-        { icon: <Heart className="h-5 w-5" />, text: "Privacy-focused platform built for you" },
+        { icon: <Heart className="h-5 w-5" />, text: "Privacy-first architecture" },
+    ];
+
+    const futureFeatures = [
+        { icon: <Smartphone className="h-6 w-6" />, title: "Mobile App", desc: "Manage on the go" },
+        { icon: <TrendingUp className="h-6 w-6" />, title: "Advanced Analytics", desc: "Deeper insights" },
+        { icon: <Users className="h-6 w-6" />, title: "Community", desc: "Learn & grow together" },
     ];
 
     return (
         <SeoWrapper 
-            title="About Us - Ashwheel" 
-            description="Learn about Ashwheel - independently built and maintained by Ashish Kumar Vishwakarma. A privacy-focused platform for automobile businesses and productivity tools."
+            title="About Us - Ashwheel | Built by an Individual for Real Businesses" 
+            description="Ashwheel is independently built by Ashish Kumar Vishwakarma. A privacy-focused platform for automobile businesses with 50+ tools and complete management system."
         >
             <motion.div 
                 initial={{ opacity: 0 }} 
@@ -55,14 +61,14 @@ const AboutUsPage = () => {
             >
                 <div className="container mx-auto px-4 py-12">
                     {/* Hero Section */}
-                    <div className="text-center mb-20">
+                    <div className="text-center mb-16">
                         <motion.h1 
                             initial={{ y: -20, opacity: 0 }} 
                             animate={{ y: 0, opacity: 1 }} 
                             transition={{ duration: 0.7 }} 
                             className="text-4xl md:text-6xl font-extrabold text-primary tracking-tight"
                         >
-                            Built by an Individual, Made for Businesses
+                            Built by an Individual, Made for Real Businesses
                         </motion.h1>
                         <motion.p 
                             initial={{ y: 20, opacity: 0 }} 
@@ -70,35 +76,52 @@ const AboutUsPage = () => {
                             transition={{ delay: 0.3, duration: 0.7 }} 
                             className="mt-6 text-lg text-muted-foreground max-w-3xl mx-auto"
                         >
-                            Ashwheel is independently built and maintained by a solo developer who understands the real challenges of running an automobile business. What started as a solution to simplify complex workflows has grown into a comprehensive platform trusted by businesses across India.
+                            Ashwheel is independently built and maintained by a solo developer who understands the real challenges of running an automobile showroom or workshop. What started as a personal solution has grown into a focused platform trusted by automobile businesses across India.
+                        </motion.p>
+                        <motion.p
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            transition={{ delay: 0.5, duration: 0.7 }}
+                            className="mt-4 text-sm text-muted-foreground/80 max-w-2xl mx-auto italic"
+                        >
+                            Ashwheel is a personal project led by Ashish Kumar Vishwakarma. We are currently in the startup phase and plan for formal business registration in the future.
                         </motion.p>
                     </div>
 
-                    {/* Personal Story */}
-                    <div className="mb-24 max-w-4xl mx-auto">
+                    {/* Why Ashwheel Exists */}
+                    <div className="mb-20 max-w-4xl mx-auto">
                         <Card className="border-0 bg-card/50 backdrop-blur-sm">
                             <CardContent className="p-8">
-                                <h2 className="text-2xl font-bold mb-4 text-center">Why Ashwheel Exists</h2>
+                                <h2 className="text-2xl font-bold mb-6 text-center">Why Ashwheel Exists</h2>
                                 <div className="space-y-4 text-muted-foreground">
-                                    <p>
-                                        <strong className="text-foreground">The Problem:</strong> Managing an automobile showroom or workshop involves juggling multiple spreadsheets, manual invoices, and disconnected tools. I saw firsthand how time-consuming and error-prone this process was.
-                                    </p>
-                                    <p>
-                                        <strong className="text-foreground">The Solution:</strong> Ashwheel was born from the need to simplify these operations. Starting with basic invoicing, it evolved into a complete management system with inventory tracking, GST compliance, workshop management, and 50+ productivity tools.
-                                    </p>
-                                    <p>
-                                        <strong className="text-foreground">The Mission:</strong> To provide accessible, powerful tools that help businesses focus on growth rather than paperwork—without compromising on privacy or security.
-                                    </p>
+                                    <div>
+                                        <h3 className="text-lg font-semibold text-foreground mb-2">The Problem</h3>
+                                        <p>
+                                            Managing an automobile business often means handling multiple spreadsheets, manual invoices, stock registers, and disconnected tools. I experienced firsthand how inefficient and error-prone this setup can be.
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-semibold text-foreground mb-2">The Solution</h3>
+                                        <p>
+                                            Ashwheel was created to bring everything under one roof. It began with simple invoicing and gradually evolved into a complete management system covering inventory, GST compliance, workshop operations, and 50+ practical productivity tools.
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-semibold text-foreground mb-2">The Mission</h3>
+                                        <p>
+                                            To help businesses focus on growth, customers, and profitability—not paperwork—while maintaining complete control over their data.
+                                        </p>
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>
                     </div>
 
                     {/* Trust & Privacy */}
-                    <div className="mb-24">
-                        <div className="text-center mb-12">
-                            <h2 className="text-3xl md:text-4xl font-bold">Your Trust, Our Priority</h2>
-                            <p className="mt-2 text-muted-foreground">Privacy and security built into every feature</p>
+                    <div className="mb-20">
+                        <div className="text-center mb-10">
+                            <h2 className="text-3xl md:text-4xl font-bold">Your Trust Comes First</h2>
+                            <p className="mt-2 text-muted-foreground">Privacy and security built into every layer</p>
                         </div>
                         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
                             {trustPoints.map((point, i) => (
@@ -108,7 +131,7 @@ const AboutUsPage = () => {
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
                                     transition={{ delay: i * 0.1 }}
-                                    className="flex flex-col items-center text-center p-6 bg-card/50 rounded-lg border"
+                                    className="flex flex-col items-center text-center p-6 bg-card/50 rounded-lg border hover:border-primary transition-colors"
                                 >
                                     <div className="bg-primary/10 text-primary p-3 rounded-full mb-3">
                                         {point.icon}
@@ -119,69 +142,56 @@ const AboutUsPage = () => {
                         </div>
                     </div>
 
-                    {/* Mission, Vision, Values */}
-                    <div className="grid md:grid-cols-3 gap-8 mb-24">
-                        <Card className="text-center border-0 bg-card/50 backdrop-blur-sm transform hover:-translate-y-2 transition-transform duration-300">
+                    {/* Vision & Values */}
+                    <div className="grid md:grid-cols-2 gap-8 mb-20 max-w-5xl mx-auto">
+                        <Card className="text-center border-0 bg-card/50 backdrop-blur-sm">
                             <CardHeader>
                                 <div className="mx-auto bg-primary/10 text-primary p-4 rounded-full w-fit mb-4">
                                     <Target className="h-8 w-8" />
-                                </div>
-                                <CardTitle className="text-2xl font-bold">Our Mission</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-muted-foreground">
-                                    To provide accessible, intuitive, and powerful digital tools that streamline operations and drive sustainable growth for businesses of all sizes.
-                                </p>
-                            </CardContent>
-                        </Card>
-                        <Card className="text-center border-0 bg-card/50 backdrop-blur-sm transform hover:-translate-y-2 transition-transform duration-300">
-                            <CardHeader>
-                                <div className="mx-auto bg-primary/10 text-primary p-4 rounded-full w-fit mb-4">
-                                    <Lightbulb className="h-8 w-8" />
                                 </div>
                                 <CardTitle className="text-2xl font-bold">Our Vision</CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <p className="text-muted-foreground">
-                                    To become the go-to platform for automobile businesses in India, known for simplicity, reliability, and genuine care for user privacy.
+                                    To become the most trusted and easy-to-use platform for automobile businesses in India—known for simplicity, reliability, and respect for user privacy.
                                 </p>
                             </CardContent>
                         </Card>
-                        <Card className="text-center border-0 bg-card/50 backdrop-blur-sm transform hover:-translate-y-2 transition-transform duration-300">
+                        <Card className="text-center border-0 bg-card/50 backdrop-blur-sm">
                             <CardHeader>
                                 <div className="mx-auto bg-primary/10 text-primary p-4 rounded-full w-fit mb-4">
-                                    <Users className="h-8 w-8" />
+                                    <Lightbulb className="h-8 w-8" />
                                 </div>
                                 <CardTitle className="text-2xl font-bold">Our Values</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <ul className="text-muted-foreground list-none space-y-1">
-                                    <li><strong>Simplicity:</strong> Powerful but easy</li>
-                                    <li><strong>Privacy:</strong> Your data, your control</li>
-                                    <li><strong>Integrity:</strong> Honest and transparent</li>
-                                    <li><strong>Innovation:</strong> Always improving</li>
+                                <ul className="text-muted-foreground space-y-2 text-left">
+                                    <li><strong className="text-foreground">Simplicity</strong> – Powerful features, easy workflows</li>
+                                    <li><strong className="text-foreground">Privacy</strong> – Your data, your control</li>
+                                    <li><strong className="text-foreground">Integrity</strong> – Honest pricing, transparent operations</li>
+                                    <li><strong className="text-foreground">Innovation</strong> – Continuous improvement</li>
                                 </ul>
                             </CardContent>
                         </Card>
                     </div>
 
                     {/* Features Section */}
-                    <div className="mb-24">
+                    <div className="mb-20">
                         <div className="text-center mb-12">
                             <h2 className="text-3xl md:text-4xl font-bold">The Ashwheel Pro Suite</h2>
-                            <p className="mt-2 text-muted-foreground max-w-2xl mx-auto">Complete management solution for automobile businesses</p>
+                            <p className="mt-2 text-muted-foreground">Complete all-in-one management solution</p>
                         </div>
-                        <div className="grid md:grid-cols-2 gap-12">
+                        <div className="grid md:grid-cols-2 gap-12 max-w-5xl mx-auto">
                             <div>
-                                <h3 className="text-2xl font-semibold mb-6">Showroom Management</h3>
-                                <div className="space-y-6">
+                                <h3 className="text-2xl font-semibold mb-6 text-center md:text-left">Showroom Management</h3>
+                                <div className="space-y-4">
                                     {features["Showroom Management"].map((feature, i) => (
                                         <motion.div
                                             key={i}
-                                            className="flex items-start gap-4"
+                                            className="flex items-start gap-4 p-4 bg-card/30 rounded-lg"
                                             initial={{ opacity: 0, x: -20 }}
                                             whileInView={{ opacity: 1, x: 0 }}
-                                            viewport={{ once: true, amount: 0.5 }}
+                                            viewport={{ once: true }}
                                             transition={{ delay: i * 0.1 }}
                                         >
                                             {feature.icon}
@@ -194,15 +204,15 @@ const AboutUsPage = () => {
                                 </div>
                             </div>
                             <div>
-                                <h3 className="text-2xl font-semibold mb-6">Workshop Management</h3>
-                                <div className="space-y-6">
+                                <h3 className="text-2xl font-semibold mb-6 text-center md:text-left">Workshop Management</h3>
+                                <div className="space-y-4">
                                     {features["Workshop Management"].map((feature, i) => (
                                         <motion.div
                                             key={i}
-                                            className="flex items-start gap-4"
+                                            className="flex items-start gap-4 p-4 bg-card/30 rounded-lg"
                                             initial={{ opacity: 0, x: 20 }}
                                             whileInView={{ opacity: 1, x: 0 }}
-                                            viewport={{ once: true, amount: 0.5 }}
+                                            viewport={{ once: true }}
                                             transition={{ delay: i * 0.1 }}
                                         >
                                             {feature.icon}
@@ -218,8 +228,8 @@ const AboutUsPage = () => {
                     </div>
 
                     {/* Meet the Founder */}
-                    <div className="bg-card/30 rounded-lg p-10 md:p-16 mb-24">
-                        <div className="text-center mb-12">
+                    <div className="bg-card/30 rounded-lg p-10 md:p-16 mb-20">
+                        <div className="text-center mb-10">
                             <h2 className="text-3xl md:text-4xl font-bold">Meet the Founder</h2>
                             <p className="mt-2 text-muted-foreground">The person behind Ashwheel</p>
                         </div>
@@ -236,33 +246,37 @@ const AboutUsPage = () => {
                                 <p className="text-primary font-medium">Founder & Lead Developer</p>
                                 <p className="text-sm text-muted-foreground mt-1">📍 Mirzapur, Uttar Pradesh, India</p>
                                 <p className="mt-4 text-muted-foreground">
-                                    A passionate developer dedicated to building practical solutions for real-world problems. Ashish combines technical expertise with deep understanding of business needs to create tools that actually work.
+                                    A passionate independent developer building practical tools for real-world business problems. Ashish combines strong technical skills with real operational understanding to create solutions that actually work on the ground.
                                 </p>
                             </div>
                         </div>
                     </div>
 
-                    {/* Future Vision */}
-                    <div className="mb-24 max-w-4xl mx-auto">
+                    {/* What's Next */}
+                    <div className="mb-20 max-w-4xl mx-auto">
                         <Card className="border-0 bg-gradient-to-br from-primary/10 to-purple-500/10">
-                            <CardContent className="p-8 text-center">
-                                <h2 className="text-2xl font-bold mb-4">What's Next for Ashwheel</h2>
-                                <p className="text-muted-foreground mb-4">
-                                    We're constantly evolving based on user feedback. Upcoming features include:
+                            <CardContent className="p-8">
+                                <h2 className="text-2xl font-bold mb-4 text-center">What's Next for Ashwheel</h2>
+                                <p className="text-muted-foreground mb-6 text-center">
+                                    Continuously evolving based on real user feedback
                                 </p>
-                                <div className="grid md:grid-cols-3 gap-4 text-sm">
-                                    <div className="bg-background/50 p-4 rounded-lg">
-                                        <strong className="text-foreground">Mobile App</strong>
-                                        <p className="text-muted-foreground mt-1">Manage on the go</p>
-                                    </div>
-                                    <div className="bg-background/50 p-4 rounded-lg">
-                                        <strong className="text-foreground">Advanced Analytics</strong>
-                                        <p className="text-muted-foreground mt-1">Deeper business insights</p>
-                                    </div>
-                                    <div className="bg-background/50 p-4 rounded-lg">
-                                        <strong className="text-foreground">Community Features</strong>
-                                        <p className="text-muted-foreground mt-1">Connect with peers</p>
-                                    </div>
+                                <div className="grid md:grid-cols-3 gap-6">
+                                    {futureFeatures.map((feature, i) => (
+                                        <motion.div
+                                            key={i}
+                                            initial={{ opacity: 0, y: 20 }}
+                                            whileInView={{ opacity: 1, y: 0 }}
+                                            viewport={{ once: true }}
+                                            transition={{ delay: i * 0.1 }}
+                                            className="bg-background/50 p-6 rounded-lg text-center"
+                                        >
+                                            <div className="bg-primary/10 text-primary p-3 rounded-full w-fit mx-auto mb-3">
+                                                {feature.icon}
+                                            </div>
+                                            <strong className="text-foreground block mb-1">{feature.title}</strong>
+                                            <p className="text-sm text-muted-foreground">{feature.desc}</p>
+                                        </motion.div>
+                                    ))}
                                 </div>
                             </CardContent>
                         </Card>
@@ -270,9 +284,9 @@ const AboutUsPage = () => {
 
                     {/* Get in Touch */}
                     <div className="text-center">
-                        <h2 className="text-3xl font-bold">Have a Question or Feedback?</h2>
+                        <h2 className="text-3xl font-bold">Have a Question or Suggestion?</h2>
                         <p className="mt-2 text-muted-foreground max-w-2xl mx-auto">
-                            I'm always open to feedback, suggestions, or just a friendly chat. Let's connect.
+                            I'm always open to feedback, ideas, or a simple conversation. Let's build better tools together.
                         </p>
                         <a 
                             href="mailto:support@ashwheel.cloud" 

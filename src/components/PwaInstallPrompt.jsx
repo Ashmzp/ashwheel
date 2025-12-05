@@ -85,7 +85,7 @@ const PwaInstallPrompt = () => {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 animate-fade-in-up">
+    <div className="fixed bottom-20 right-4 z-50 animate-fade-in-up">
       <Button onClick={handleInstallClick} size="lg" className="shadow-lg bg-gradient-to-r from-primary to-blue-500 text-white hover:from-primary/90 hover:to-blue-500/90">
         <Download className="mr-2 h-5 w-5" />
         Install App
