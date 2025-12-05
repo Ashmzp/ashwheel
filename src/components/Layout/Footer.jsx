@@ -33,7 +33,7 @@ import React from 'react';
               <div className="md:col-span-2 lg:col-span-1">
                 <h3 className="text-lg font-bold">Ashwheel</h3>
                 <p className="mt-4 text-sm text-secondary-foreground/80">
-                  Ashwheel is a futuristic tool platform offering document formatting, photo resizing, and productivity tools to simplify your workflow.
+                  Ashwheel is a comprehensive platform offering 50+ productivity tools (PDF, image, video editing) and Ashwheel Pro—a complete management system for automobile showrooms and workshops with GST invoicing, inventory tracking, and business analytics.
                 </p>
               </div>
 
