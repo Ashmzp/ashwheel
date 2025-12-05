@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/customSupabaseClient';
 import { Button } from '@/components/ui/button';
@@ -12,8 +12,22 @@ const ResetPassword = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [sessionChecked, setSessionChecked] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({ title: 'Error', description: 'Invalid or expired reset link', variant: 'destructive' });
+        navigate('/login');
+      } else {
+        setSessionChecked(true);
+      }
+    };
+    checkSession();
+  }, [navigate, toast]);
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
@@ -30,6 +44,7 @@ const ResetPassword = () => {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
       toast({ title: 'Success', description: 'Password updated successfully' });
+      await supabase.auth.signOut();
       navigate('/login');
     } catch (error) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
@@ -44,6 +59,13 @@ const ResetPassword = () => {
         <title>Reset Password - Ashwheel</title>
       </Helmet>
       <div className="flex items-center justify-center min-h-screen bg-secondary/20 p-4">
+        {!sessionChecked ? (
+          <Card className="w-full max-w-md">
+            <CardContent className="pt-6">
+              <div className="text-center">Verifying reset link...</div>
+            </CardContent>
+          </Card>
+        ) : (
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Set New Password</CardTitle>
@@ -65,6 +87,7 @@ const ResetPassword = () => {
             </form>
           </CardContent>
         </Card>
+        )}
       </div>
     </>
   );

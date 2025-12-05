@@ -125,6 +125,7 @@ const WpReturnPage = () => {
               />
               <Input type="date" value={dateRange.start} onChange={e => setDateRange(prev => ({...prev, start: e.target.value}))} />
               <Input type="date" value={dateRange.end} onChange={e => setDateRange(prev => ({...prev, end: e.target.value}))} />
+              <Button onClick={fetchReturns}><Search className="mr-2 h-4 w-4" /> Search</Button>
               <Button onClick={handleExport} variant="outline"><Download className="mr-2 h-4 w-4" /> Export</Button>
             </div>
           </CardHeader>

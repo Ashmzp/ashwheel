@@ -1,30 +1,46 @@
-import React from 'react';
-import { Input } from '@/components/ui/input';
-import { Calendar } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import * as React from "react";
+import { Input } from "@/components/ui/input";
+import { Calendar } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export const DateInput = React.forwardRef(({ className, ...props }, ref) => {
+  const inputRef = React.useRef(null);
+
+  const openPicker = () => {
+    if (inputRef.current?.showPicker) {
+      inputRef.current.showPicker();
+    } else {
+      inputRef.current?.focus();
+    }
+  };
+
   return (
     <div className="relative w-full">
       <Input
+        ref={(node) => {
+          inputRef.current = node;
+          if (typeof ref === "function") ref(node);
+          else if (ref) ref.current = node;
+        }}
         type="date"
-        ref={ref}
+        style={{ colorScheme: "light" }}
         className={cn(
           "pr-10 cursor-pointer",
-          "[&::-webkit-calendar-picker-indicator]:opacity-0",
-          "[&::-webkit-calendar-picker-indicator]:absolute",
-          "[&::-webkit-calendar-picker-indicator]:inset-0",
-          "[&::-webkit-calendar-picker-indicator]:w-full",
-          "[&::-webkit-calendar-picker-indicator]:h-full",
-          "[&::-webkit-calendar-picker-indicator]:cursor-pointer",
-          "[&::-webkit-calendar-picker-indicator]:z-20",
+          "appearance-none",
+          "[&::-webkit-calendar-picker-indicator]:hidden",
           className
         )}
         {...props}
       />
-      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none z-10">
-        <Calendar className="h-4 w-4 text-muted-foreground" />
-      </div>
+
+      <button
+        type="button"
+        onClick={openPicker}
+        tabIndex={-1}
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <Calendar size={18} />
+      </button>
     </div>
   );
 });

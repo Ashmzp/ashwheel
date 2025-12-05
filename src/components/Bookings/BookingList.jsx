@@ -91,16 +91,22 @@ const BookingList = ({ onAdd, onEdit, onDelete }) => {
   const pageSize = 10;
   const { toast } = useToast();
 
+  const [fetchTrigger, setFetchTrigger] = useState(0);
+
   const { data: summary, isLoading: isLoadingSummary } = useQuery({
-    queryKey: ['bookingSummary', dateRange],
+    queryKey: ['bookingSummary', dateRange, fetchTrigger],
     queryFn: () => getBookingSummary(dateRange.start, dateRange.end),
   });
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['bookings', page, pageSize, debouncedSearchTerm, dateRange],
+    queryKey: ['bookings', page, pageSize, debouncedSearchTerm, dateRange, fetchTrigger],
     queryFn: () => getBookings({ page, pageSize, searchTerm: debouncedSearchTerm, startDate: dateRange.start, endDate: dateRange.end }),
     placeholderData: (previousData) => previousData,
   });
+
+  const handleSearch = () => {
+    setFetchTrigger(prev => prev + 1);
+  };
 
   const bookings = data?.data ?? [];
   const totalCount = data?.count ?? 0;
@@ -250,6 +256,7 @@ const BookingList = ({ onAdd, onEdit, onDelete }) => {
               />
             </div>
             <div className="flex gap-2">
+              <Button onClick={handleSearch}><Search className="w-4 h-4 mr-2" />Search</Button>
               <Button variant="outline" onClick={() => setShowFilters(!showFilters)}><Filter className="w-4 h-4 mr-2" />Filters</Button>
               <Button onClick={handleMainExport} variant="outline"><Download className="w-4 h-4 mr-2" />Export</Button>
               <Dialog>

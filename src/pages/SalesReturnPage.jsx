@@ -49,7 +49,12 @@ const SalesReturnPage = () => {
             setCurrentPage(1);
             fetchReturns(1, searchTerm, dateRange);
         }, 500);
-    }, [searchTerm, dateRange, fetchReturns]);
+    }, [searchTerm, fetchReturns]);
+
+    const handleSearch = () => {
+        setCurrentPage(1);
+        fetchReturns(1, searchTerm, dateRange);
+    };
 
     useEffect(() => {
         fetchReturns(1, searchTerm, dateRange);

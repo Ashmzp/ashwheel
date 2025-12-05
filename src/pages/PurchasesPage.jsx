@@ -3,7 +3,7 @@ import '@/styles/responsive.css';
 import { Helmet } from 'react-helmet-async';
 import { v4 as uuidv4 } from 'uuid';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { 
+import {
   savePurchase as savePurchaseToDb,
   deletePurchase as deletePurchaseFromDb,
   getPurchases as fetchPurchasesFromDb,
@@ -26,7 +26,7 @@ import usePurchaseUIStore from '@/stores/purchaseUIStore';
 import { useDebounce } from '@/hooks/useDebounce';
 import { cn } from '@/lib/utils';
 
-const PurchaseList = ({ purchases, onAddPurchase, onEditPurchase, onDeletePurchase, loading, totalPages, currentPage, onPageChange, searchTerm, setSearchTerm, dateRange, setDateRange }) => {
+const PurchaseList = ({ purchases, onAddPurchase, onEditPurchase, onDeletePurchase, loading, totalPages, currentPage, onPageChange, searchTerm, setSearchTerm, dateRange, setDateRange, onSearch }) => {
   const { toast } = useToast();
   const { canWrite, canDelete, isExpired } = useAuth();
   const queryClient = useQueryClient();
@@ -60,7 +60,7 @@ const PurchaseList = ({ purchases, onAddPurchase, onEditPurchase, onDeletePurcha
         return;
       }
 
-      const dataToExport = allData.data.flatMap(p => 
+      const dataToExport = allData.data.flatMap(p =>
         (p.items || []).map(item => ({
           'Party Name': p.party_name,
           'Invoice Date': formatDate(p.invoice_date),
@@ -75,7 +75,7 @@ const PurchaseList = ({ purchases, onAddPurchase, onEditPurchase, onDeletePurcha
           'Category': item.category,
         }))
       );
-      
+
       exportToExcel(dataToExport, 'purchases_report');
       toast({ title: "Success", description: "Data exported to Excel." });
     } catch (error) {
@@ -123,8 +123,9 @@ const PurchaseList = ({ purchases, onAddPurchase, onEditPurchase, onDeletePurcha
               <Input placeholder="Search Party, Invoice, Chassis, Engine..." className="input-compact pl-8" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
             </div>
             <div className="flex items-center gap-2">
-              <Input type="date" value={dateRange.start} onChange={(e) => setDateRange({...dateRange, start: e.target.value})} className="w-auto" />
-              <Input type="date" value={dateRange.end} onChange={(e) => setDateRange({...dateRange, end: e.target.value})} className="w-auto" />
+              <Input type="date" value={dateRange.start} onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })} className="w-auto" />
+              <Input type="date" value={dateRange.end} onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })} className="w-auto" />
+              <Button onClick={onSearch}><Search className="mr-2 h-4 w-4" /> Search</Button>
               <Button variant="outline" onClick={handleExport}><Download className="mr-2 h-4 w-4" /> Export</Button>
             </div>
           </div>
@@ -144,9 +145,9 @@ const PurchaseList = ({ purchases, onAddPurchase, onEditPurchase, onDeletePurcha
               </TableHeader>
               <TableBody>
                 {loading ? (
-                    <TableRow><TableCell colSpan={6} className="text-center h-24">Loading purchases...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="text-center h-24">Loading purchases...</TableCell></TableRow>
                 ) : purchases.length > 0 ? purchases.map((purchase) => (
-                  <TableRow 
+                  <TableRow
                     key={purchase.id}
                     className={cn(highlightedChassisNos.has(purchase.id) && 'bg-red-100 dark:bg-red-900/30 text-red-900 dark:text-red-200')}
                   >
@@ -172,7 +173,7 @@ const PurchaseList = ({ purchases, onAddPurchase, onEditPurchase, onDeletePurcha
               </TableBody>
             </Table>
           </div>
-           {totalPages > 1 && (
+          {totalPages > 1 && (
             <div className="mt-4">
               <PaginationControls
                 currentPage={currentPage}
@@ -201,7 +202,9 @@ const PurchasesPage = () => {
   const isEditing = openForm?.mode === 'edit';
   const editingId = openForm?.id;
 
-  const queryKey = ['purchases', currentPage, debouncedSearchTerm, dateRange];
+  const [searchDateRange, setSearchDateRange] = React.useState(dateRange);
+
+  const queryKey = ['purchases', currentPage, debouncedSearchTerm, searchDateRange];
 
   const { data, isLoading } = useQuery({
     queryKey,
@@ -209,8 +212,8 @@ const PurchasesPage = () => {
       page: currentPage,
       pageSize: PAGE_SIZE,
       searchTerm: debouncedSearchTerm,
-      startDate: dateRange.start,
-      endDate: dateRange.end,
+      startDate: searchDateRange.start,
+      endDate: searchDateRange.end,
     }),
     placeholderData: (previousData) => previousData,
     staleTime: 1000 * 60 * 30, // 30 minutes
@@ -242,9 +245,9 @@ const PurchasesPage = () => {
         const oldChassisNos = selectedPurchase.items.map(item => item.chassisNo);
         await deleteStockByChassis(oldChassisNos);
       }
-      
+
       const savedData = await savePurchaseToDb(purchaseData);
-      
+
       if (savedData?.items?.length > 0) {
         const newStockItems = savedData.items.map(item => ({
           id: uuidv4(),
@@ -296,7 +299,7 @@ const PurchasesPage = () => {
       queryClient.invalidateQueries({ queryKey: ['stock'] });
     },
     onError: (error) => {
-       toast({ title: "Error", description: `Failed to delete purchase. ${error.message}`, variant: "destructive" });
+      toast({ title: "Error", description: `Failed to delete purchase. ${error.message}`, variant: "destructive" });
     }
   });
 
@@ -313,10 +316,16 @@ const PurchasesPage = () => {
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
-  
+
+  const handleSearch = () => {
+    setSearchDateRange(dateRange);
+    setCurrentPage(1);
+  };
+
+  // Auto-fetch only on search term change, not on date change
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearchTerm, dateRange]);
+  }, [debouncedSearchTerm]);
 
   return (
     <>
@@ -344,6 +353,7 @@ const PurchasesPage = () => {
             setSearchTerm={setSearchTerm}
             dateRange={dateRange}
             setDateRange={setDateRange}
+            onSearch={handleSearch}
           />
         )}
       </div>

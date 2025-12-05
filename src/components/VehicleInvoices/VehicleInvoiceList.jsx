@@ -17,22 +17,23 @@ import { getVehicleInvoicesForExport } from '@/utils/db';
 const ALL_COLUMN_KEYS = Object.keys(EXPORT_COLUMNS_CONFIG).filter(key => !EXPORT_COLUMNS_CONFIG[key].source);
 const LOCAL_STORAGE_KEY = 'vehicleInvoiceVisibleColumns_report';
 
-const VehicleInvoiceList = ({ 
-  invoices, 
-  onAddInvoice, 
-  onEditInvoice, 
-  onDeleteInvoice, 
-  onPrint, 
-  loading, 
-  canAccess, 
-  summaryData, 
+const VehicleInvoiceList = ({
+  invoices,
+  onAddInvoice,
+  onEditInvoice,
+  onDeleteInvoice,
+  onPrint,
+  loading,
+  canAccess,
+  summaryData,
   summaryLoading,
   dateRange,
   setDateRange,
   searchTerm,
   setSearchTerm,
   pagination,
-  setPagination
+  setPagination,
+  onSearch
 }) => {
   const { toast } = useToast();
   const [selectedRows, setSelectedRows] = useState([]);
@@ -41,12 +42,12 @@ const VehicleInvoiceList = ({
 
   const [visibleColumns, setVisibleColumns] = useState(() => {
     try {
-        const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-        if (saved) {
-            const parsed = JSON.parse(saved);
-            return parsed.filter(col => EXPORT_COLUMNS_CONFIG[col] && !EXPORT_COLUMNS_CONFIG[col].source);
-        }
-    } catch (e) {}
+      const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return parsed.filter(col => EXPORT_COLUMNS_CONFIG[col] && !EXPORT_COLUMNS_CONFIG[col].source);
+      }
+    } catch (e) { }
     return ALL_COLUMN_KEYS.filter(key => EXPORT_COLUMNS_CONFIG[key].default);
   });
 
@@ -86,75 +87,75 @@ const VehicleInvoiceList = ({
 
   const handleExport = useCallback(async () => {
     toast({ title: "Exporting...", description: "Preparing data for export. This may take a moment." });
-    
+
     try {
-        const dataToExport = await getVehicleInvoicesForExport({
-            startDate: dateRange.start,
-            endDate: dateRange.end,
-            searchTerm: searchTerm
-        });
-        
-        if (dataToExport.length === 0) {
-            toast({ title: "No Data", description: "There is no data to export for the selected criteria.", variant: "destructive" });
-            return;
-        }
+      const dataToExport = await getVehicleInvoicesForExport({
+        startDate: dateRange.start,
+        endDate: dateRange.end,
+        searchTerm: searchTerm
+      });
 
-        const expandedData = [];
-        dataToExport.forEach(invoice => {
-            const commonData = {};
-            visibleColumns.forEach(colName => {
-                if(EXPORT_COLUMNS_CONFIG[colName] && EXPORT_COLUMNS_CONFIG[colName].export) {
-                    const config = EXPORT_COLUMNS_CONFIG[colName];
-                     if (!config.source) {
-                        const value = config.getter ? config.getter(invoice) : invoice[config.key];
-                        commonData[colName] = config.format ? config.format(value) : (value ?? '');
-                    }
-                }
-            });
+      if (dataToExport.length === 0) {
+        toast({ title: "No Data", description: "There is no data to export for the selected criteria.", variant: "destructive" });
+        return;
+      }
 
-            if (invoice.items && invoice.items.length > 0) {
-                invoice.items.forEach(item => {
-                    const itemRow = {...commonData};
-                    itemRow['Model Name'] = item.model_name || '';
-                    itemRow['Chassis No'] = item.chassis_no || '';
-                    itemRow['Engine No'] = item.engine_no || '';
-                    itemRow['Colour'] = item.colour || '';
-                    itemRow['Price'] = item.price || 0;
-                    expandedData.push(itemRow);
-                });
-            } else {
-                // If an invoice has no items, still include it once
-                const emptyRow = {...commonData};
-                emptyRow['Model Name'] = '';
-                emptyRow['Chassis No'] = '';
-                emptyRow['Engine No'] = '';
-                emptyRow['Colour'] = '';
-                emptyRow['Price'] = 0;
-                expandedData.push(emptyRow);
+      const expandedData = [];
+      dataToExport.forEach(invoice => {
+        const commonData = {};
+        visibleColumns.forEach(colName => {
+          if (EXPORT_COLUMNS_CONFIG[colName] && EXPORT_COLUMNS_CONFIG[colName].export) {
+            const config = EXPORT_COLUMNS_CONFIG[colName];
+            if (!config.source) {
+              const value = config.getter ? config.getter(invoice) : invoice[config.key];
+              commonData[colName] = config.format ? config.format(value) : (value ?? '');
             }
-        });
-        
-        // Ensure all visible columns exist in the final export data, even if empty
-        const finalData = expandedData.map(row => {
-            const finalRow = {};
-            visibleColumns.forEach(colName => {
-                finalRow[colName] = row[colName] ?? '';
-            });
-             if (visibleColumns.includes('Model Name')) finalRow['Model Name'] = row['Model Name'];
-             if (visibleColumns.includes('Chassis No')) finalRow['Chassis No'] = row['Chassis No'];
-             if (visibleColumns.includes('Engine No')) finalRow['Engine No'] = row['Engine No'];
-             if (visibleColumns.includes('Colour')) finalRow['Colour'] = row['Colour'];
-            return finalRow;
+          }
         });
 
+        if (invoice.items && invoice.items.length > 0) {
+          invoice.items.forEach(item => {
+            const itemRow = { ...commonData };
+            itemRow['Model Name'] = item.model_name || '';
+            itemRow['Chassis No'] = item.chassis_no || '';
+            itemRow['Engine No'] = item.engine_no || '';
+            itemRow['Colour'] = item.colour || '';
+            itemRow['Price'] = item.price || 0;
+            expandedData.push(itemRow);
+          });
+        } else {
+          // If an invoice has no items, still include it once
+          const emptyRow = { ...commonData };
+          emptyRow['Model Name'] = '';
+          emptyRow['Chassis No'] = '';
+          emptyRow['Engine No'] = '';
+          emptyRow['Colour'] = '';
+          emptyRow['Price'] = 0;
+          expandedData.push(emptyRow);
+        }
+      });
 
-        exportToExcel(finalData, `vehicle_invoices_${dateRange.start}_to_${dateRange.end}`);
-        toast({ title: "Export Successful", description: "Your data has been exported to Excel." });
+      // Ensure all visible columns exist in the final export data, even if empty
+      const finalData = expandedData.map(row => {
+        const finalRow = {};
+        visibleColumns.forEach(colName => {
+          finalRow[colName] = row[colName] ?? '';
+        });
+        if (visibleColumns.includes('Model Name')) finalRow['Model Name'] = row['Model Name'];
+        if (visibleColumns.includes('Chassis No')) finalRow['Chassis No'] = row['Chassis No'];
+        if (visibleColumns.includes('Engine No')) finalRow['Engine No'] = row['Engine No'];
+        if (visibleColumns.includes('Colour')) finalRow['Colour'] = row['Colour'];
+        return finalRow;
+      });
+
+
+      exportToExcel(finalData, `vehicle_invoices_${dateRange.start}_to_${dateRange.end}`);
+      toast({ title: "Export Successful", description: "Your data has been exported to Excel." });
     } catch (error) {
-        toast({ title: "Export Failed", description: error.message, variant: 'destructive' });
+      toast({ title: "Export Failed", description: error.message, variant: 'destructive' });
     }
   }, [dateRange, searchTerm, visibleColumns, toast]);
-  
+
   const handleSort = (key) => {
     setSorting(prev => ({
       key,
@@ -211,7 +212,7 @@ const VehicleInvoiceList = ({
       toast({ title: "Invalid Page", description: `Please enter a page number between 1 and ${pagination.totalPages}.`, variant: "destructive" });
     }
   };
-  
+
   return (
     <div className="space-y-3">
       <div className="page-header">
@@ -240,6 +241,7 @@ const VehicleInvoiceList = ({
             <div className="filter-controls">
               <Input type="date" value={dateRange.start} onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })} className="input-compact" />
               <Input type="date" value={dateRange.end} onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })} className="input-compact" />
+              <Button onClick={onSearch} className="btn-compact"><Search className="mr-1 h-3.5 w-3.5" /> Search</Button>
               <Button variant="outline" onClick={handleExport} className="btn-compact"><Download className="mr-1 h-3.5 w-3.5" /> Export</Button>
               <ColumnSettingsDialog visibleColumns={visibleColumns} setVisibleColumns={setVisibleColumns} storageKey={LOCAL_STORAGE_KEY} />
             </div>
@@ -256,10 +258,10 @@ const VehicleInvoiceList = ({
                   {visibleColumns.map(colName => {
                     const config = EXPORT_COLUMNS_CONFIG[colName];
                     return (
-                        <TableHead key={colName} onClick={() => config.sortable && handleSort(colName)} className={config.sortable ? 'cursor-pointer' : ''}>
-                          {colName}
-                          {config.sortable && sorting.key === colName && <ArrowUpDown className="ml-2 h-4 w-4 inline" />}
-                        </TableHead>
+                      <TableHead key={colName} onClick={() => config.sortable && handleSort(colName)} className={config.sortable ? 'cursor-pointer' : ''}>
+                        {colName}
+                        {config.sortable && sorting.key === colName && <ArrowUpDown className="ml-2 h-4 w-4 inline" />}
+                      </TableHead>
                     )
                   })}
                   <TableHead className="text-right">Actions</TableHead>
@@ -270,33 +272,33 @@ const VehicleInvoiceList = ({
                   {loading ? (
                     <TableRow><TableCell colSpan={visibleColumns.length + 2} className="text-center h-24">Loading invoices...</TableCell></TableRow>
                   ) : sortedInvoices.length > 0 ? sortedInvoices.map((invoice) => (
-                     <motion.tr
-                        key={invoice.invoice_id}
-                        layout
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className={selectedRows.includes(invoice.invoice_id) ? 'bg-secondary' : ''}
-                      >
-                        <TableCell>
-                            <Checkbox
-                                checked={selectedRows.includes(invoice.invoice_id)}
-                                onCheckedChange={(checked) => handleSelectRow(invoice.invoice_id, checked)}
-                            />
-                        </TableCell>
-                        {visibleColumns.map(colName => renderCellContent(invoice, colName))}
-                        <TableCell className="text-right">
-                          <div className="action-buttons">
-                            <Button variant="ghost" title="Print Delivery Challan" onClick={() => onPrint('DeliveryChallan', invoice)}><Printer className="text-blue-400" /></Button>
-                            <Button variant="ghost" title="Print Tax Invoice" onClick={() => onPrint('TaxInvoice', invoice)}><Printer className="text-green-400" /></Button>
-                            {canAccess('vehicle_invoices', 'write') && (
-                                <Button variant="ghost" title="Edit Invoice" onClick={() => onEditInvoice(invoice)}><Edit /></Button>
-                            )}
-                            {canAccess('vehicle_invoices', 'delete') && (
-                                <Button variant="ghost" title="Delete Invoice" className="text-red-500" onClick={() => handleDelete(invoice.invoice_id)}><Trash2 /></Button>
-                            )}
-                          </div>
-                        </TableCell>
+                    <motion.tr
+                      key={invoice.invoice_id}
+                      layout
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className={selectedRows.includes(invoice.invoice_id) ? 'bg-secondary' : ''}
+                    >
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedRows.includes(invoice.invoice_id)}
+                          onCheckedChange={(checked) => handleSelectRow(invoice.invoice_id, checked)}
+                        />
+                      </TableCell>
+                      {visibleColumns.map(colName => renderCellContent(invoice, colName))}
+                      <TableCell className="text-right">
+                        <div className="action-buttons">
+                          <Button variant="ghost" title="Print Delivery Challan" onClick={() => onPrint('DeliveryChallan', invoice)}><Printer className="text-blue-400" /></Button>
+                          <Button variant="ghost" title="Print Tax Invoice" onClick={() => onPrint('TaxInvoice', invoice)}><Printer className="text-green-400" /></Button>
+                          {canAccess('vehicle_invoices', 'write') && (
+                            <Button variant="ghost" title="Edit Invoice" onClick={() => onEditInvoice(invoice)}><Edit /></Button>
+                          )}
+                          {canAccess('vehicle_invoices', 'delete') && (
+                            <Button variant="ghost" title="Delete Invoice" className="text-red-500" onClick={() => handleDelete(invoice.invoice_id)}><Trash2 /></Button>
+                          )}
+                        </div>
+                      </TableCell>
                     </motion.tr>
                   )) : (
                     <TableRow><TableCell colSpan={visibleColumns.length + 2} className="text-center h-24">No invoices found.</TableCell></TableRow>

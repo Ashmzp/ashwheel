@@ -45,6 +45,7 @@ const PurchaseReturnList = ({ returns, onEdit, onDelete, loading, totalPages, cu
                             value={dateRange.end}
                             onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
                         />
+                        <Button onClick={() => onPageChange(1)}><Search className="w-4 h-4 mr-2" />Search</Button>
                     </div>
                 </div>
                  <div className="overflow-x-auto">

@@ -109,11 +109,18 @@ const CustomersPage = () => {
     }
   }, [user, currentPage, searchTerm, JSON.stringify(filters)]);
 
+  // Initial load only
   useEffect(() => {
     if (user) {
       fetchCustomers();
     }
-  }, [user, currentPage, searchTerm, filters.type, filters.startDate, filters.endDate]);
+  }, [user, currentPage]);
+
+  // Manual search handler
+  const handleSearch = () => {
+    setCurrentPage(1);
+    fetchCustomers();
+  };
 
 
 
@@ -259,7 +266,6 @@ const CustomersPage = () => {
                 <div className="filter-controls">
                   <Select value={filters.type} onValueChange={(value) => {
                     setFilters(prev => ({ ...prev, type: value }));
-                    setCurrentPage(1);
                   }}>
                     <SelectTrigger className="btn-compact w-full sm:w-auto">
                       <SelectValue placeholder="Filter by type" />
@@ -276,7 +282,6 @@ const CustomersPage = () => {
                     value={filters.startDate}
                     onChange={(e) => {
                       setFilters(prev => ({ ...prev, startDate: e.target.value }));
-                      setCurrentPage(1);
                     }}
                   />
                   <Input
@@ -285,9 +290,11 @@ const CustomersPage = () => {
                     value={filters.endDate}
                     onChange={(e) => {
                       setFilters(prev => ({ ...prev, endDate: e.target.value }));
-                      setCurrentPage(1);
                     }}
                   />
+                  <Button onClick={handleSearch} className="btn-compact">
+                    <Search className="mr-1 h-3.5 w-3.5" /> Search
+                  </Button>
                   <Button variant="outline" onClick={handleExport} className="btn-compact">
                     <FileDown className="mr-1 h-3.5 w-3.5" /> Export
                   </Button>

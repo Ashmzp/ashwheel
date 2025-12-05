@@ -306,6 +306,7 @@ const JobCardList = ({ jobCards = [], onEdit, onDelete, isLoading, dateRange, se
                   />
                 </PopoverContent>
               </Popover>
+              <Button onClick={() => {}} className="btn-compact"><Search className="h-3.5 w-3.5 mr-1" /> Search</Button>
               <Button onClick={handleExport} variant="outline" className="btn-compact"><Download className="h-3.5 w-3.5" /></Button>
               <ColumnSettingsDialog visibleColumns={visibleColumns} setVisibleColumns={setVisibleColumns} saveSettings={saveColumnSettings} />
             </div>

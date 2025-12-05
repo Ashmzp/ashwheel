@@ -35,7 +35,7 @@ const VehicleInvoicesPage = () => {
   const showForm = openForm?.type === 'vehicle_invoice';
   const isEditing = openForm?.mode === 'edit';
   const editingId = openForm?.id;
-  
+
   const {
     searchTerm,
     dateRange,
@@ -46,6 +46,7 @@ const VehicleInvoicesPage = () => {
   } = useVehicleInvoiceStore();
 
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
+  const [searchDateRange, setSearchDateRange] = useState(dateRange);
 
   const challanPrintRef = useRef();
   const invoicePrintRef = useRef();
@@ -56,11 +57,9 @@ const VehicleInvoicesPage = () => {
     setPagination({ currentPage: 1 });
   }, [searchTerm, debouncedSetSearch, setPagination]);
 
-  useEffect(() => {
-    setPagination({ currentPage: 1 });
-  }, [dateRange, setPagination]);
-  
-  const queryKey = ['vehicleInvoices', dateRange, debouncedSearchTerm, pagination.currentPage, user.id];
+  // Removed auto-fetch on date change - user must click Search button
+
+  const queryKey = ['vehicleInvoices', searchDateRange, debouncedSearchTerm, pagination.currentPage, user.id];
 
   const { data, isLoading: queryLoading, error: queryError } = useQuery({
     queryKey,
@@ -74,7 +73,7 @@ const VehicleInvoicesPage = () => {
             .select('invoice_id')
             .eq('user_id', user.id)
             .or(`chassis_no.ilike.%${debouncedSearchTerm}%,engine_no.ilike.%${debouncedSearchTerm}%,model_name.ilike.%${debouncedSearchTerm}%`);
-          
+
           if (itemsData && itemsData.length > 0) {
             invoiceIds = [...new Set(itemsData.map(item => item.invoice_id))];
           }
@@ -85,8 +84,8 @@ const VehicleInvoicesPage = () => {
           .from('vehicle_invoices')
           .select('*, vehicle_invoice_items(*), customers(*)', { count: 'exact' })
           .eq('user_id', user.id)
-          .gte('invoice_date', dateRange.start)
-          .lte('invoice_date', dateRange.end)
+          .gte('invoice_date', searchDateRange.start)
+          .lte('invoice_date', searchDateRange.end)
           .order('invoice_date', { ascending: false });
 
         // Apply search filter
@@ -105,7 +104,7 @@ const VehicleInvoicesPage = () => {
         if (error) {
           throw new Error(`Failed to fetch invoices: ${error.message}`);
         }
-        
+
         // Transform data to match expected format
         const transformedInvoices = (invoicesData || []).map(inv => ({
           invoice_id: inv.id,
@@ -127,7 +126,7 @@ const VehicleInvoicesPage = () => {
         throw new Error(error.message || 'Failed to load vehicle invoices');
       }
     },
-    enabled: !!dateRange.start && !!dateRange.end && !!user,
+    enabled: !!searchDateRange.start && !!searchDateRange.end && !!user,
     placeholderData: (previousData) => previousData,
     ...DEFAULT_QUERY_CONFIG,
   });
@@ -145,50 +144,50 @@ const VehicleInvoicesPage = () => {
 
   useEffect(() => {
     if (showForm) {
-        const fetchAndInit = async () => {
-            try {
-                if (isEditing) {
-                    const { data: invoiceData, error } = await supabase
-                        .from('vehicle_invoices')
-                        .select('*, vehicle_invoice_items(*), customers(*)')
-                        .eq('id', editingId)
-                        .eq('user_id', user.id)
-                        .single();
+      const fetchAndInit = async () => {
+        try {
+          if (isEditing) {
+            const { data: invoiceData, error } = await supabase
+              .from('vehicle_invoices')
+              .select('*, vehicle_invoice_items(*), customers(*)')
+              .eq('id', editingId)
+              .eq('user_id', user.id)
+              .single();
 
-                    if (error) {
-                        toast({ 
-                            title: "Error", 
-                            description: `Could not fetch invoice for editing: ${error.message}`, 
-                            variant: 'destructive' 
-                        });
-                        closeForm();
-                        return;
-                    }
-
-                    if (!invoiceData) {
-                        toast({ 
-                            title: "Not Found", 
-                            description: "The invoice you were editing could not be found.", 
-                            variant: 'destructive' 
-                        });
-                        closeForm();
-                        return;
-                    }
-                    
-                    initializeShowroomStore(true, invoiceData);
-                } else {
-                    initializeShowroomStore(false, null);
-                }
-            } catch (error) {
-                toast({ 
-                    title: "Error", 
-                    description: `Failed to initialize form: ${error.message}`, 
-                    variant: 'destructive' 
-                });
-                closeForm();
+            if (error) {
+              toast({
+                title: "Error",
+                description: `Could not fetch invoice for editing: ${error.message}`,
+                variant: 'destructive'
+              });
+              closeForm();
+              return;
             }
+
+            if (!invoiceData) {
+              toast({
+                title: "Not Found",
+                description: "The invoice you were editing could not be found.",
+                variant: 'destructive'
+              });
+              closeForm();
+              return;
+            }
+
+            initializeShowroomStore(true, invoiceData);
+          } else {
+            initializeShowroomStore(false, null);
+          }
+        } catch (error) {
+          toast({
+            title: "Error",
+            description: `Failed to initialize form: ${error.message}`,
+            variant: 'destructive'
+          });
+          closeForm();
         }
-        fetchAndInit();
+      }
+      fetchAndInit();
     }
   }, [showForm, isEditing, editingId, toast, closeForm, user.id]);
 
@@ -206,33 +205,33 @@ const VehicleInvoicesPage = () => {
     try {
       const customer = invoice.customer || invoice.customer_details_json;
       const items = invoice.items || [];
-      const settings = await queryClient.fetchQuery({ 
-        queryKey: ['settings'], 
-        queryFn: getSettings 
+      const settings = await queryClient.fetchQuery({
+        queryKey: ['settings'],
+        queryFn: getSettings
       });
-      
+
       if (!customer || items.length === 0 || !settings) {
-        toast({ 
-          title: "Error", 
-          description: "Could not fetch all data required for printing.", 
-          variant: "destructive" 
+        toast({
+          title: "Error",
+          description: "Could not fetch all data required for printing.",
+          variant: "destructive"
         });
         return;
       }
       setPrintData({ type, invoice, customer, items, settings });
     } catch (error) {
-      toast({ 
-        title: "Error", 
-        description: `Failed to prepare print data: ${error.message}`, 
-        variant: "destructive" 
+      toast({
+        title: "Error",
+        description: `Failed to prepare print data: ${error.message}`,
+        variant: "destructive"
       });
     }
   };
 
   useEffect(() => {
     if (printData) {
-      if(printData.type === 'DeliveryChallan') handlePrintChallan();
-      if(printData.type === 'TaxInvoice') handlePrintInvoice();
+      if (printData.type === 'DeliveryChallan') handlePrintChallan();
+      if (printData.type === 'TaxInvoice') handlePrintInvoice();
     }
   }, [printData, handlePrintChallan, handlePrintInvoice]);
 
@@ -243,19 +242,19 @@ const VehicleInvoicesPage = () => {
   const handleEditInvoice = async (invoice) => {
     setOpenForm({ type: 'vehicle_invoice', mode: 'edit', id: invoice.invoice_id });
   };
-  
+
   const saveInvoiceMutation = useMutation({
     mutationFn: saveVehicleInvoiceToDb,
     onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['vehicleInvoices'] });
-        queryClient.invalidateQueries({ queryKey: ['stock'] });
+      queryClient.invalidateQueries({ queryKey: ['vehicleInvoices'] });
+      queryClient.invalidateQueries({ queryKey: ['stock'] });
     }
   });
 
   const handleSaveInvoice = async (invoiceData) => {
     try {
       await saveInvoiceMutation.mutateAsync(invoiceData);
-      
+
       toast({
         title: "Success",
         description: `Invoice ${!invoiceData.id ? 'created' : 'updated'} successfully! Stock has been updated.`
@@ -275,49 +274,49 @@ const VehicleInvoicesPage = () => {
 
   const deleteInvoiceMutation = useMutation({
     mutationFn: async (invoiceId) => {
-        try {
-            const { data: itemsToRestore, error } = await supabase
-                .from('vehicle_invoice_items')
-                .select('*')
-                .eq('invoice_id', invoiceId);
-            
-            if (error) throw new Error(`Failed to fetch items: ${error.message}`);
-            
-            await deleteVehicleInvoiceFromDb(invoiceId);
-            
-            if (itemsToRestore && itemsToRestore.length > 0) {
-                const stockItems = itemsToRestore.map(item => ({
-                    chassis_no: item.chassis_no,
-                    engine_no: item.engine_no,
-                    model_name: item.model_name,
-                    colour: item.colour,
-                    price: item.price,
-                    gst: item.gst,
-                    hsn: item.hsn,
-                    purchase_date: new Date().toISOString().split('T')[0],
-                }));
-                await addStock(stockItems);
-            }
-        } catch (error) {
-            throw new Error(error.message || 'Failed to delete invoice');
+      try {
+        const { data: itemsToRestore, error } = await supabase
+          .from('vehicle_invoice_items')
+          .select('*')
+          .eq('invoice_id', invoiceId);
+
+        if (error) throw new Error(`Failed to fetch items: ${error.message}`);
+
+        await deleteVehicleInvoiceFromDb(invoiceId);
+
+        if (itemsToRestore && itemsToRestore.length > 0) {
+          const stockItems = itemsToRestore.map(item => ({
+            chassis_no: item.chassis_no,
+            engine_no: item.engine_no,
+            model_name: item.model_name,
+            colour: item.colour,
+            price: item.price,
+            gst: item.gst,
+            hsn: item.hsn,
+            purchase_date: new Date().toISOString().split('T')[0],
+          }));
+          await addStock(stockItems);
         }
+      } catch (error) {
+        throw new Error(error.message || 'Failed to delete invoice');
+      }
     },
     onSuccess: () => {
       toast({
-          title: "Invoice Deleted",
-          description: "Invoice deleted and items have been restored to stock.",
+        title: "Invoice Deleted",
+        description: "Invoice deleted and items have been restored to stock.",
       });
     },
     onError: (error) => {
-      toast({ 
-          title: "Error", 
-          description: `Failed to delete invoice: ${error.message}`, 
-          variant: "destructive" 
+      toast({
+        title: "Error",
+        description: `Failed to delete invoice: ${error.message}`,
+        variant: "destructive"
       });
     },
     onSettled: () => {
-        queryClient.invalidateQueries({ queryKey: ['vehicleInvoices'] });
-        queryClient.invalidateQueries({ queryKey: ['stock'] });
+      queryClient.invalidateQueries({ queryKey: ['vehicleInvoices'] });
+      queryClient.invalidateQueries({ queryKey: ['stock'] });
     }
   });
 
@@ -330,14 +329,19 @@ const VehicleInvoicesPage = () => {
     closeForm();
   };
 
+  const handleSearch = () => {
+    setSearchDateRange(dateRange);
+    setPagination({ currentPage: 1 });
+  };
+
   const PrintComponent = () => {
     if (!printData) return null;
     const { invoice, customer, items, settings } = printData;
-    
+
     return (
       <div className="hidden">
-          <DeliveryChallan ref={challanPrintRef} invoice={invoice} customer={customer} items={items} settings={settings} />
-          <TaxInvoice ref={invoicePrintRef} invoice={invoice} customer={customer} items={items} settings={settings} />
+        <DeliveryChallan ref={challanPrintRef} invoice={invoice} customer={customer} items={items} settings={settings} />
+        <TaxInvoice ref={invoicePrintRef} invoice={invoice} customer={customer} items={items} settings={settings} />
       </div>
     );
   }
@@ -369,8 +373,9 @@ const VehicleInvoicesPage = () => {
             setDateRange={setDateRange}
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
-            pagination={{...pagination, totalCount}}
+            pagination={{ ...pagination, totalCount }}
             setPagination={setPagination}
+            onSearch={handleSearch}
           />
         )}
       </div>
