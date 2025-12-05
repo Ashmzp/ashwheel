@@ -245,9 +245,10 @@ const VehicleInvoicesPage = () => {
 
   const saveInvoiceMutation = useMutation({
     mutationFn: saveVehicleInvoiceToDb,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['vehicleInvoices'] });
-      queryClient.invalidateQueries({ queryKey: ['stock'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['vehicleInvoices'] });
+      await queryClient.invalidateQueries({ queryKey: ['stock'] });
+      await queryClient.refetchQueries({ queryKey: ['vehicleInvoices'] });
     }
   });
 
@@ -301,11 +302,14 @@ const VehicleInvoicesPage = () => {
         throw new Error(error.message || 'Failed to delete invoice');
       }
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast({
         title: "Invoice Deleted",
         description: "Invoice deleted and items have been restored to stock.",
       });
+      await queryClient.invalidateQueries({ queryKey: ['vehicleInvoices'] });
+      await queryClient.invalidateQueries({ queryKey: ['stock'] });
+      await queryClient.refetchQueries({ queryKey: ['vehicleInvoices'] });
     },
     onError: (error) => {
       toast({
@@ -313,10 +317,6 @@ const VehicleInvoicesPage = () => {
         description: `Failed to delete invoice: ${error.message}`,
         variant: "destructive"
       });
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['vehicleInvoices'] });
-      queryClient.invalidateQueries({ queryKey: ['stock'] });
     }
   });
 

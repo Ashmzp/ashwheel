@@ -267,13 +267,14 @@ const PurchasesPage = () => {
       }
       return savedData;
     },
-    onSuccess: (savedData) => {
+    onSuccess: async (savedData) => {
       toast({
         title: "Success",
         description: `Purchase ${isEditing ? 'updated' : 'created'} and stock updated.`
       });
-      queryClient.invalidateQueries({ queryKey: ['purchases'] });
-      queryClient.invalidateQueries({ queryKey: ['stock'] });
+      await queryClient.invalidateQueries({ queryKey: ['purchases'] });
+      await queryClient.invalidateQueries({ queryKey: ['stock'] });
+      await queryClient.refetchQueries({ queryKey: ['purchases'] });
       handleCancel();
     },
     onError: (error) => {
@@ -294,9 +295,10 @@ const PurchasesPage = () => {
       }
       await deletePurchaseFromDb(purchaseId);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['purchases'] });
-      queryClient.invalidateQueries({ queryKey: ['stock'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['purchases'] });
+      await queryClient.invalidateQueries({ queryKey: ['stock'] });
+      await queryClient.refetchQueries({ queryKey: ['purchases'] });
     },
     onError: (error) => {
       toast({ title: "Error", description: `Failed to delete purchase. ${error.message}`, variant: "destructive" });

@@ -5,7 +5,7 @@ import { startOfMonth, format } from 'date-fns';
 
 const createInitialState = (data = {}) => ({
   id: data.id || null,
-  invoice_date: data.invoice_date || format(startOfMonth(new Date()), 'yyyy-MM-dd'),
+  invoice_date: data.invoice_date || getCurrentDate(),
   invoice_no: data.invoice_no || '',
   customer_id: data.customer_id || null,
   customer_name: data.customer_name || '',
