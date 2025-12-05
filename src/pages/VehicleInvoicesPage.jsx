@@ -246,9 +246,10 @@ const VehicleInvoicesPage = () => {
   const saveInvoiceMutation = useMutation({
     mutationFn: saveVehicleInvoiceToDb,
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['vehicleInvoices'] });
-      await queryClient.invalidateQueries({ queryKey: ['stock'] });
-      await queryClient.refetchQueries({ queryKey: ['vehicleInvoices'] });
+      await queryClient.invalidateQueries({ queryKey: ['vehicleInvoices'], refetchType: 'active' });
+      await queryClient.invalidateQueries({ queryKey: ['stock'], refetchType: 'active' });
+      await queryClient.invalidateQueries({ queryKey: ['stockCount'], refetchType: 'active' });
+      await queryClient.invalidateQueries({ queryKey: ['dashboardStats'], refetchType: 'active' });
     }
   });
 
@@ -307,9 +308,10 @@ const VehicleInvoicesPage = () => {
         title: "Invoice Deleted",
         description: "Invoice deleted and items have been restored to stock.",
       });
-      await queryClient.invalidateQueries({ queryKey: ['vehicleInvoices'] });
-      await queryClient.invalidateQueries({ queryKey: ['stock'] });
-      await queryClient.refetchQueries({ queryKey: ['vehicleInvoices'] });
+      await queryClient.invalidateQueries({ queryKey: ['vehicleInvoices'], refetchType: 'active' });
+      await queryClient.invalidateQueries({ queryKey: ['stock'], refetchType: 'active' });
+      await queryClient.invalidateQueries({ queryKey: ['stockCount'], refetchType: 'active' });
+      await queryClient.invalidateQueries({ queryKey: ['dashboardStats'], refetchType: 'active' });
     },
     onError: (error) => {
       toast({
