@@ -1,0 +1,76 @@
+# 📧 Minified Email Templates for Coolify
+
+## Copy-Paste Ready Templates
+
+### 1. Password Recovery Template
+
+**Variable Name:** `GOTRUE_MAILER_TEMPLATES_RECOVERY`
+
+**Value:**
+```
+<!DOCTYPE html><html><body style="font-family: Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px;"><div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"><div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 30px; text-align: center;"><h1 style="color: #ffffff; margin: 0; font-size: 28px;">🚗 Ashwheel</h1></div><div style="padding: 40px 30px;"><h2 style="color: #333; margin-top: 0;">Reset Your Password</h2><p style="color: #666; font-size: 16px; line-height: 1.6;">Hi there,</p><p style="color: #666; font-size: 16px; line-height: 1.6;">You requested to reset your password for your Ashwheel account. Use the OTP code below:</p><div style="background-color: #f8f9fa; border: 2px dashed #ef4444; border-radius: 8px; padding: 30px; text-align: center; margin: 30px 0;"><p style="color: #666; font-size: 14px; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 1px;">Your OTP Code</p><h1 style="color: #ef4444; font-size: 42px; letter-spacing: 8px; margin: 0; font-family: 'Courier New', monospace;">{{ .Token }}</h1></div><p style="color: #666; font-size: 14px; line-height: 1.6;">⏰ <strong>This code will expire in 60 minutes.</strong></p><p style="color: #666; font-size: 14px; line-height: 1.6;">If you didn't request this password reset, please ignore this email.</p><div style="margin-top: 30px; padding-top: 30px; border-top: 1px solid #e5e5e5;"><p style="color: #666; font-size: 14px; line-height: 1.6; margin: 0;">Best regards,<br><strong>Ashwheel Team</strong></p></div></div><div style="background-color: #f8f9fa; padding: 20px 30px; text-align: center;"><p style="color: #999; font-size: 12px; margin: 0;">© 2025 Ashwheel. All rights reserved.</p></div></div></body></html>
+```
+
+---
+
+### 2. Email Confirmation Template
+
+**Variable Name:** `GOTRUE_MAILER_TEMPLATES_CONFIRMATION`
+
+**Value:**
+```
+<!DOCTYPE html><html><body style="font-family: Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px;"><div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"><div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 30px; text-align: center;"><h1 style="color: #ffffff; margin: 0; font-size: 28px;">🚗 Welcome to Ashwheel!</h1></div><div style="padding: 40px 30px;"><h2 style="color: #333; margin-top: 0;">Confirm Your Email</h2><p style="color: #666; font-size: 16px; line-height: 1.6;">Thank you for signing up!</p><p style="color: #666; font-size: 16px; line-height: 1.6;">Your confirmation code is:</p><div style="background-color: #f8f9fa; border: 2px dashed #ef4444; border-radius: 8px; padding: 30px; text-align: center; margin: 30px 0;"><p style="color: #666; font-size: 14px; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 1px;">Confirmation Code</p><h1 style="color: #ef4444; font-size: 42px; letter-spacing: 8px; margin: 0; font-family: 'Courier New', monospace;">{{ .Token }}</h1></div><p style="color: #666; font-size: 14px; line-height: 1.6;">⏰ <strong>This code will expire in 60 minutes.</strong></p><div style="margin-top: 30px; padding-top: 30px; border-top: 1px solid #e5e5e5;"><p style="color: #666; font-size: 14px; line-height: 1.6; margin: 0;">Best regards,<br><strong>Ashwheel Team</strong></p></div></div><div style="background-color: #f8f9fa; padding: 20px 30px; text-align: center;"><p style="color: #999; font-size: 12px; margin: 0;">© 2025 Ashwheel. All rights reserved.</p></div></div></body></html>
+```
+
+---
+
+### 3. Subject Lines
+
+**Recovery Subject:**
+```
+GOTRUE_MAILER_SUBJECTS_RECOVERY=Reset Your Ashwheel Password - OTP Inside
+```
+
+**Confirmation Subject:**
+```
+GOTRUE_MAILER_SUBJECTS_CONFIRMATION=Welcome to Ashwheel - Confirm Your Email
+```
+
+---
+
+## 🎯 How to Use in Coolify
+
+### Step 1: Go to Service Settings
+1. **Coolify Dashboard** → **Your Supabase Project**
+2. **GoTrue Service** → **Environment Variables**
+
+### Step 2: Add Variables
+1. Click **Add Variable**
+2. **Name:** `GOTRUE_MAILER_TEMPLATES_RECOVERY`
+3. **Value:** Copy entire minified HTML from above
+4. Click **Save**
+
+### Step 3: Repeat for Other Templates
+- `GOTRUE_MAILER_TEMPLATES_CONFIRMATION`
+- `GOTRUE_MAILER_SUBJECTS_RECOVERY`
+- `GOTRUE_MAILER_SUBJECTS_CONFIRMATION`
+
+### Step 4: Redeploy
+1. **Save** all variables
+2. **Redeploy** service
+3. Check logs
+
+---
+
+## ✅ Complete Variable List (Copy All)
+
+```bash
+GOTRUE_MAILER_SUBJECTS_RECOVERY=Reset Your Ashwheel Password - OTP Inside
+GOTRUE_MAILER_SUBJECTS_CONFIRMATION=Welcome to Ashwheel - Confirm Your Email
+GOTRUE_MAILER_TEMPLATES_RECOVERY=<!DOCTYPE html><html><body style="font-family: Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px;"><div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"><div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 30px; text-align: center;"><h1 style="color: #ffffff; margin: 0; font-size: 28px;">🚗 Ashwheel</h1></div><div style="padding: 40px 30px;"><h2 style="color: #333; margin-top: 0;">Reset Your Password</h2><p style="color: #666; font-size: 16px; line-height: 1.6;">Hi there,</p><p style="color: #666; font-size: 16px; line-height: 1.6;">You requested to reset your password for your Ashwheel account. Use the OTP code below:</p><div style="background-color: #f8f9fa; border: 2px dashed #ef4444; border-radius: 8px; padding: 30px; text-align: center; margin: 30px 0;"><p style="color: #666; font-size: 14px; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 1px;">Your OTP Code</p><h1 style="color: #ef4444; font-size: 42px; letter-spacing: 8px; margin: 0; font-family: 'Courier New', monospace;">{{ .Token }}</h1></div><p style="color: #666; font-size: 14px; line-height: 1.6;">⏰ <strong>This code will expire in 60 minutes.</strong></p><p style="color: #666; font-size: 14px; line-height: 1.6;">If you didn't request this password reset, please ignore this email.</p><div style="margin-top: 30px; padding-top: 30px; border-top: 1px solid #e5e5e5;"><p style="color: #666; font-size: 14px; line-height: 1.6; margin: 0;">Best regards,<br><strong>Ashwheel Team</strong></p></div></div><div style="background-color: #f8f9fa; padding: 20px 30px; text-align: center;"><p style="color: #999; font-size: 12px; margin: 0;">© 2025 Ashwheel. All rights reserved.</p></div></div></body></html>
+GOTRUE_MAILER_TEMPLATES_CONFIRMATION=<!DOCTYPE html><html><body style="font-family: Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px;"><div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"><div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 30px; text-align: center;"><h1 style="color: #ffffff; margin: 0; font-size: 28px;">🚗 Welcome to Ashwheel!</h1></div><div style="padding: 40px 30px;"><h2 style="color: #333; margin-top: 0;">Confirm Your Email</h2><p style="color: #666; font-size: 16px; line-height: 1.6;">Thank you for signing up!</p><p style="color: #666; font-size: 16px; line-height: 1.6;">Your confirmation code is:</p><div style="background-color: #f8f9fa; border: 2px dashed #ef4444; border-radius: 8px; padding: 30px; text-align: center; margin: 30px 0;"><p style="color: #666; font-size: 14px; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 1px;">Confirmation Code</p><h1 style="color: #ef4444; font-size: 42px; letter-spacing: 8px; margin: 0; font-family: 'Courier New', monospace;">{{ .Token }}</h1></div><p style="color: #666; font-size: 14px; line-height: 1.6;">⏰ <strong>This code will expire in 60 minutes.</strong></p><div style="margin-top: 30px; padding-top: 30px; border-top: 1px solid #e5e5e5;"><p style="color: #666; font-size: 14px; line-height: 1.6; margin: 0;">Best regards,<br><strong>Ashwheel Team</strong></p></div></div><div style="background-color: #f8f9fa; padding: 20px 30px; text-align: center;"><p style="color: #999; font-size: 12px; margin: 0;">© 2025 Ashwheel. All rights reserved.</p></div></div></body></html>
+```
+
+---
+
+**Made with ❤️ for Ashwheel**

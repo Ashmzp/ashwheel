@@ -30,6 +30,7 @@ function App() {
     location.pathname === '/login' ||
     location.pathname === '/admin-login' ||
     location.pathname === '/signup' ||
+    location.pathname === '/forgot-password' ||
     location.pathname === '/reset-password' ||
     location.pathname === '/auth/callback';
 

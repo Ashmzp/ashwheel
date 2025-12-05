@@ -1,0 +1,142 @@
+version: "3.9"
+
+services:
+  supabase-db:
+    image: postgres:15-alpine
+    container_name: supabase-db
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - supabase_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - supabase
+
+  supabase-auth:
+    image: supabase/gotrue:v2.99.0
+    container_name: supabase-auth
+    restart: always
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+    ports:
+      - "9999:9999"
+    environment:
+      # Database Connection
+      GOTRUE_DB_DRIVER: "postgres"
+      DATABASE_URL: "postgresql://postgres:postgres@supabase-db:5432/postgres"
+      
+      # API Configuration
+      GOTRUE_API_HOST: "0.0.0.0"
+      GOTRUE_API_PORT: "9999"
+      GOTRUE_SITE_URL: "https://ashwheel.cloud"
+      API_EXTERNAL_URL: "https://supabase.ashwheel.cloud"
+      
+      # JWT Configuration
+      GOTRUE_JWT_SECRET: "your-super-secret-jwt-token-with-at-least-32-characters-long"
+      GOTRUE_JWT_EXP: "3600"
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: "authenticated"
+      
+      # SMTP Configuration (Gmail Example)
+      GOTRUE_SMTP_HOST: "smtp.gmail.com"
+      GOTRUE_SMTP_PORT: "587"
+      GOTRUE_SMTP_USER: "your-email@gmail.com"
+      GOTRUE_SMTP_PASS: "your-gmail-app-password"
+      GOTRUE_SMTP_ADMIN_EMAIL: "noreply@ashwheel.cloud"
+      GOTRUE_SMTP_SENDER_NAME: "Ashwheel"
+      
+      # Email Templates - Recovery (Password Reset)
+      GOTRUE_MAILER_SUBJECTS_RECOVERY: "Reset Your Ashwheel Password - OTP Inside"
+      GOTRUE_MAILER_TEMPLATES_RECOVERY: |
+        <!DOCTYPE html>
+        <html>
+        <body style="font-family: Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px;">
+          <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 30px; text-align: center;">
+              <h1 style="color: #ffffff; margin: 0; font-size: 28px;">🚗 Ashwheel</h1>
+            </div>
+            <div style="padding: 40px 30px;">
+              <h2 style="color: #333; margin-top: 0;">Reset Your Password</h2>
+              <p style="color: #666; font-size: 16px; line-height: 1.6;">Hi there,</p>
+              <p style="color: #666; font-size: 16px; line-height: 1.6;">You requested to reset your password for your Ashwheel account. Use the OTP code below:</p>
+              <div style="background-color: #f8f9fa; border: 2px dashed #ef4444; border-radius: 8px; padding: 30px; text-align: center; margin: 30px 0;">
+                <p style="color: #666; font-size: 14px; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 1px;">Your OTP Code</p>
+                <h1 style="color: #ef4444; font-size: 42px; letter-spacing: 8px; margin: 0; font-family: 'Courier New', monospace;">{{ .Token }}</h1>
+              </div>
+              <p style="color: #666; font-size: 14px; line-height: 1.6;">⏰ <strong>This code will expire in 60 minutes.</strong></p>
+              <p style="color: #666; font-size: 14px; line-height: 1.6;">If you didn't request this password reset, please ignore this email.</p>
+              <div style="margin-top: 30px; padding-top: 30px; border-top: 1px solid #e5e5e5;">
+                <p style="color: #666; font-size: 14px; line-height: 1.6; margin: 0;">Best regards,<br><strong>Ashwheel Team</strong></p>
+              </div>
+            </div>
+            <div style="background-color: #f8f9fa; padding: 20px 30px; text-align: center;">
+              <p style="color: #999; font-size: 12px; margin: 0;">© 2025 Ashwheel. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      
+      # Email Templates - Confirmation (Signup)
+      GOTRUE_MAILER_SUBJECTS_CONFIRMATION: "Welcome to Ashwheel - Confirm Your Email"
+      GOTRUE_MAILER_TEMPLATES_CONFIRMATION: |
+        <!DOCTYPE html>
+        <html>
+        <body style="font-family: Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px;">
+          <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden;">
+            <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 30px; text-align: center;">
+              <h1 style="color: #ffffff; margin: 0;">🚗 Welcome to Ashwheel!</h1>
+            </div>
+            <div style="padding: 40px 30px;">
+              <h2 style="color: #333;">Confirm Your Email</h2>
+              <p style="color: #666; font-size: 16px;">Your confirmation code is:</p>
+              <div style="background-color: #f8f9fa; border: 2px dashed #ef4444; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0;">
+                <h1 style="color: #ef4444; font-size: 36px; letter-spacing: 5px; margin: 0; font-family: monospace;">{{ .Token }}</h1>
+              </div>
+              <p style="color: #666; font-size: 14px;">Thanks,<br><strong>Ashwheel Team</strong></p>
+            </div>
+          </div>
+        </body>
+        </html>
+      
+      # Security & Auth Settings
+      GOTRUE_DISABLE_SIGNUP: "false"
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
+      GOTRUE_MAILER_AUTOCONFIRM: "false"
+      GOTRUE_PASSWORD_MIN_LENGTH: "6"
+      GOTRUE_MAILER_OTP_EXP: "3600"
+      
+    networks:
+      - supabase
+
+  supabase-rest:
+    image: postgrest/postgrest:v12.2.12
+    container_name: supabase-rest
+    restart: always
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      PGRST_DB_URI: postgres://postgres:postgres@supabase-db:5432/postgres
+      PGRST_DB_SCHEMA: api
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: "your-super-secret-jwt-token-with-at-least-32-characters-long"
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+      PGRST_LOG_LEVEL: "info"
+    networks:
+      - supabase
+
+volumes:
+  supabase_data:
+
+networks:
+  supabase:
+    driver: bridge
