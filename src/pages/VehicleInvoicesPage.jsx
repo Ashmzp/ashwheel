@@ -246,10 +246,10 @@ const VehicleInvoicesPage = () => {
   const saveInvoiceMutation = useMutation({
     mutationFn: saveVehicleInvoiceToDb,
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['vehicleInvoices'], refetchType: 'active' });
-      await queryClient.invalidateQueries({ queryKey: ['stock'], refetchType: 'active' });
-      await queryClient.invalidateQueries({ queryKey: ['stockCount'], refetchType: 'active' });
-      await queryClient.invalidateQueries({ queryKey: ['dashboardStats'], refetchType: 'active' });
+      queryClient.invalidateQueries({ queryKey: ['vehicleInvoices'] });
+      queryClient.invalidateQueries({ queryKey: ['stock'] });
+      queryClient.invalidateQueries({ queryKey: ['stockCount'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboardStats'] });
     }
   });
 
@@ -303,15 +303,15 @@ const VehicleInvoicesPage = () => {
         throw new Error(error.message || 'Failed to delete invoice');
       }
     },
-    onSuccess: async () => {
+    onSuccess: () => {
       toast({
         title: "Invoice Deleted",
         description: "Invoice deleted and items have been restored to stock.",
       });
-      await queryClient.invalidateQueries({ queryKey: ['vehicleInvoices'], refetchType: 'active' });
-      await queryClient.invalidateQueries({ queryKey: ['stock'], refetchType: 'active' });
-      await queryClient.invalidateQueries({ queryKey: ['stockCount'], refetchType: 'active' });
-      await queryClient.invalidateQueries({ queryKey: ['dashboardStats'], refetchType: 'active' });
+      queryClient.invalidateQueries({ queryKey: ['vehicleInvoices'] });
+      queryClient.invalidateQueries({ queryKey: ['stock'] });
+      queryClient.invalidateQueries({ queryKey: ['stockCount'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboardStats'] });
     },
     onError: (error) => {
       toast({

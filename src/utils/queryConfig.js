@@ -1,8 +1,8 @@
 // Default query configuration to prevent unnecessary refetches
 export const DEFAULT_QUERY_CONFIG = {
-  staleTime: Infinity, // Never consider data stale
+  staleTime: 0,
   refetchOnWindowFocus: false,
-  refetchOnMount: false,
+  refetchOnMount: true,
   refetchOnReconnect: false,
   refetchInterval: false,
   refetchIntervalInBackground: false,

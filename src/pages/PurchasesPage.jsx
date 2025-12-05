@@ -267,15 +267,15 @@ const PurchasesPage = () => {
       }
       return savedData;
     },
-    onSuccess: async (savedData) => {
+    onSuccess: (savedData) => {
       toast({
         title: "Success",
         description: `Purchase ${isEditing ? 'updated' : 'created'} and stock updated.`
       });
-      await queryClient.invalidateQueries({ queryKey: ['purchases'], refetchType: 'active' });
-      await queryClient.invalidateQueries({ queryKey: ['stock'], refetchType: 'active' });
-      await queryClient.invalidateQueries({ queryKey: ['stockCount'], refetchType: 'active' });
-      await queryClient.invalidateQueries({ queryKey: ['dashboardStats'], refetchType: 'active' });
+      queryClient.invalidateQueries({ queryKey: ['purchases'] });
+      queryClient.invalidateQueries({ queryKey: ['stock'] });
+      queryClient.invalidateQueries({ queryKey: ['stockCount'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboardStats'] });
       handleCancel();
     },
     onError: (error) => {
@@ -296,11 +296,11 @@ const PurchasesPage = () => {
       }
       await deletePurchaseFromDb(purchaseId);
     },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['purchases'], refetchType: 'active' });
-      await queryClient.invalidateQueries({ queryKey: ['stock'], refetchType: 'active' });
-      await queryClient.invalidateQueries({ queryKey: ['stockCount'], refetchType: 'active' });
-      await queryClient.invalidateQueries({ queryKey: ['dashboardStats'], refetchType: 'active' });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['purchases'] });
+      queryClient.invalidateQueries({ queryKey: ['stock'] });
+      queryClient.invalidateQueries({ queryKey: ['stockCount'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboardStats'] });
     },
     onError: (error) => {
       toast({ title: "Error", description: `Failed to delete purchase. ${error.message}`, variant: "destructive" });
