@@ -40,18 +40,19 @@ import React from 'react';
             <Link to="/" className="flex items-center gap-2">
                 <AnimatedLogo className="h-12 w-auto" isLink={false} />
             </Link>
-            <nav className="hidden md:flex items-center gap-1">
-                <Button variant="ghost" onClick={(e) => handleNavClick(e, '/#tools')}><Wrench className="mr-2 h-4 w-4" /> Tools <span className="ml-1 text-xs text-green-500">(Free)</span></Button>
+            <nav className="flex items-center gap-1">
+                <Button variant="ghost" onClick={(e) => handleNavClick(e, '/#tools')} className="hidden sm:flex"><Wrench className="mr-2 h-4 w-4" /> Tools <span className="ml-1 text-xs text-green-500">(Free)</span></Button>
                 <Button variant="ghost" asChild>
                   <Link to="/ashwheel-pro" className="relative">
                     <Zap className="mr-2 h-4 w-4 text-yellow-400" /> 
-                    Ashwheel Pro
+                    <span className="hidden sm:inline">Ashwheel Pro</span>
+                    <span className="sm:hidden">Pro</span>
                     <span className="ml-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-yellow-400 text-black">SaaS</span>
                   </Link>
                 </Button>
-                <Button variant="ghost" asChild><Link to="/about"><Info className="mr-2 h-4 w-4" /> About</Link></Button>
-                <Button variant="ghost" asChild><Link to="/contact"><MessageSquare className="mr-2 h-4 w-4" /> Contact</Link></Button>
-                <Button variant="ghost" asChild><Link to="/feedback"><Star className="mr-2 h-4 w-4" /> Feedback</Link></Button>
+                <Button variant="ghost" asChild className="hidden md:flex"><Link to="/about"><Info className="mr-2 h-4 w-4" /> About</Link></Button>
+                <Button variant="ghost" asChild className="hidden md:flex"><Link to="/contact"><MessageSquare className="mr-2 h-4 w-4" /> Contact</Link></Button>
+                <Button variant="ghost" asChild className="hidden lg:flex"><Link to="/feedback"><Star className="mr-2 h-4 w-4" /> Feedback</Link></Button>
             </nav>
             <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2">
               <Button variant="ghost" size="icon" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>

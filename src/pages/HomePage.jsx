@@ -6,6 +6,8 @@ import React, { useState, useMemo, useEffect } from 'react';
     import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
     import { FileText, Image, Video, Scissors, FileJson, FileType, Split, Merge, Minimize as Compress, Type, QrCode, Calculator, Percent, Calendar, Link2, Download, User, Shield, FileImage, FileUp, FileDown, PenSquare, Clock, Hash, Palette, TextSelection as TextSearch, ZoomIn, Crop, Repeat, Sparkles, Facebook, Instagram, Youtube, Heart, Edit, KeyRound, Scale, Paintbrush, CaseSensitive, Weight, Code, Timer, BookText, CheckSquare, Vote, Layers } from 'lucide-react';
     import ProBanner from '@/components/ProBanner';
+    import ComparisonSection from '@/components/ComparisonSection';
+    import WhatsAppButton from '@/components/WhatsAppButton';
 
     const toolCategories = {
         "PDF Tools": {
@@ -260,7 +262,9 @@ import React, { useState, useMemo, useEffect } from 'react';
                             )}
                         </main>
                     </div>
+                    {!searchTerm && <ComparisonSection />}
                 </div>
+                <WhatsAppButton phoneNumber="917275277076" message="Hi, I want Ashwheel Pro demo" />
             </>
         );
     };

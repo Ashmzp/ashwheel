@@ -4,7 +4,9 @@ import React, { useState } from 'react';
     import { motion } from 'framer-motion';
     import { Button } from '@/components/ui/button';
     import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-    import { CheckCircle, BarChart2, Users, Car, ArrowRight, Sparkles, Clock, Shield, FileText, Zap, Smartphone, Printer, CreditCard } from 'lucide-react';
+    import { CheckCircle, BarChart2, Users, Car, ArrowRight, Sparkles, Clock, Shield, FileText, Zap, Smartphone, Printer, CreditCard, MessageCircle } from 'lucide-react';
+    import WhatsAppButton from '@/components/WhatsAppButton';
+    import ComparisonSection from '@/components/ComparisonSection';
     const featureVariants = {
       hidden: {
         opacity: 0,
@@ -157,6 +159,9 @@ import React, { useState } from 'react';
                             </motion.p>
                         </div>
                     </motion.section>
+
+                    {/* Comparison Section - Right after Hero */}
+                    <ComparisonSection />
 
                     {/* Trial Benefits Section */}
                     <section className="py-16 px-4 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-900">
@@ -430,13 +435,13 @@ import React, { useState } from 'react';
                                     Start Your 30-Day Free Trial Now!
                                 </h2>
                                 <p className="text-xl mb-8 opacity-90">
-                                    Join hundreds of successful dealers who trust Ashwheel Pro
+                                    Join our growing community of dealers transforming their business
                                 </p>
                                 <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
                                     <Button size="lg" variant="secondary" className="text-primary font-bold" asChild>
                                         <Link to="/signup">Get Started Free <ArrowRight className="ml-2 h-5 w-5" /></Link>
                                     </Button>
-                                    <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10" asChild>
+                                    <Button size="lg" variant="outline" className="border-2 border-white text-white bg-transparent hover:bg-white hover:text-primary" asChild>
                                         <a href="mailto:support@ashwheel.cloud">Contact Sales</a>
                                     </Button>
                                 </div>
@@ -457,7 +462,25 @@ import React, { useState } from 'react';
                             </motion.div>
                         </div>
                     </section>
+
+                    {/* WhatsApp CTA Section */}
+                    <section className="py-16 px-4 bg-green-50 dark:bg-green-950/20">
+                        <div className="container mx-auto text-center">
+                            <MessageCircle className="h-16 w-16 mx-auto mb-6 text-green-600" />
+                            <h2 className="text-3xl md:text-4xl font-bold mb-4">Want to See a Live Demo?</h2>
+                            <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
+                                Chat with us on WhatsApp for a personalized demo and special startup pricing
+                            </p>
+                            <a href="https://wa.me/917275277076?text=Hi,%20I%20want%20Ashwheel%20Pro%20demo%20and%20pricing" target="_blank" rel="noopener noreferrer">
+                                <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white text-lg px-8 py-6">
+                                    <MessageCircle className="mr-2 h-5 w-5" />
+                                    Get Demo & Pricing on WhatsApp
+                                </Button>
+                            </a>
+                        </div>
+                    </section>
                 </div>
+                <WhatsAppButton phoneNumber="917275277076" message="Hi, I want Ashwheel Pro demo and pricing" />
             </>;
     };
     export default AshwheelProPage;
