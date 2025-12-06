@@ -34,11 +34,8 @@ const TaxInvoice = forwardRef(({ invoice, customer, items, settings }, ref) => {
   const totalIgst = itemsWithTax.reduce((sum, item) => sum + item.igst, 0);
   const totalGst = totalCgst + totalSgst + totalIgst;
   
-  const regCharge = parseFloat(invoice.extra_charges?.Registration || invoice.registration_amount || 0);
-  const insCharge = parseFloat(invoice.extra_charges?.Insurance || invoice.insurance_amount || 0);
-  const accCharge = parseFloat(invoice.extra_charges?.Accessories || invoice.accessories_amount || 0);
-  
-  const extraChargesTotal = Object.values(invoice.extra_charges || {}).reduce((sum, charge) => sum + parseFloat(charge || 0), 0);
+  const extraCharges = invoice.extra_charges || invoice.extra_charges_json || {};
+  const extraChargesTotal = Object.values(extraCharges).reduce((sum, charge) => sum + parseFloat(charge || 0), 0);
   
   const subTotal = items.reduce((sum, item) => sum + parseFloat(item.price || 0), 0);
   const grandTotal = subTotal + extraChargesTotal;
@@ -53,59 +50,101 @@ const TaxInvoice = forwardRef(({ invoice, customer, items, settings }, ref) => {
   };
   
   return (
-    <div ref={ref} className="p-2 bg-white text-black text-[10px] font-sans leading-tight">
+    <div ref={ref} className="p-2 bg-white text-black text-[12px] font-sans leading-tight">
       <style>{`
         @page {
-          size: A4;
-          margin: 20mm 18mm 20mm 15mm;
+          size: 210mm 297mm;
+          margin: 10mm;
         }
         @media print {
           body {
             margin: 0;
             padding: 0;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
           }
         }
+        .invoice-container {
+          width: 190mm;
+          min-height: 277mm;
+          margin: 0 auto;
+        }
         .invoice-box {
-          border: 1px solid black;
+          border: 2px solid #000;
+          display: flex;
+          flex-direction: column;
+          min-height: 277mm;
         }
         .invoice-box table {
           width: 100%;
           border-collapse: collapse;
         }
         .invoice-box table td, .invoice-box table th {
-          border: 1px solid black;
-          padding: 2px 4px;
+          border-left: 1px solid #333;
+          border-right: 1px solid #333;
+          padding: 4px 6px;
           vertical-align: top;
+        }
+        .invoice-box table td:first-child {
+          border-left: none;
+        }
+        .invoice-box table td:last-child {
+          border-right: none;
         }
         .invoice-box table .no-border td {
           border: none;
         }
         .header-item {
           display: flex;
+          margin-bottom: 2px;
         }
         .header-item > span:first-child {
-          font-weight: bold;
-          width: 100px;
+          font-weight: 600;
+          width: 120px;
           display: inline-block;
         }
         .header-item > span:nth-child(2) {
-          margin-right: 5px;
+          margin: 0 4px;
+        }
+        .section-header {
+          background: #f5f5f5;
+          font-weight: bold;
+          padding: 6px 8px !important;
+          border-top: 1px solid #333 !important;
+          border-bottom: 1px solid #333 !important;
+        }
+        .total-row {
+          border-top: 1px solid #333 !important;
+        }
+        .amount-cell {
+          font-family: 'Courier New', monospace;
+          text-align: right;
+        }
+        .invoice-footer {
+          margin-top: auto;
+          padding: 12px 8px;
+          border-top: 2px solid #333;
+        }
+        @media print {
+          .invoice-footer {
+            page-break-inside: avoid;
+          }
         }
       `}</style>
+      <div className="invoice-container">
       <div className="invoice-box">
-        <header className="p-2">
-          <div className="flex justify-between items-start">
-            <p className="font-bold">GSTIN: {settings?.gst_no}</p>
-            <p className="font-bold text-center text-sm">TAX INVOICE</p>
-            <p className="font-bold text-right">Original For Recipient</p>
+        <header className="p-3 border-b-2 border-black">
+          <div className="flex justify-between items-start mb-2">
+            <p className="font-bold text-[9px]">GSTIN: {settings?.gst_no}</p>
+            <p className="font-bold text-center text-base tracking-wide">TAX INVOICE</p>
+            <p className="font-bold text-right text-[9px]">Original For Recipient</p>
           </div>
-          <div className="text-center my-1">
-            {settings.company_logo_url && <img src={settings.company_logo_url} alt="Company Logo" className="h-16 w-auto mx-auto mb-2" />}
-            <h1 className="text-xl font-bold">{settings.company_name}</h1>
-            <p>{settings.address}, {settings.district}, {settings.state} - {settings.pin_code}</p>
-            <p>Phone No: {settings.mobile} | Email: {settings.email || 'N/A'}</p>
-            <p>PAN No: {settings.pan || 'N/A'}</p>
-            <p className="font-bold mt-1">State Code: 09</p>
+          <div className="text-center">
+            {settings.company_logo_url && <img src={settings.company_logo_url} alt="Company Logo" className="h-14 w-auto mx-auto mb-1" />}
+            <h1 className="text-2xl font-bold tracking-wide mb-1">{settings.company_name}</h1>
+            <p className="text-[9px]">{settings.address}, {settings.district}, {settings.state} - {settings.pin_code}</p>
+            <p className="text-[9px]">Phone: {settings.mobile} | Email: {settings.email || 'N/A'} | PAN: {settings.pan || 'N/A'}</p>
+            <p className="font-semibold text-[9px] mt-1">State Code: 09</p>
           </div>
         </header>
 
@@ -145,61 +184,71 @@ const TaxInvoice = forwardRef(({ invoice, customer, items, settings }, ref) => {
             </tr>
             <tr>
               <td colSpan="2">
-                <div className="header-item"><span>Bill Type</span><span>:</span><span>Credit</span></div>
+                <div className="header-item"><span>Bill Type</span><span>:</span><span></span></div>
               </td>
             </tr>
           </tbody>
         </table>
 
-        <div className="min-h-[24rem]">
-          <table>
-            <thead>
-              <tr className="text-center font-bold">
-                <td className="w-[5%]">S No</td>
-                <td className="w-[35%]">Description</td>
-                <td className="w-[10%]">HSN / SAC</td>
-                <td className="w-[5%]">Qty</td>
-                <td className="w-[5%]">UOM</td>
-                <td className="w-[10%]">Item Rate</td>
-                <td className="w-[10%]">Disc%</td>
-                <td className="w-[15%]">Amount (INR)</td>
+        <table>
+          <thead>
+            <tr className="text-center font-bold section-header">
+              <td className="w-[5%]">S.No</td>
+              <td className="w-[35%]">Description of Goods</td>
+              <td className="w-[10%]">HSN/SAC</td>
+              <td className="w-[5%]">Qty</td>
+              <td className="w-[5%]">UOM</td>
+              <td className="w-[10%]">Rate</td>
+              <td className="w-[10%]">Disc%</td>
+              <td className="w-[15%]">Amount (₹)</td>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item, index) => (
+              <tr key={item.chassis_no}>
+                <td className="text-center align-top">{index + 1}</td>
+                <td className="leading-relaxed align-top">
+                  <span className="font-semibold">{item.model_name}</span> - <span className="italic">{item.colour}</span>
+                  <br />
+                  <span className="text-[10px]">Chassis: {item.chassis_no}</span>
+                  <br />
+                  <span className="text-[10px]">Engine: {item.engine_no}</span>
+                </td>
+                <td className="text-center align-top">{item.hsn}</td>
+                <td className="text-center align-top">1.00</td>
+                <td className="text-center align-top">PCS</td>
+                <td className="amount-cell align-top">{parseFloat(item.price || 0).toFixed(2)}</td>
+                <td className="text-center align-top">0.00</td>
+                <td className="amount-cell align-top font-semibold">{parseFloat(item.price || 0).toFixed(2)}</td>
               </tr>
-            </thead>
-            <tbody>
-              {items.map((item, index) => (
-                <tr key={item.chassis_no}>
-                  <td className="text-center">{index + 1}</td>
-                  <td>
-                    {item.model_name} | {item.colour}
-                    <br />
-                    <span className="ml-2">Chassis No. : {item.chassis_no}</span>
-                    <br />
-                    <span className="ml-2">Engine No. : {item.engine_no}</span>
-                  </td>
-                  <td className="text-center">{item.hsn}</td>
-                  <td className="text-center">1.00</td>
-                  <td className="text-center">PCS</td>
-                  <td className="text-right">{parseFloat(item.price || 0).toFixed(2)}</td>
-                  <td className="text-center">0.00%</td>
-                  <td className="text-right">{parseFloat(item.price || 0).toFixed(2)}</td>
-                </tr>
-              ))}
-            </tbody>
-            <tfoot>
-              <tr className="font-bold">
-                <td colSpan="3" className="text-right">Total</td>
-                <td className="text-center">{totalQty.toFixed(2)}</td>
-                <td colSpan="3"></td>
-                <td className="text-right">{subTotal.toFixed(2)}</td>
+            ))}
+            {Array.from({ length: Math.max(0, 12 - items.length) }).map((_, i) => (
+              <tr key={`empty-${i}`}>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
               </tr>
-            </tfoot>
-          </table>
-        </div>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr className="font-bold total-row">
+              <td colSpan="3" className="text-right section-header">Total</td>
+              <td className="text-center section-header">{totalQty.toFixed(2)}</td>
+              <td colSpan="3" className="section-header"></td>
+              <td className="amount-cell section-header">₹ {subTotal.toFixed(2)}</td>
+            </tr>
+          </tfoot>
+        </table>
 
         <table>
           <tbody>
             <tr>
-              <td className="w-2/3">
+              <td className="w-2/3" style={{borderTop: 0}}>
                 <p><span className="font-bold">Narration:</span> Being Goods Sold To {customer.customer_name} S/O {customer.guardian_name}</p>
                 <table className="my-1">
                   <tbody>
@@ -224,28 +273,28 @@ const TaxInvoice = forwardRef(({ invoice, customer, items, settings }, ref) => {
                 </table>
                 <table>
                   <thead>
-                    <tr className="font-bold text-center">
+                    <tr className="font-bold text-center section-header text-[9px]">
                       <td>Tax Rate</td>
                       <td>Taxable Value</td>
-                      <td>CGST Amount</td>
-                      <td>SGST Amount</td>
-                      <td>IGST Amount</td>
+                      <td>CGST</td>
+                      <td>SGST</td>
+                      <td>IGST</td>
                       <td>Total Tax</td>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td className="text-center">TAX @ {items[0]?.gst || 0}%</td>
-                      <td className="text-right">{totalTaxableValue.toFixed(2)}</td>
-                      <td className="text-right">{totalCgst.toFixed(2)}</td>
-                      <td className="text-right">{totalSgst.toFixed(2)}</td>
-                      <td className="text-right">{totalIgst.toFixed(2)}</td>
-                      <td className="text-right">{totalGst.toFixed(2)}</td>
+                    <tr className="text-[9px]">
+                      <td className="text-center font-semibold">{items[0]?.gst || 0}%</td>
+                      <td className="amount-cell">{totalTaxableValue.toFixed(2)}</td>
+                      <td className="amount-cell">{totalCgst.toFixed(2)}</td>
+                      <td className="amount-cell">{totalSgst.toFixed(2)}</td>
+                      <td className="amount-cell">{totalIgst.toFixed(2)}</td>
+                      <td className="amount-cell font-semibold">{totalGst.toFixed(2)}</td>
                     </tr>
                   </tbody>
                 </table>
-                <p><span className="font-bold">Tax Amount:</span> INR {numberToWords(totalGst)} Only</p>
-                <p><span className="font-bold">Bill Amount:</span> INR {numberToWords(billTotal)} Only</p>
+                <p><span className="font-bold">Tax Amount:</span> INR {numberToWords(totalGst)}</p>
+                <p><span className="font-bold">Bill Amount:</span> INR {numberToWords(billTotal)}</p>
                 <div className="grid grid-cols-3 gap-2">
                   <div className="col-span-2">
                     <p className="font-bold">Terms & Conditions:</p>
@@ -268,34 +317,38 @@ const TaxInvoice = forwardRef(({ invoice, customer, items, settings }, ref) => {
                   )}
                 </div>
               </td>
-              <td className="w-1/3">
-                <div className="flex justify-between"><span>Sub Total</span><span>{subTotal.toFixed(2)}</span></div>
-                {Object.entries(invoice.extra_charges || {}).map(([name, value]) => {
+              <td className="w-1/3" style={{borderTop: 0}}>
+                <div className="flex justify-between py-1 border-b"><span className="font-semibold">Sub Total</span><span className="amount-cell">₹ {subTotal.toFixed(2)}</span></div>
+                {Object.entries(extraCharges).map(([name, value]) => {
                   const amount = parseFloat(value || 0);
                   return amount > 0 ? (
-                    <div key={name} className="flex justify-between"><span>{name}</span><span>{amount.toFixed(2)}</span></div>
+                    <div key={name} className="flex justify-between py-1"><span>{name}</span><span className="amount-cell">₹ {amount.toFixed(2)}</span></div>
                   ) : null;
                 })}
-                <div className="flex justify-between"><span>Round Off</span><span>{roundOff.toFixed(2)}</span></div>
-                <div className="flex justify-between font-bold text-sm border-y border-black my-1 py-1"><span>Bill Total</span><span>{billTotal.toFixed(2)}</span></div>
+                <div className="flex justify-between py-1 border-t"><span className="text-[9px]">Round Off</span><span className="amount-cell text-[9px]">{roundOff.toFixed(2)}</span></div>
+                <div className="flex justify-between font-bold text-base border-y-2 border-black my-1 py-2 bg-gray-100"><span>Grand Total</span><span className="amount-cell">₹ {billTotal.toFixed(2)}</span></div>
               </td>
-            </tr>
-            <tr>
-              <td className="h-16">
-                <p>Receiver's Signature</p>
-              </td>
-              <td className="text-center">
-                <p className="font-bold">For {settings.company_name}</p>
-                <div className="mt-12">
-                  <p>Authorised Signatory</p>
-                </div>
-              </td>
-            </tr>
-            <tr>
-                <td colSpan="2" className="text-right">Page: 1/1</td>
             </tr>
           </tbody>
         </table>
+
+        <div className="invoice-footer">
+          <div className="flex justify-between">
+            <div>
+              <p className="text-[9px] mb-1">Receiver's Signature</p>
+              <div className="border-t border-black w-32 mt-10"></div>
+            </div>
+            <div className="text-center">
+              <p className="font-bold text-sm">For {settings.company_name}</p>
+              <div className="mt-8">
+                <div className="border-t border-black w-32 mx-auto mb-1"></div>
+                <p className="text-[9px]">Authorised Signatory</p>
+              </div>
+            </div>
+          </div>
+          <p className="text-right text-[9px] mt-2">Page: 1/1</p>
+        </div>
+      </div>
       </div>
     </div>
   );

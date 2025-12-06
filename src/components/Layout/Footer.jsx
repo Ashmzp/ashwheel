@@ -21,7 +21,7 @@ import React from 'react';
         { name: 'Facebook', icon: <Facebook className="w-5 h-5" />, url: 'https://www.facebook.com/share/158pNG3ihR9/' },
         { name: 'Instagram', icon: <Instagram className="w-5 h-5" />, url: 'https://www.instagram.com/ash.mzp' },
         { name: 'X', icon: <Twitter className="w-5 h-5" />, url: 'https://x.com/ash_mzp' },
-        { name: 'LinkedIn', icon: <Linkedin className="w-5 h-5" />, url: 'https://www.linkedin.com/in/ashish-kumar-mzp/' },
+        { name: 'LinkedIn', icon: <Linkedin className="w-5 h-5" />, url: 'www.linkedin.com/in/ashwheel/' },
         { name: 'YouTube', icon: <Youtube className="w-5 h-5" />, url: 'https://youtube.com' },
       ];
 

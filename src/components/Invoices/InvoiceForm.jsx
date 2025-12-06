@@ -22,6 +22,7 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
     customer_type: invoice?.customer_type || 'non-registered',
     items: invoice?.items || [],
     custom_field_values: invoice?.custom_field_values || {},
+    extra_charges: invoice?.extra_charges || { Registration: 0, Insurance: 0, Accessories: 0 },
     total_amount: invoice?.total_amount || 0,
   });
   const [customers, setCustomers] = useState([]);
@@ -93,9 +94,10 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
   };
   
   useEffect(() => {
-    const total = formData.items.reduce((sum, item) => sum + parseFloat(item.price || 0), 0);
-    setFormData(prev => ({...prev, total_amount: total}));
-  }, [formData.items]);
+    const itemsTotal = formData.items.reduce((sum, item) => sum + parseFloat(item.price || 0), 0);
+    const extraTotal = Object.values(formData.extra_charges || {}).reduce((sum, val) => sum + parseFloat(val || 0), 0);
+    setFormData(prev => ({...prev, total_amount: itemsTotal + extraTotal}));
+  }, [formData.items, formData.extra_charges]);
 
   const handleItemRemove = async (itemToRemove) => {
     if (invoice) { // Only add back to stock if editing an existing invoice
@@ -318,6 +320,24 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
               />
               {errors.items && <p className="text-red-500 text-sm mt-1">{errors.items}</p>}
             </div>
+
+            <Card>
+              <CardHeader><CardTitle className="text-base">Extra Charges</CardTitle></CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label>Registration</Label>
+                  <Input type="number" value={formData.extra_charges?.Registration || 0} onChange={(e) => setFormData(p => ({...p, extra_charges: {...p.extra_charges, Registration: e.target.value}}))} />
+                </div>
+                <div>
+                  <Label>Insurance</Label>
+                  <Input type="number" value={formData.extra_charges?.Insurance || 0} onChange={(e) => setFormData(p => ({...p, extra_charges: {...p.extra_charges, Insurance: e.target.value}}))} />
+                </div>
+                <div>
+                  <Label>Accessories</Label>
+                  <Input type="number" value={formData.extra_charges?.Accessories || 0} onChange={(e) => setFormData(p => ({...p, extra_charges: {...p.extra_charges, Accessories: e.target.value}}))} />
+                </div>
+              </CardContent>
+            </Card>
 
             <div className="flex justify-between items-center">
               <div className="text-xl font-bold">Total: ₹{formData.total_amount.toFixed(2)}</div>

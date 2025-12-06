@@ -91,12 +91,12 @@ const InvoicePreview = ({ invoice, formData: initialFormData, customer: initialC
       
       <div className="border rounded-lg p-4 bg-white text-black">
         <h3 className="text-center font-bold text-xl mb-4">Tax Invoice Preview</h3>
-        <TaxInvoice ref={invoiceRef} formData={data.formData} customer={data.customer} settings={data.settings} />
+        <TaxInvoice ref={invoiceRef} invoice={data.formData} customer={data.customer} items={data.formData.items} settings={data.settings} />
       </div>
 
       <div className="border rounded-lg p-4 bg-white text-black mt-8">
         <h3 className="text-center font-bold text-xl mb-4">Delivery Challan Preview</h3>
-        <DeliveryChallan ref={challanRef} formData={data.formData} customer={data.customer} settings={data.settings} />
+        <DeliveryChallan ref={challanRef} invoice={data.formData} customer={data.customer} items={data.formData.items} settings={data.settings} />
       </div>
 
     </div>

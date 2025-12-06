@@ -218,7 +218,14 @@ const VehicleInvoicesPage = () => {
         });
         return;
       }
-      setPrintData({ type, invoice, customer, items, settings });
+      
+      const invoiceWithExtraCharges = {
+        ...invoice,
+        extra_charges: invoice.extra_charges_json || invoice.extra_charges || {},
+        customer_details_json: invoice.customer_details_json || {}
+      };
+      
+      setPrintData({ type, invoice: invoiceWithExtraCharges, customer, items, settings });
     } catch (error) {
       toast({
         title: "Error",
