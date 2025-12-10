@@ -6,10 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { useToast } from '@/components/ui/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, Download, Loader2, ArrowLeft, RefreshCw, Scissors, HelpCircle, FileText, Move, CheckCircle2 } from 'lucide-react';
-import Cropper from 'react-easy-crop';
-import { getCroppedImg } from '@/utils/imageProcessing';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Slider } from '@/components/ui/slider';
+import ProfessionalImageCropper from '@/components/common/ProfessionalImageCropper';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import * as pdfjsLib from "pdfjs-dist";
 import { PDFDocument } from 'pdf-lib';
 import { v4 as uuidv4 } from 'uuid';
@@ -19,8 +17,8 @@ import { Stage, Layer, Image as KonvaImage } from 'react-konva';
 import useImage from 'use-image';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.js',
-  import.meta.url,
+    'pdfjs-dist/build/pdf.worker.min.js',
+    import.meta.url,
 ).toString();
 
 const DraggableCroppedImage = ({ id, src, x, y, onDragEnd }) => {
@@ -50,18 +48,9 @@ const CropAnythingPage = () => {
     const [finalPdfUrl, setFinalPdfUrl] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
 
-    const [crop, setCrop] = useState({ x: 0, y: 0 });
-    const [zoom, setZoom] = useState(1);
-    const [rotation, setRotation] = useState(0);
-    const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
-    
     const fileInputRef = useRef(null);
     const stageRef = useRef(null);
     const { toast } = useToast();
-
-    const onCropComplete = useCallback((_, croppedAreaPixelsValue) => {
-        setCroppedAreaPixels(croppedAreaPixelsValue);
-    }, []);
 
     const handleFileChange = async (e) => {
         const selectedFiles = Array.from(e.target.files);
@@ -114,7 +103,7 @@ const CropAnythingPage = () => {
 
         const results = await Promise.all(newFilesPromises);
         const flattenedResults = results.flat().filter(Boolean);
-        
+
         setFiles(flattenedResults);
         setIsProcessing(false);
         if (flattenedResults.length > 0) {
@@ -124,21 +113,12 @@ const CropAnythingPage = () => {
 
     const startCropping = (fileId) => {
         setCurrentCroppingFileId(fileId);
-        setCrop({ x: 0, y: 0 });
-        setZoom(1);
-        setRotation(0);
     };
 
-    const finishCropping = async () => {
-        if (!currentCroppingFileId || !croppedAreaPixels) return;
-        const currentFile = files.find(f => f.id === currentCroppingFileId);
-        try {
-            const croppedImgResult = await getCroppedImg(currentFile.source, croppedAreaPixels, rotation);
-            setFiles(files.map(f => f.id === currentCroppingFileId ? { ...f, cropped: croppedImgResult } : f));
-            setCurrentCroppingFileId(null);
-        } catch (e) {
-            toast({ title: 'Crop Failed', description: 'Could not crop the selection.', variant: 'destructive' });
-        }
+    const handleCropSave = (croppedDataUrl) => {
+        if (!currentCroppingFileId) return;
+        setFiles(files.map(f => f.id === currentCroppingFileId ? { ...f, cropped: croppedDataUrl } : f));
+        setCurrentCroppingFileId(null);
     };
 
     const handleGoToArrange = () => {
@@ -316,21 +296,14 @@ const CropAnythingPage = () => {
             </div>
 
             <Dialog open={!!currentFileToCrop} onOpenChange={(isOpen) => !isOpen && setCurrentCroppingFileId(null)}>
-                <DialogContent className="max-w-4xl w-[90vw] h-[85vh] flex flex-col p-4 sm:p-6">
-                    <DialogHeader>
-                        <DialogTitle>Crop: {currentFileToCrop?.name}</DialogTitle>
-                    </DialogHeader>
-                    <div className="relative flex-1 my-4 bg-muted rounded-md">
-                        {currentFileToCrop && <Cropper image={currentFileToCrop.source} crop={crop} zoom={zoom} rotation={rotation} onCropChange={setCrop} onZoomChange={setZoom} onRotationChange={setRotation} onCropComplete={onCropComplete} />}
-                    </div>
-                    <div className="flex flex-col md:flex-row gap-4">
-                        <div className="flex-1"><label htmlFor="zoom-slider-crop" className="text-sm">Zoom</label><Slider id="zoom-slider-crop" name="zoom-slider-crop" value={[zoom]} min={0.1} max={10} step={0.1} onValueChange={(val) => setZoom(val[0])} /></div>
-                        <div className="flex-1"><label htmlFor="rotation-slider-crop" className="text-sm">Rotation</label><Slider id="rotation-slider-crop" name="rotation-slider-crop" value={[rotation]} min={0} max={360} step={1} onValueChange={(val) => setRotation(val[0])} /></div>
-                    </div>
-                    <DialogFooter className="mt-4">
-                        <Button variant="outline" onClick={() => setCurrentCroppingFileId(null)}>Cancel</Button>
-                        <Button onClick={finishCropping}>Crop & Save</Button>
-                    </DialogFooter>
+                <DialogContent className="max-w-none w-[98vw] h-[95vh] !top-[2vh] !translate-y-0 p-0 gap-0 overflow-hidden flex flex-col bg-background border-none">
+                    {currentFileToCrop && (
+                        <ProfessionalImageCropper
+                            imageSrc={currentFileToCrop.source}
+                            onCancel={() => setCurrentCroppingFileId(null)}
+                            onSave={handleCropSave}
+                        />
+                    )}
                 </DialogContent>
             </Dialog>
         </DndProvider>

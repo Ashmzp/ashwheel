@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef } from 'react';
 import SEO from '@/components/SEO';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -7,10 +7,8 @@ import { useToast } from '@/components/ui/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, Download, Loader2, ArrowLeft, RefreshCw, FileImage, FileText, Image as ImageIcon, Scissors, Rows, Columns } from 'lucide-react';
 import { PDFDocument } from 'pdf-lib';
-import Cropper from 'react-easy-crop';
-import { getCroppedImg } from '@/utils/cropImage';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Slider } from '@/components/ui/slider';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import ProfessionalImageCropper from '@/components/common/ProfessionalImageCropper';
 
 const AadhaarFormatterPage = () => {
   const [frontImage, setFrontImage] = useState(null);
@@ -21,23 +19,15 @@ const AadhaarFormatterPage = () => {
   const [resultImage, setResultImage] = useState(null);
   const [layout, setLayout] = useState('vertical'); // 'vertical' or 'horizontal'
 
-  const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
-  const [rotation, setRotation] = useState(0);
   const [currentCropping, setCurrentCropping] = useState(null); // 'front' or 'back'
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
 
   const frontInputRef = useRef(null);
   const backInputRef = useRef(null);
   const { toast } = useToast();
 
-  const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
-    setCroppedAreaPixels(croppedAreaPixels);
-  }, []);
-
   const handleImageUpload = (e, side) => {
     const file = e.target.files[0];
-    if (file && file.type.startsWith('image/')) {
+    if (file && file.type.startsWith('image/')); {
       const reader = new FileReader();
       reader.onload = (event) => {
         if (side === 'front') {
@@ -50,39 +40,16 @@ const AadhaarFormatterPage = () => {
         setCurrentCropping(side);
       };
       reader.readAsDataURL(file);
-    } else {
-      toast({
-        title: 'Invalid File Type',
-        description: 'Please select a valid image file (JPEG, PNG, etc.).',
-        variant: 'destructive',
-      });
     }
   };
 
-  const showCroppedImage = async () => {
-    try {
-      const imageToCrop = currentCropping === 'front' ? frontImage : backImage;
-      if (!imageToCrop) {
-          toast({ title: 'No Image', description: 'No image source to crop.', variant: 'destructive' });
-          return;
-      }
-      const croppedImage = await getCroppedImg(
-        imageToCrop,
-        croppedAreaPixels,
-        rotation
-      );
-      if (currentCropping === 'front') {
-        setCroppedFront(croppedImage);
-      } else {
-        setCroppedBack(croppedImage);
-      }
-      setCurrentCropping(null);
-      setZoom(1);
-      setRotation(0);
-    } catch (e) {
-      console.error(e);
-      toast({ title: 'Crop Failed', description: 'Could not crop the image.', variant: 'destructive' });
+  const handleCropSave = (croppedDataUrl) => {
+    if (currentCropping === 'front') {
+      setCroppedFront(croppedDataUrl);
+    } else {
+      setCroppedBack(croppedDataUrl);
     }
+    setCurrentCropping(null);
   };
 
   const processImages = async () => {
@@ -112,32 +79,32 @@ const AadhaarFormatterPage = () => {
 
       const [frontImg, backImg] = await Promise.all([loadImage(croppedFront), loadImage(croppedBack)]);
 
-      const cardWidth = 1011 * 1.2; 
-      const cardHeight = 638 * 1.2; 
+      const cardWidth = 1011 * 1.2;
+      const cardHeight = 638 * 1.2;
       const margin = 100;
-      
+
       const centerX = a4Width / 2;
-      
+
       if (layout === 'vertical') {
         let currentY = margin;
         if (frontImg) {
-            finalCtx.drawImage(frontImg, centerX - cardWidth / 2, currentY, cardWidth, cardHeight);
-            currentY += cardHeight + margin;
+          finalCtx.drawImage(frontImg, centerX - cardWidth / 2, currentY, cardWidth, cardHeight);
+          currentY += cardHeight + margin;
         }
         if (backImg) {
-            finalCtx.drawImage(backImg, centerX - cardWidth / 2, currentY, cardWidth, cardHeight);
+          finalCtx.drawImage(backImg, centerX - cardWidth / 2, currentY, cardWidth, cardHeight);
         }
       } else { // horizontal
         const startY = a4Height / 2 - cardHeight / 2;
         if (frontImg && backImg) {
-            const startX1 = a4Width / 2 - cardWidth - margin / 2;
-            const startX2 = a4Width / 2 + margin / 2;
-            finalCtx.drawImage(frontImg, startX1, startY, cardWidth, cardHeight);
-            finalCtx.drawImage(backImg, startX2, startY, cardWidth, cardHeight);
+          const startX1 = a4Width / 2 - cardWidth - margin / 2;
+          const startX2 = a4Width / 2 + margin / 2;
+          finalCtx.drawImage(frontImg, startX1, startY, cardWidth, cardHeight);
+          finalCtx.drawImage(backImg, startX2, startY, cardWidth, cardHeight);
         } else if (frontImg) {
-            finalCtx.drawImage(frontImg, centerX - cardWidth / 2, startY, cardWidth, cardHeight);
+          finalCtx.drawImage(frontImg, centerX - cardWidth / 2, startY, cardWidth, cardHeight);
         } else if (backImg) {
-            finalCtx.drawImage(backImg, centerX - cardWidth / 2, startY, cardWidth, cardHeight);
+          finalCtx.drawImage(backImg, centerX - cardWidth / 2, startY, cardWidth, cardHeight);
         }
       }
 
@@ -293,56 +260,31 @@ const AadhaarFormatterPage = () => {
 
           <Card className="w-full max-w-4xl mt-8">
             <CardHeader>
-                <CardTitle>How to Use the Aadhaar Formatter</CardTitle>
+              <CardTitle>How to Use the Aadhaar Formatter</CardTitle>
             </CardHeader>
             <CardContent className="prose prose-sm dark:prose-invert max-w-none">
-                <p>Easily format your Aadhaar card for printing on an A4 sheet. This tool allows precise cropping and arrangement.</p>
-                <ol>
-                    <li><strong>Upload Images:</strong> Click on the "Upload front side" and "Upload back side" areas to select your Aadhaar images. You can upload one or both sides.</li>
-                    <li><strong>Crop Precisely:</strong> After uploading, click the "Crop Image" button. A cropper tool will open. You can zoom, rotate, and drag the image to get the perfect crop. Click "Crop & Save" when done.</li>
-                    <li><strong>Choose Layout:</strong> Select either a "Vertical" or "Horizontal" layout for how the front and back sides will be placed on the A4 page.</li>
-                    <li><strong>Generate & Download:</strong> Click the "Generate Document" button. A preview of the A4 page will be shown. You can then download the final document as a high-quality JPEG or a print-ready PDF.</li>
-                </ol>
+              <p>Easily format your Aadhaar card for printing on an A4 sheet. This tool allows precise cropping and arrangement.</p>
+              <ol>
+                <li><strong>Upload Images:</strong> Click on the "Upload front side" and "Upload back side" areas to select your Aadhaar images. You can upload one or both sides.</li>
+                <li><strong>Crop Precisely:</strong> After uploading, click the "Crop Image" button. A cropper tool will open. You can zoom, rotate, and drag the image to get the perfect crop. Click "Crop & Save" when done.</li>
+                <li><strong>Choose Layout:</strong> Select either a "Vertical" or "Horizontal" layout for how the front and back sides will be placed on the A4 page.</li>
+                <li><strong>Generate & Download:</strong> Click the "Generate Document" button. A preview of the A4 page will be shown. You can then download the final document as a high-quality JPEG or a print-ready PDF.</li>
+              </ol>
             </CardContent>
           </Card>
         </main>
       </div>
 
       <Dialog open={!!currentCropping} onOpenChange={(isOpen) => !isOpen && setCurrentCropping(null)}>
-        <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
-          <DialogHeader>
-            <DialogTitle>Crop Image - {currentCropping} side</DialogTitle>
-          </DialogHeader>
-          <div className="relative flex-1">
-            <Cropper
-              image={currentCropping === 'front' ? frontImage : backImage}
-              crop={crop}
-              zoom={zoom}
-              rotation={rotation}
-              aspect={85.6 / 54}
-              onCropChange={setCrop}
-              onZoomChange={setZoom}
-              onRotationChange={setRotation}
-              onCropComplete={onCropComplete}
-              showGrid={true}
-              cropShape="rect"
-              objectFit="contain"
+        <DialogContent className="max-w-none w-[98vw] h-[95vh] !top-[2vh] !translate-y-0 p-0 overflow-hidden flex flex-col bg-background border-none gap-0">
+          {((currentCropping === 'front' ? frontImage : backImage) && (
+            <ProfessionalImageCropper
+              imageSrc={currentCropping === 'front' ? frontImage : backImage}
+              onCancel={() => setCurrentCropping(null)}
+              onSave={handleCropSave}
+              initialAspectRatio={85.6 / 54}
             />
-          </div>
-          <div className="flex flex-col gap-4 mt-4">
-            <div>
-              <label htmlFor="zoom-slider" className="text-sm">Zoom</label>
-              <Slider id="zoom-slider" name="zoom-slider" value={[zoom]} min={1} max={3} step={0.1} onValueChange={(val) => setZoom(val[0])} />
-            </div>
-            <div>
-              <label htmlFor="rotation-slider" className="text-sm">Rotation</label>
-              <Slider id="rotation-slider" name="rotation-slider" value={[rotation]} min={0} max={360} step={1} onValueChange={(val) => setRotation(val[0])} />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setCurrentCropping(null)}>Cancel</Button>
-            <Button onClick={showCroppedImage}>Crop & Save</Button>
-          </DialogFooter>
+          ))}
         </DialogContent>
       </Dialog>
     </>
